@@ -6,15 +6,18 @@ CFLAGS_TARGET=-O0 -ggdb -Wall
 VPATH=debug libpwu tgt
 
 CLEAN_TARGETS=libpwu.so libpwu/libpwu.o
-CLEAN_TARGETS_ALL=libpwu/libpwu.so libpwu/main.o DEBUG debug/DEBUG.o target debug/target.o
+CLEAN_TARGETS_ALL=libpwu/libpwu.so libpwu/main.o libpwu/process_maps.o DEBUG debug/DEBUG.o target tgt/target.o
 
 all: libpwu.so DEBUG target
 
-libpwu.so: libpwu/main.o
-	${CC} ${CFLAGS} -shared -o libpwu/libpwu.so libpwu/main.o
+libpwu.so: libpwu/main.o libpwu/process_maps.o libpwu/process_maps.h
+	${CC} ${CFLAGS} -shared -o libpwu/libpwu.so libpwu/main.o libpwu/process_maps.{c,h}
 
 main.o: libpwu/main.c
 	${CC} ${CFLAGS} -c libpwu/main.c
+
+process_maps.o: libpwu/process_maps.c libpwu/process_maps.h
+	${CC} ${CFLAGS} -c libpwu/process_maps.c libpwu/process_maps.h
 
 DEBUG: debug/DEBUG.o
 	${CC} ${CFLAGS_DEBUG} -o DEBUG debug/DEBUG.o
