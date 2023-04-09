@@ -26,7 +26,7 @@
 int read_maps(maps_data * m_data, FILE * maps_stream) {
 
 	int ret;
-	char line[LINE_MAX];
+	char line[LINE_LEN];
 	maps_entry temp_m_entry;
 
 	/*	1) create temporary node, read next entry into it
@@ -51,16 +51,16 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 		ret = entry_path_match(temp_m_entry, *m_data);
 		if (ret == -1) {
 			//if there is no matching maps_obj, create new one
-			ret = new_maps_obj(&m_data->m_obj_arr[len]);
+			ret = new_maps_obj(&m_data->m_obj_arr[m_data->len]);
 			if (ret != 0) return -1;
 			//now append to object
-			ret = vector_add(&m_data->m_obj_arr[len].entry_vector, NULL, &temp_m_entry, 
-					         VECTOR_APPEND_TRUE);
+			ret = vector_add(&m_data->m_obj_arr[m_data->len].entry_vector, 0, 
+					         (char *) &temp_m_entry, VECTOR_APPEND_TRUE);
 			if (ret != SUCCESS) return -1;
 		} else {
 			//else append to existing object
-			ret = vector_add(&m_data->m_obj_arr[ret].entry_vector, NULL, &temp_m_entry. 
-					         VECTOR_APPEND_TRUE);
+			ret = vector_add(&m_data->m_obj_arr[ret].entry_vector, 0, 
+					         (char *) &temp_m_entry, VECTOR_APPEND_TRUE);
 			if (ret != SUCCESS) return -1;
 		}
 	} //end while there are entries in /proc/<pid>/maps
@@ -79,7 +79,7 @@ int entry_path_match(maps_entry temp_m_entry, maps_data m_data) {
 	//for every maps_obj in m_data
 	for (int i = 0; i < m_data.len; ++i) {
 
-		ret = strcmp(temp_m_entry.pathname, m_data[i].name);
+		ret = strcmp(temp_m_entry.pathname, m_data.m_obj_arr[i].name);
 		if (ret == 0) {
 			return i;
 		}
@@ -93,7 +93,7 @@ int entry_path_match(maps_entry temp_m_entry, maps_data m_data) {
 void new_maps_data(maps_data * m_data) {
 
 	m_data->len = 0;
-	memset(m_data->m_obj_arr, NULL, M_OBJ_ARR_LEN * sizeof(maps_obj));
+	memset(m_data->m_obj_arr, 0, M_OBJ_ARR_LEN * sizeof(maps_obj));
 }
 
 
@@ -105,7 +105,7 @@ int del_maps_data(maps_data * m_data) {
 	//for every maps_data object
 	for (int i = 0; i < m_data->len; ++i) {
 
-		ret = del_maps_obj(&m_obj_arr[i]) {
+		ret = del_maps_obj(&m_data->m_obj_arr[i]); 
 		if (ret != 0) return -1; //attempting to free non-existant vector
 	}
 	return 0; //memory freed, can discard maps_data
@@ -116,7 +116,7 @@ int del_maps_data(maps_data * m_data) {
 int get_maps_line(char line[LINE_LEN], FILE * maps_stream) {
 
 	//first, zero out line
-	memset(line, LINE_LEN, '\0');
+	memset(line, '\0', LINE_LEN);
 
 	if (fgets(line, LINE_LEN, maps_stream) == NULL) {
 		return -1;
@@ -131,7 +131,7 @@ int new_maps_obj(maps_obj * m_obj) {
 	int ret;
 
 	//first, zero out the name field
-	memset(m_obj->name, PATH_MAX, '\0');
+	memset(m_obj->name, '\0', PATH_MAX);
 
 	//now, initialise vector member
 	ret = new_vector(&m_obj->entry_vector, sizeof(maps_entry));
@@ -191,7 +191,7 @@ int get_addr_range(char line[LINE_LEN], void ** start_addr, void ** end_addr) {
 int get_perms_name(char line[LINE_LEN], char perms[PERMS_LEN], char name[PATH_MAX]) {
 
 	//zero out name first
-	memset(name, PATH_MAX, '\0');
+	memset(name, '\0', PATH_MAX);
 
 	//get to end of line
 	int i = 0;
@@ -201,7 +201,7 @@ int get_perms_name(char line[LINE_LEN], char perms[PERMS_LEN], char name[PATH_MA
 		
 		//if at permissions
 		if(column_count == 1) {
-			strncpy(name, line[i], PERMS_LEN);
+			strncpy(name, &line[i], PERMS_LEN);
 			i+=4;
 		}
 
