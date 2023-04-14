@@ -6,7 +6,6 @@
 
 #include "process_maps.h"
 
-
 /*
  *	Intended use:
  *
@@ -40,22 +39,28 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 		//store address range in temporary entry
 		ret = get_addr_range(line, &temp_m_entry.start_addr, &temp_m_entry.end_addr);
 		if (ret != 0) return -1; //error reading maps file
+		
 		//store permissions and name of backing file in temporary entry
 		ret = get_perms_name(line, temp_m_entry.perms, temp_m_entry.pathname);
+		
 		//if there is no pathname for a given entry, set it to tag
 		if (ret != 0) strcpy(temp_m_entry.pathname, "<NO_PATHNAME>");
 
 		//look for a matching maps_obj
 		pos = entry_path_match(temp_m_entry, *m_data);
+		
 		//if there isn't a matching backing file that exists
 		if (pos == -1) {
+
 			//create new temporary map object
 			ret = new_maps_obj(&temp_m_obj, temp_m_entry.pathname);
 			if (ret != 0) return -1;
+			
 			//add temporary entry to temporary map object
 			ret = vector_add(&temp_m_obj.entry_vector, 0, (char *) &temp_m_entry,
 			                 APPEND_TRUE);
 			if (ret != 0) return -1;
+			
 			//add temporary map object to vector array
 			ret = vector_add(&m_data->obj_vector, 0, (char *) &temp_m_obj, 
 			                 APPEND_TRUE);
@@ -68,6 +73,7 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 			ret = vector_add(&temp_m_obj.entry_vector, 0, (char *) &temp_m_entry,
 			                 APPEND_TRUE);
 			if (ret != 0) return -1;
+			
 			//reset value in vector in case pointer changed
 			ret = vector_set(&m_data->obj_vector, pos, (char *) &temp_m_obj);
 			if (ret != 0) return -1;

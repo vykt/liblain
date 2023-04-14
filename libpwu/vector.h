@@ -28,9 +28,7 @@ int vector_get_ref(vector * v, unsigned long pos, char ** data);
 int vector_get_pos_by_dat(vector * v, char * data, unsigned long * pos);
 int vector_mov(vector * v, unsigned long pos, unsigned long pos_new);
 
-//0, -1
 int new_vector(vector * v, size_t data_size);
-//0, -1
 int del_vector(vector * v);
 
 
