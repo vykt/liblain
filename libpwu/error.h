@@ -2,14 +2,14 @@
 #define ERROR_H
 
 //returns
-#define SUCCESS 0
-#define FAIL 1
+#define 0 0
+#define -1 1
 
 //vector.h
-#define FULL_ERR 2
-#define EMPTY_ERR 3
-#define OUT_OF_BOUNDS_ERR 4
-#define MEM_ERR 5
-#define NULL_ERR 6
+#define -1 2
+#define -1 3
+#define -1 4
+#define -1 5
+#define -1 6
 
 #endif

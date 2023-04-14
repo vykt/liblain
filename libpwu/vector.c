@@ -6,52 +6,52 @@
 
 
 //Set element's data
-int vector_set(vector_t * v, unsigned long pos, char * data) {
+int vector_set(vector * v, unsigned long pos, char * data) {
 
 	//Check for NULL
 	if (v == NULL || data == NULL) {
-		return NULL_ERR;
+		return -1;
 	}
 
 	//Check if asking to set out of bounds
 	if (pos >= v->length) {
-		return OUT_OF_BOUNDS_ERR;
+		return -1;
 	}
 
 	//Copy data to vector entry
 	memcpy(v->vector + (pos * v->data_size), data, v->data_size);
 	
-	return SUCCESS;
+	return 0;
 }
 
 
 //Add element
-int vector_add(vector_t * v, unsigned long pos, char * data, unsigned short append) {
+int vector_add(vector * v, unsigned long pos, char * data, unsigned short append) {
 
 	//Check for NULL
 	if (v == NULL || v->data_size == 0) {
-		return NULL_ERR;
+		return -1;
 	}
 
 	//Check if max capacity reached
 	if (v->length == UINT64_MAX) {
-		return FULL_ERR;
+		return -1;
 	}
 
 	//Check if asking for data out of bounds
-	if (pos > v->length && append == VECTOR_APPEND_FALSE) {
-		return OUT_OF_BOUNDS_ERR;
+	if (pos > v->length && append == APPEND_FALSE) {
+		return -1;
 	}
 
 	//Check for append
-	if (append == VECTOR_APPEND_TRUE) {
+	if (append == APPEND_TRUE) {
 		pos = v->length;
 	}
 
 	v->length = v->length + 1;
 	v->vector = realloc(v->vector, (size_t) (v->length * v->data_size));
 	if (v->vector == NULL) {
-		return MEM_ERR;
+		return -1;
 	}
 
 	//Move vector entries	
@@ -68,26 +68,26 @@ int vector_add(vector_t * v, unsigned long pos, char * data, unsigned short appe
 		memcpy(v->vector + (pos * v->data_size), data, v->data_size);
 	}
 
-	return SUCCESS;
+	return 0;
 }
 
 
 //Remove element
-int vector_rmv(vector_t * v, unsigned long pos) {
+int vector_rmv(vector * v, unsigned long pos) {
 
 	//Check for NULL
 	if (v == NULL) {
-		return NULL_ERR;
+		return -1;
 	}
 
 	//Check if vector is empty
 	if (v->length == 0) {
-		return EMPTY_ERR;
+		return -1;
 	}
 
 	//Check if asking for data out of bounds
 	if (pos >= v->length) {
-		return OUT_OF_BOUNDS_ERR;
+		return -1;
 	}
 
 	if (pos < v->length - 1) {
@@ -101,71 +101,68 @@ int vector_rmv(vector_t * v, unsigned long pos) {
 	v->length = v->length - 1;
 	v->vector = realloc(v->vector, v->length * v->data_size);
 
-	return SUCCESS;
+	return 0;
 }
 
 
 //Get element
-int vector_get(vector_t * v, unsigned long pos, char * data) {
+int vector_get(vector * v, unsigned long pos, char * data) {
 
 	//Check for NULL
 	if (v == NULL) {
-		return NULL_ERR;
+		return -1;
 	}
 
 	//Check if vector is empty
 	if (v->length == 0) {
-		return EMPTY_ERR;
+		return -1;
 	}
 
 	//Check if asking for data out of bounds
 	if (pos >= v->length) {
-		return OUT_OF_BOUNDS_ERR;
+		return -1;
 	}
 
-	//Allocate space and clear buffer;
-	if ((data = realloc(data, v->data_size)) == NULL) {
-		return NULL_ERR;
-	}
+	//Clear buffer;
 	memset(data, 0, v->data_size);
 
 	//Get value
 	memcpy(data, v->vector + (pos * v->data_size), v->data_size);
 
-	return SUCCESS;
+	return 0;
 }
 
 
 //Get element by reference
-int vector_get_ref(vector_t * v, unsigned long pos, char ** data) {
+int vector_get_ref(vector * v, unsigned long pos, char ** data) {
 	
 	//Check for NULL
 	if (v == NULL) {
-		return NULL_ERR;
+		return -1;
 	}
 
 	//Check if vector is empty
 	if (v->length == 0) {
-		return EMPTY_ERR;
+		return -1;
 	}
 
 	//Check if asking for data out of bounds
 	if (pos >= v->length) {
-		return OUT_OF_BOUNDS_ERR;
+		return -1;
 	}
 
 	*data = v->vector + (pos * v->data_size);
 
-	return SUCCESS;
+	return 0;
 }
 
 
 //Get index of element in vector by value
-int vector_get_pos_by_dat(vector_t * v, char * data, unsigned long * pos) {
+int vector_get_pos_by_dat(vector * v, char * data, unsigned long * pos) {
 
 	//Check for NULL
 	if (v == NULL || data == NULL) {
-		return NULL_ERR;
+		return -1;
 	}
 
 	int ret;
@@ -174,32 +171,32 @@ int vector_get_pos_by_dat(vector_t * v, char * data, unsigned long * pos) {
 	//Try get position
 	for (unsigned long i = 0; i < v->length; ++i) {
 		ret = vector_get_ref(v, i, &data_cmp);
-		if (ret != SUCCESS) return ret;
+		if (ret != 0) return ret;
 
 		//Here, compare only the sockaddr_in6 part, not the last_ping
 		ret = memcmp(data, data_cmp, sizeof((struct sockaddr_in6 *) data));
 		if (ret) continue;
 		*pos = i;
-		return SUCCESS;
+		return 0;
 	}
 
-	return FAIL;
+	return -1;
 }
 
 
 //Move element
-int vector_mov(vector_t * v, unsigned long pos, unsigned long pos_new) {
+int vector_mov(vector * v, unsigned long pos, unsigned long pos_new) {
 
-	if (pos == pos_new) return SUCCESS;
+	if (pos == pos_new) return 0;
 
 	int ret;
 
 	char * data = malloc(v->data_size);
-	if (data == NULL) return MEM_ERR;
+	if (data == NULL) return -1;
 
 	//Get data of both indexes
 	ret = vector_get(v, pos, data);
-	if (ret != SUCCESS) { free(data); return ret; }
+	if (ret != 0) { free(data); return ret; }
 
 	//If moving towards beginning
 	if (pos > pos_new) {
@@ -214,38 +211,38 @@ int vector_mov(vector_t * v, unsigned long pos, unsigned long pos_new) {
 	} //End if moving towards beginning/end
 
 	ret = vector_set(v, pos_new, data);
-	if (ret != SUCCESS) { free(data); return ret; }
+	if (ret != 0) { free(data); return ret; }
 
 	free(data);
-	return SUCCESS;
+	return 0;
 }
 
 
 //Start vector
-int new_vector(vector_t * v, size_t data_size) {
+int new_vector(vector * v, size_t data_size) {
 
 	//Check NULL
 	if (v == NULL || data_size == 0) {
-		return NULL_ERR;
+		return -1;
 	}
 
 	v->vector = malloc(0);
 	v->data_size = data_size;
 	v->length = 0;
 
-	return SUCCESS;
+	return 0;
 }
 
 
 //End vector, free memory
-int del_vector(vector_t * v) {
+int del_vector(vector * v) {
 
 	//Check NULL
 	if (v == NULL) {
-		return NULL_ERR;
+		return -1;
 	}
 
 	free(v->vector);
 
-	return SUCCESS;
+	return 0;
 }
