@@ -7,17 +7,19 @@
 
 #include <sys/types.h>
 
-#define APPEND_TRUE 1
-#define APPEND_FALSE 0
+#include "libpwu.h"
+
+//#define APPEND_TRUE 1
+//#define APPEND_FALSE 0
 
 
-typedef struct {
+/*typedef struct {
 
 	char * vector;
 	size_t data_size;
 	unsigned long length;
 
-} vector;
+} vector;*/
 
 
 int vector_set(vector * v, unsigned long pos, char * data);

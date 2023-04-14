@@ -5,13 +5,14 @@
 
 #include <linux/limits.h>
 
+#include "libpwu.h"
 #include "vector.h"
 
 #define LINE_LEN PATH_MAX + 128
 #define PERMS_LEN 4
 
 
-typedef struct {
+/*typedef struct {
 
 	char pathname[PATH_MAX];
 	char perms[PERMS_LEN];
@@ -33,7 +34,7 @@ typedef struct {
 
 	vector obj_vector; //maps_obj
 
-} maps_data;
+} maps_data;*/
 
 
 //internal functions

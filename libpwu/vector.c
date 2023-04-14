@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "libpwu.h"
 #include "vector.h"
 
 

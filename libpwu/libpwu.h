@@ -1,7 +1,51 @@
 #ifndef _LIBPWU_H
 #define _LIBPWU_H
 
-#include "process_maps.h"
+#include <stdio.h>
+#include <linux/limits.h>
+
+//#include "process_maps.h"
+//#include "vector.h"
+
+#define APPEND_TRUE 1
+#define APPEND_FALSE 0
+#define PERMS_LEN 4
+
+
+//vector
+typedef struct {
+	
+	char * vector;
+	size_t data_size;
+	unsigned long length;
+
+} vector;
+
+//single region in /proc/<pid>/maps
+typedef struct {
+
+        char pathname[PATH_MAX];
+        char perms[PERMS_LEN];
+        void * start_addr;
+        void * end_addr;
+
+} maps_entry;
+
+//regions grouped by backing file/type
+typedef struct {
+
+        char name[PATH_MAX];
+        vector entry_vector; //maps_entry
+
+} maps_obj;
+
+//entire memory map
+typedef struct {
+
+        vector obj_vector; //maps_obj
+
+} maps_data;
+
 
 //read /proc/<pid>/maps into allocated maps_data object
 extern int read_maps(maps_data * m_data, FILE * maps_stream);

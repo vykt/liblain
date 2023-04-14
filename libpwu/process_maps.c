@@ -4,7 +4,9 @@
 
 #include <linux/limits.h>
 
+#include "libpwu.h"
 #include "process_maps.h"
+#include "vector.h"
 
 /*
  *	Intended use:
