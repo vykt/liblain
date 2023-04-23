@@ -4,12 +4,15 @@
 #include <stdio.h>
 #include <linux/limits.h>
 
-//#include "process_maps.h"
-//#include "vector.h"
-
 #define APPEND_TRUE 1
 #define APPEND_FALSE 0
+
 #define PERMS_LEN 4
+#define PATTERN_LEN 1024
+
+
+//byte
+typedef char byte;
 
 
 //vector
@@ -45,6 +48,17 @@ typedef struct {
         vector obj_vector; //maps_obj
 
 } maps_data;
+
+//pattern to search for
+typedef struct {
+
+	maps_entry * search_region;
+	byte pattern_bytes[PATTERN_LEN];
+	int pattern_len;
+	vector instances;
+
+
+} pattern;
 
 
 //read /proc/<pid>/maps into allocated maps_data object
