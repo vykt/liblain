@@ -14,7 +14,6 @@
 //byte
 typedef char byte;
 
-
 //vector
 typedef struct {
 	
@@ -69,5 +68,30 @@ extern int new_maps_data(maps_data * m_data);
 
 //returns: 0 - success, -1 - failed to deallocate maps_data
 extern int del_maps_data(maps_data * m_data);
+
+
+//returns: 0 - success, -1 - failed to allocate object
+//search_region can be NULL and be set later
+extern int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, int bytes_ptn_len);
+
+//returns: 0 - success, -1 - failed to deallocate object
+extern int del_pattern(pattern * ptn);
+
+//returns: n - number of patterns, -1 - failed to search for patterns
+extern int match_pattern(pattern * ptn, int fd);
+
+//convert bytes to hex string
+extern void bytes_to_hex(byte * inp, int inp_len, char * out);
+
+
+//set vector entry
+extern int vector_set(vector * v, unsigned long pos, char * data);
+
+//get vector entry
+extern int vector_get(vector * v, unsigned long pos, char * data);
+
+//get vector entry reference
+extern int vector_get_ref(vector * v, unsigned long pos, char ** data);
+
 
 #endif

@@ -6,18 +6,19 @@
 #include <linux/limits.h>
 
 #include "libpwu.h"
-#include "patterns.h"
+#include "pattern.h"
 #include "vector.h"
 
 
-//initiate new pattern
-int new_pattern(pattern * ptn, maps_entry * search_region, byte * ptn, int ptn_len) {
+//initiate new pattern, search_region can be NULL and set by user later
+int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, int bytes_ptn_len) {
 
 	int ret;
 
-	memcpy(ptn->pattern_bytes, ptn, ptn_len);
-	ptn->pattern_len = ptn_len;
-	ptn->search_region = search_region;
+	memcpy(ptn->pattern_bytes, bytes_ptn, bytes_ptn_len);
+	ptn->pattern_len = bytes_ptn_len;
+	
+	if (search_region != NULL) ptn->search_region = search_region;
 
 	ret = new_vector(&ptn->instances, sizeof(void *));
 	if (ret != 0) return -1;
@@ -37,18 +38,18 @@ int del_pattern(pattern * ptn) {
 
 
 //return number of patterns matched, -1 on error
-int find_pattern(pattern ptn, int fd) {
+int match_pattern(pattern * ptn, int fd) {
 
 	int ret;
+	off_t off_ret;
 	int scanning = 1;
 	int ptn_count = 0;
 	int page_rd_count = 0;
 	size_t rd_size;
 	ssize_t rd_bytes;
 
-	void * start_map_addr;
-	void * end_map_addr;
-	void * cur_map_addr;
+	void * curr_map_addr;
+	void * match_addr;
 
 	long page_size;
 	byte * mem_page;
@@ -59,6 +60,9 @@ int find_pattern(pattern ptn, int fd) {
 	mem_page = malloc(page_size);
 	if (mem_page == NULL) return -1;
 
+	//seek to start
+	off_ret = lseek(fd, (off_t) ptn->search_region->start_addr, SEEK_SET);
+	if (off_ret == -1) return -1;
 
 	//read process region a page at a time
 	while (scanning) {
@@ -67,18 +71,19 @@ int find_pattern(pattern ptn, int fd) {
 		//memset(mem_page, 0, page_size);
 
 		//figure out how much to read to not segfault
-		curr_map_addr = start_map_addr + (page_size * page_rd_count);
-		if (end_map_addr - curr_map_addr > page_size) {
+		curr_map_addr = ptn->search_region->start_addr + (page_size * page_rd_count);
+		if (ptn->search_region->end_addr - curr_map_addr > page_size) {
 			rd_size = page_size;
 		} else {
 			//if not reading a full page, this is the final page.
 			//therefore dont iterate again
-			rd_size = end_map_addr - curr_map_addr;
+			rd_size = ptn->search_region->end_addr - curr_map_addr;
 			scanning = 0;
 		}
 
 		//read new page
 		rd_bytes = read(fd, mem_page, rd_size);
+		if (rd_bytes == -1) return 0;
 
 		//for every byte of page
 		for (int byte_index = 0; byte_index < rd_size; ++byte_index) {
@@ -91,14 +96,21 @@ int find_pattern(pattern ptn, int fd) {
 				if (ptn_count == ptn->pattern_len) {
 
 					//add address where pattern began to instances
-					ret = vector_add(&ptn->instances, 0, (char *) cur_map_addr 
-							         + byte_index - ptn->pattern_len);
+					match_addr = curr_map_addr + byte_index - (ptn->pattern_len - 1);
+					ret = vector_add(&ptn->instances, 0, (char *) &match_addr, 
+							         APPEND_TRUE);
 					if (ret != 0) return -1;
 					//reset pattern count
 					ptn_count = 0;
 				}
+
+			//next byte not in pattern
+			} else {
+				ptn_count = 0;
 			}
+
 		}//end for every byte of page
+		++page_rd_count;
 	}//end read process region
 
 	//return number of patterns matched

@@ -1,6 +1,13 @@
+#include <stdio.h>
+#include <unistd.h>
+
+
 int main() {
+
+	char * test = "hello!";
 	while (1) {
-		__asm__("nop");
+		puts(test);
+		sleep(1);
 	}
 
 }
