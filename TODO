@@ -1,0 +1,7 @@
+TO IMPLEMENT!!!
+
+>wrapper for sending SIGSTOP & SIGCONT
+>resolving PID by name
+>changing region permissions
+>resizing segments?
+>loading shared objects?

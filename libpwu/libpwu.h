@@ -10,10 +10,6 @@
 #define PERMS_LEN 4
 #define PATTERN_LEN 1024
 
-#define P_STOP 0
-#define P_CONT 1
-
-
 
 //byte
 typedef char byte;
