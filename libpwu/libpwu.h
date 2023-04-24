@@ -10,6 +10,10 @@
 #define PERMS_LEN 4
 #define PATTERN_LEN 1024
 
+#define P_STOP 0
+#define P_CONT 1
+
+
 
 //byte
 typedef char byte;
@@ -92,6 +96,13 @@ extern int vector_get(vector * v, unsigned long pos, char * data);
 
 //get vector entry reference
 extern int vector_get_ref(vector * v, unsigned long pos, char ** data);
+
+
+//read memory into buffer
+extern int read_mem(int fd, void * addr, char * read_buf, int len);
+
+//write memory at address from write_buf
+extern int write_mem(int fd, void * addr, char * write_buf, int len);
 
 
 #endif
