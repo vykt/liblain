@@ -1,6 +1,8 @@
-# libpwu
+<p align="center">
+	<img src="logo.png">
+</p>
 
-![libpwu logo](logo.png)
+#libpwu
 
 ### ABOUT:
 
