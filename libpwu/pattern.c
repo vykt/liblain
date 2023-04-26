@@ -97,7 +97,7 @@ int match_pattern(pattern * ptn, int fd) {
 
 					//add address where pattern began to instances
 					match_addr = curr_map_addr + byte_index - (ptn->pattern_len - 1);
-					ret = vector_add(&ptn->instances, 0, (char *) &match_addr, 
+					ret = vector_add(&ptn->instances, 0, (byte *) &match_addr, 
 							         APPEND_TRUE);
 					if (ret != 0) return -1;
 					//reset pattern count

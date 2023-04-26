@@ -59,25 +59,25 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 			if (ret != 0) return -1;
 			
 			//add temporary entry to temporary map object
-			ret = vector_add(&temp_m_obj.entry_vector, 0, (char *) &temp_m_entry,
+			ret = vector_add(&temp_m_obj.entry_vector, 0, (byte *) &temp_m_entry,
 			                 APPEND_TRUE);
 			if (ret != 0) return -1;
 			
 			//add temporary map object to vector array
-			ret = vector_add(&m_data->obj_vector, 0, (char *) &temp_m_obj, 
+			ret = vector_add(&m_data->obj_vector, 0, (byte *) &temp_m_obj, 
 			                 APPEND_TRUE);
 			if (ret != 0) return -1;
 
 		} else {
 			//else append to existing object
-			ret = vector_get(&m_data->obj_vector, pos, (char *) &temp_m_obj);
+			ret = vector_get(&m_data->obj_vector, pos, (byte *) &temp_m_obj);
 			if (ret != 0) return -1;
-			ret = vector_add(&temp_m_obj.entry_vector, 0, (char *) &temp_m_entry,
+			ret = vector_add(&temp_m_obj.entry_vector, 0, (byte *) &temp_m_entry,
 			                 APPEND_TRUE);
 			if (ret != 0) return -1;
 			
 			//reset value in vector in case pointer changed
-			ret = vector_set(&m_data->obj_vector, pos, (char *) &temp_m_obj);
+			ret = vector_set(&m_data->obj_vector, pos, (byte *) &temp_m_obj);
 			if (ret != 0) return -1;
 		}
 	} //end while there are entries in /proc/<pid>/maps
@@ -97,7 +97,7 @@ int entry_path_match(maps_entry temp_m_entry, maps_data m_data) {
 	//for every maps_obj in m_data
 	for (int i = 0; i < m_data.obj_vector.length; ++i) {
 
-		ret = vector_get(&m_data.obj_vector, i, (char *) &m_obj);
+		ret = vector_get(&m_data.obj_vector, i, (byte *) &m_obj);
 		if (ret != 0) return -1; //unable to fetch vector entry
 
 		ret = strcmp(temp_m_entry.pathname, m_obj.name);
@@ -130,7 +130,7 @@ int del_maps_data(maps_data * m_data) {
 	//for every maps_data object
 	for (int i = 0; i < m_data->obj_vector.length; ++i) {
 
-		ret = vector_get(&m_data->obj_vector, i, (char *) &m_obj);
+		ret = vector_get(&m_data->obj_vector, i, (byte *) &m_obj);
 		if (ret != 0) return -1; //unable to fetch vector entry
 
 		ret = del_maps_obj(&m_obj);

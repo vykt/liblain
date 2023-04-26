@@ -5,7 +5,7 @@
 #include "rdwr_mem.h"
 
 //read memory at address into read_buf
-int read_mem(int fd, void * addr, char * read_buf, int len) {
+int read_mem(int fd, void * addr, byte * read_buf, int len) {
 
 	ssize_t rdwr_ret;
 	off_t off_ret;
@@ -22,7 +22,7 @@ int read_mem(int fd, void * addr, char * read_buf, int len) {
 }
 
 //write memory at address from write_buf
-int write_mem(int fd, void * addr, char * write_buf, int len) {
+int write_mem(int fd, void * addr, byte * write_buf, int len) {
 
 	ssize_t rdwr_ret;
 	off_t off_ret;

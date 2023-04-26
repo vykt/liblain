@@ -7,7 +7,7 @@
 
 
 //Set element's data
-int vector_set(vector * v, unsigned long pos, char * data) {
+int vector_set(vector * v, unsigned long pos, byte * data) {
 
 	//Check for NULL
 	if (v == NULL || data == NULL) {
@@ -27,7 +27,7 @@ int vector_set(vector * v, unsigned long pos, char * data) {
 
 
 //Add element
-int vector_add(vector * v, unsigned long pos, char * data, unsigned short append) {
+int vector_add(vector * v, unsigned long pos, byte * data, unsigned short append) {
 
 	//Check for NULL
 	if (v == NULL || v->data_size == 0) {
@@ -107,7 +107,7 @@ int vector_rmv(vector * v, unsigned long pos) {
 
 
 //Get element
-int vector_get(vector * v, unsigned long pos, char * data) {
+int vector_get(vector * v, unsigned long pos, byte * data) {
 
 	//Check for NULL
 	if (v == NULL) {
@@ -135,7 +135,7 @@ int vector_get(vector * v, unsigned long pos, char * data) {
 
 
 //Get element by reference
-int vector_get_ref(vector * v, unsigned long pos, char ** data) {
+int vector_get_ref(vector * v, unsigned long pos, byte ** data) {
 	
 	//Check for NULL
 	if (v == NULL) {
@@ -159,7 +159,7 @@ int vector_get_ref(vector * v, unsigned long pos, char ** data) {
 
 
 //Get index of element in vector by value
-int vector_get_pos_by_dat(vector * v, char * data, unsigned long * pos) {
+int vector_get_pos_by_dat(vector * v, byte * data, unsigned long * pos) {
 
 	//Check for NULL
 	if (v == NULL || data == NULL) {
@@ -167,7 +167,7 @@ int vector_get_pos_by_dat(vector * v, char * data, unsigned long * pos) {
 	}
 
 	int ret;
-	char * data_cmp;
+	byte * data_cmp;
 
 	//Try get position
 	for (unsigned long i = 0; i < v->length; ++i) {
@@ -192,7 +192,7 @@ int vector_mov(vector * v, unsigned long pos, unsigned long pos_new) {
 
 	int ret;
 
-	char * data = malloc(v->data_size);
+	byte * data = malloc(v->data_size);
 	if (data == NULL) return -1;
 
 	//Get data of both indexes
