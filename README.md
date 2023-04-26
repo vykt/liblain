@@ -1,5 +1,7 @@
 # libpwu
 
+![libpwu logo](logo.png)
+
 ### ABOUT:
 
 libpwu is a process memory manipulation library for linux systems written in C. libpwu 
