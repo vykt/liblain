@@ -40,13 +40,13 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 
 		//store address range in temporary entry
 		ret = get_addr_range(line, &temp_m_entry.start_addr, &temp_m_entry.end_addr);
-		if (ret != 0) return -1; //error reading maps file
+		if (ret == -1) return -1; //error reading maps file
 		
 		//store permissions and name of backing file in temporary entry
 		ret = get_perms_name(line, temp_m_entry.perms, temp_m_entry.pathname);
 		
 		//if there is no pathname for a given entry, set it to tag
-		if (ret != 0) strcpy(temp_m_entry.pathname, "<NO_PATHNAME>");
+		if (ret == -1) strcpy(temp_m_entry.pathname, "<NO_PATHNAME>");
 
 		//look for a matching maps_obj
 		pos = entry_path_match(temp_m_entry, *m_data);
@@ -56,29 +56,29 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 
 			//create new temporary map object
 			ret = new_maps_obj(&temp_m_obj, temp_m_entry.pathname);
-			if (ret != 0) return -1;
+			if (ret == -1) return -1;
 			
 			//add temporary entry to temporary map object
 			ret = vector_add(&temp_m_obj.entry_vector, 0, (byte *) &temp_m_entry,
 			                 APPEND_TRUE);
-			if (ret != 0) return -1;
+			if (ret == -1) return -1;
 			
 			//add temporary map object to vector array
 			ret = vector_add(&m_data->obj_vector, 0, (byte *) &temp_m_obj, 
 			                 APPEND_TRUE);
-			if (ret != 0) return -1;
+			if (ret == -1) return -1;
 
 		} else {
 			//else append to existing object
 			ret = vector_get(&m_data->obj_vector, pos, (byte *) &temp_m_obj);
-			if (ret != 0) return -1;
+			if (ret == -1) return -1;
 			ret = vector_add(&temp_m_obj.entry_vector, 0, (byte *) &temp_m_entry,
 			                 APPEND_TRUE);
-			if (ret != 0) return -1;
+			if (ret == -1) return -1;
 			
 			//reset value in vector in case pointer changed
 			ret = vector_set(&m_data->obj_vector, pos, (byte *) &temp_m_obj);
-			if (ret != 0) return -1;
+			if (ret == -1) return -1;
 		}
 	} //end while there are entries in /proc/<pid>/maps
 
@@ -98,7 +98,7 @@ int entry_path_match(maps_entry temp_m_entry, maps_data m_data) {
 	for (int i = 0; i < m_data.obj_vector.length; ++i) {
 
 		ret = vector_get(&m_data.obj_vector, i, (byte *) &m_obj);
-		if (ret != 0) return -1; //unable to fetch vector entry
+		if (ret == -1) return -1; //unable to fetch vector entry
 
 		ret = strcmp(temp_m_entry.pathname, m_obj.name);
 		if (ret == 0) {
@@ -115,9 +115,7 @@ int new_maps_data(maps_data * m_data) {
 
 	int ret;
 	ret = new_vector(&m_data->obj_vector, sizeof(maps_obj));
-	if (ret != 0) return -1;
-
-	return 0;
+	return ret; //return 0 on success, -1 on fail
 }
 
 
@@ -131,17 +129,15 @@ int del_maps_data(maps_data * m_data) {
 	for (int i = 0; i < m_data->obj_vector.length; ++i) {
 
 		ret = vector_get(&m_data->obj_vector, i, (byte *) &m_obj);
-		if (ret != 0) return -1; //unable to fetch vector entry
+		if (ret == -1) return -1; //unable to fetch vector entry
 
 		ret = del_maps_obj(&m_obj);
-		if (ret != 0) return -1; //attempting to free non-existant vector
+		if (ret == -1) return -1; //attempting to free non-existant vector
 
 	}
 
 	ret = del_vector(&m_data->obj_vector);
-	if (ret != 0) return -1; //unable to delete vector
-
-	return 0; //memory freed, can discard maps_data
+	return ret; //return 0 on success, -1 on fail
 }
 
 
@@ -171,8 +167,7 @@ int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX]) {
 
 	//now, initialise vector member
 	ret = new_vector(&m_obj->entry_vector, sizeof(maps_entry));
-	if (ret == -1) return -1;
-	return 0;
+	return ret; //return 0 on success, -1 on fail
 }
 
 
@@ -182,8 +177,7 @@ int del_maps_obj(maps_obj * m_obj) {
 	//this is mostly a wrapper for old vector functions
 	int ret;
 	ret = del_vector(&m_obj->entry_vector);
-	if (ret == -1) return -1;
-	return 0;
+	return ret; //return 0 on success, -1 on fail
 }
 
 
@@ -217,9 +211,8 @@ int get_addr_range(char line[LINE_LEN], void ** start_addr, void ** end_addr) {
 	*end_addr = (void *) strtol(buf_end, NULL, 16);
 	if (*start_addr == 0 || *end_addr == 0) {
 		return -1; //convertion failed
-	} else {
-		return 0;  //convertion successful
 	}
+	return 0;  //convertion successful
 }
 
 
@@ -264,8 +257,7 @@ int get_perms_name(char line[LINE_LEN], char perms[PERMS_LEN], char name[PATH_MA
 		name_len = strlen(name);
 		name[name_len-1] = '\0';
 		return 0;
-	//if no name exists
-	} else {
-		return -1;
 	}
+	//if no name exists
+	return -1;
 }

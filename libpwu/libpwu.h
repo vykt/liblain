@@ -2,6 +2,8 @@
 #define _LIBPWU_H
 
 #include <stdio.h>
+
+#include <sys/types.h>
 #include <linux/limits.h>
 
 #define APPEND_TRUE 1
@@ -54,7 +56,7 @@ typedef struct {
 	maps_entry * search_region;
 	byte pattern_bytes[PATTERN_LEN];
 	int pattern_len;
-	vector instances;
+	vector instance_vector;
 
 
 } pattern;
@@ -63,7 +65,7 @@ typedef struct {
 typedef struct {
 
 	char name[NAME_MAX];
-	vector pids;
+	vector pid_vector;
 
 } name_pid;
 
@@ -72,10 +74,8 @@ typedef struct {
 // --- READING PROCESS MEMORY MAPS ---
 //read /proc/<pid>/maps into allocated maps_data object
 extern int read_maps(maps_data * m_data, FILE * maps_stream);
-
 //returns: 0 - success, -1 - failed to allocate space
 extern int new_maps_data(maps_data * m_data);
-
 //returns: 0 - success, -1 - failed to deallocate maps_data
 extern int del_maps_data(maps_data * m_data);
 
@@ -84,31 +84,44 @@ extern int del_maps_data(maps_data * m_data);
 //returns: 0 - success, -1 - failed to allocate object
 //search_region can be NULL and be set later
 extern int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, int bytes_ptn_len);
-
 //returns: 0 - success, -1 - failed to deallocate object
 extern int del_pattern(pattern * ptn);
-
 //returns: n - number of patterns, -1 - failed to search for patterns
 extern int match_pattern(pattern * ptn, int fd);
 
 
+// --- FINDING PIDs BY NAME ---
+//returns: 0 - success, -1 - failed to allocate object
+extern int new_name_pid(name_pid * n_pid, char * name);
+//returns: 0 - success, -1 - failed to deallocate object
+extern int del_name_pid(name_pid * n_pid);
+//returns: number of PIDs with matching name found, -1 on error
+extern int pid_by_name(name_pid * n_pid);
+
+
 // --- MISCELLANEOUS UTILITIES ---
 //convert bytes to hex string
+// inp's length = inp_len
+// out's length = inp_len * 2
+// 0x omitted from beginning of out's string
 extern void bytes_to_hex(byte * inp, int inp_len, char * out);
+//returns: 0 - success, -1 - fail
+extern int sig_stop(pid_t pid);
+//returns: 0 - success, -1 - fail
+extern int sig_cont(pid_t pid);
 
 
 // --- VECTOR OPERATIONS ---
-//get vector entry data
+//returns: 0 - success, -1 - fail
 extern int vector_get(vector * v, unsigned long pos, byte * data);
-//get vector entry reference
+//returns: 0 - success, -1 - fail
 extern int vector_get_ref(vector * v, unsigned long pos, byte ** data);
 
 
 // --- MEMORY OPERATIONS ---
-//read memory into buffer
+//returns: 0 - success, -1 - fail
 extern int read_mem(int fd, void * addr, byte * read_buf, int len);
-
-//write memory at address from write_buf
+//returns: 0 - success, -1 - fail
 extern int write_mem(int fd, void * addr, byte * write_buf, int len);
 
 

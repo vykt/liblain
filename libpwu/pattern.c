@@ -20,9 +20,8 @@ int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, int
 	
 	if (search_region != NULL) ptn->search_region = search_region;
 
-	ret = new_vector(&ptn->instances, sizeof(void *));
-	if (ret != 0) return -1;
-	return 0;
+	ret = new_vector(&ptn->instance_vector, sizeof(void *));
+	return ret; //0 on success, -1 on fail
 }
 
 
@@ -30,10 +29,8 @@ int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, int
 int del_pattern(pattern * ptn) {
 
 	int ret;
-	ret = del_vector(&ptn->instances);
-	if (ret != 0) return -1;
-	return 0;
-
+	ret = del_vector(&ptn->instance_vector);
+	return ret; //0 on success, -1 on fail
 }
 
 
@@ -97,9 +94,9 @@ int match_pattern(pattern * ptn, int fd) {
 
 					//add address where pattern began to instances
 					match_addr = curr_map_addr + byte_index - (ptn->pattern_len - 1);
-					ret = vector_add(&ptn->instances, 0, (byte *) &match_addr, 
+					ret = vector_add(&ptn->instance_vector, 0, (byte *) &match_addr, 
 							         APPEND_TRUE);
-					if (ret != 0) return -1;
+					if (ret == -1) return -1;
 					//reset pattern count
 					ptn_count = 0;
 				}
@@ -114,5 +111,5 @@ int match_pattern(pattern * ptn, int fd) {
 	}//end read process region
 
 	//return number of patterns matched
-	return ptn->instances.length;
+	return ptn->instance_vector.length;
 }

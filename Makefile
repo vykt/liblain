@@ -5,13 +5,13 @@ CFLAGS_TARGET=-O0 -ggdb -Wall
 
 VPATH=debug libpwu tgt
 
-CLEAN_TARGETS=libpwu/libpwu.so libpwu/process_maps.o libpwu/util.o libpwu/rdwr_mem.o libpwu/pattern.o libpwu/vector.o DEBUG debug/DEBUG.o
+CLEAN_TARGETS=libpwu/libpwu.so libpwu/process_maps.o libpwu/util.o libpwu/rdwr_mem.o libpwu/name_pid.o libpwu/pattern.o libpwu/vector.o DEBUG debug/DEBUG.o
 CLEAN_TARGETS_TGT=target tgt/target.o
 
 all: libpwu.so DEBUG
 
-libpwu.so: libpwu/libpwu.h libpwu/process_maps.o libpwu/process_maps.h libpwu/util.o libpwu/util.h libpwu/rdwr_mem.o libpwu/rdwr_mem.h libpwu/pattern.o libpwu/pattern.h libpwu/vector.o libpwu/vector.h
-	${CC} ${CFLAGS} -shared -o libpwu/libpwu.so libpwu/libpwu.h libpwu/util.{o,h} libpwu/rdwr_mem.{c,h} libpwu/process_maps.{o,h} libpwu/pattern.{o,h} libpwu/vector.{o,h}
+libpwu.so: libpwu/libpwu.h libpwu/process_maps.o libpwu/process_maps.h libpwu/util.o libpwu/util.h libpwu/rdwr_mem.o libpwu/rdwr_mem.h libpwu/name_pid.o libpwu/name_pid.h libpwu/pattern.o libpwu/pattern.h libpwu/vector.o libpwu/vector.h
+	${CC} ${CFLAGS} -shared -o libpwu/libpwu.so libpwu/libpwu.h libpwu/util.{o,h} libpwu/rdwr_mem.{c,h} libpwu/process_maps.{o,h} libpwu/name_pid.{o,h} libpwu/pattern.{o,h} libpwu/vector.{o,h}
 
 process_maps.o: libpwu/process_maps.c libpwu/process_maps.h libpwu/vector.h libpwu/libpwu.h
 	${CC} ${CFLAGS} -c libpwu/process_maps.{c,h} libpwu/libpwu.h libpwu/vector.h
@@ -21,6 +21,9 @@ util.o: libpwu/utils.c libpwu/utils.h libpwu/libpwu.h
 
 rdwr_mem.o: libpwu/rdwr_mem.c libpwu/rdwr_mem.h libpwu/libpwu.h
 	${CC} ${CFLAGS} -c libpwu/rdwr_mem.{c,h} libpwu/libpwu.h
+
+name_pid.o: libpwu/name_pid.c libpwu/name_pid.h libpwu/vector.h libpwu/libpwu.h
+	${CC} ${CFLAGS} -c libpwu/name_pid.{c,h} libpwu/vector.h libpwu/libpwu.h
 
 pattern.o: libpwu/pattern.c libpwu/pattern.h libpwu/vector.h libpwu/libpwu.h
 	${CC} ${CFLAGS} -c libpwu/pattern.{c,h} libpwu/vector.h libpwu/libpwu.h

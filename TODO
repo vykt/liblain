@@ -1,9 +1,5 @@
 TO IMPLEMENT:
 
->wrapper for sending SIGSTOP & SIGCONT
-	-NOT NEEDED, JUST INCLUDE <signal.h>
-
->resolving PID by name
 >changing region permissions
 >resizing segments?
 >loading shared objects?
