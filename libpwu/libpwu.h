@@ -3,7 +3,9 @@
 
 #include <stdio.h>
 
+#include <sys/user.h>
 #include <sys/types.h>
+
 #include <linux/limits.h>
 
 #define APPEND_TRUE 1
@@ -69,6 +71,18 @@ typedef struct {
 
 } name_pid;
 
+//information about puppet process
+typedef struct {
+
+	pid_t pid;
+
+	struct user_regs_struct saved_state;
+	struct user_fpregs_struct saved_float_state;
+
+	struct user_regs_struct new_state;
+	struct user_fpregs_struct new_float_state;
+
+} puppet_info;
 
 
 // --- READING PROCESS MEMORY MAPS ---
@@ -88,6 +102,17 @@ extern int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_p
 extern int del_pattern(pattern * ptn);
 //returns: n - number of patterns, -1 - failed to search for patterns
 extern int match_pattern(pattern * ptn, int fd);
+
+
+// --- ATTACHING TO PROCESS ---
+//returns: 0 - success, -1 - failed to attach
+extern int puppet_attach(puppet_info p_info);
+//returns: 0 - success, -1 - failed to detach
+extern int puppet_detach(puppet_info p_info);
+//returns: 0 - success, -1 - failed to save registers
+extern int puppet_save_regs(puppet_info * p_info);
+//returns: 0 - success, -1 - failed to write registers
+extern int puppet_write_regs(puppet_info * p_info);
 
 
 // --- FINDING PIDs BY NAME ---

@@ -37,6 +37,8 @@ int main() {
 	ret = del_maps_data(&m_data);
 	fclose(fd);*/
 
+
+	//get target's PID
 	char * name = "target";
 	name_pid n_pid;
 
@@ -49,15 +51,17 @@ int main() {
 	ret = vector_get(&n_pid.pid_vector, 0, (byte *) &process_pid);
 	printf("pid of process: %d\n", process_pid);
 
-	ret = sig_stop(process_pid);
-	printf("sent stop: %d\n", ret);
-	sleep(8);
-	ret = sig_cont(process_pid);
-	printf("sent cont: %d\n", ret);
-
 	ret = del_name_pid(&n_pid);
 	printf("del name: %d\n", ret);
 
+
+	//use PID to attach as debugger
+	/*ret = puppet_attach(process_pid);
+	printf("puppet_attach: %d\n", ret);
+
+	ret = puppet_detach(process_pid);
+	printf("puppet_detach: %d\n", ret);
+	*/
 	return 0;
 
 }

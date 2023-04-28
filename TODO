@@ -2,10 +2,21 @@ TO IMPLEMENT:
 
 >changing region permissions
 >resizing segments?
+
 >loading shared objects?
 >searching for symbols?
 >hooking functions?
 
 
+INFO:
+syscall: 0x0f05
+	-search for this value in read & exec segments
+
+
 LOOK AT:
 https://github.com/rdbo/libmem
+
+
+TODO:
+-ADD VECTOR OF MAPS REGIONS AS THEY APPEAR, NOT ORGANISED BY BACKING OBJECT
+-remember target compiles to static executable rn

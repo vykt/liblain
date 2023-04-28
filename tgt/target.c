@@ -1,13 +1,22 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
+#include <fcntl.h>
+
+#include <sys/syscall.h>
+#include <sys/mman.h>
 
 
 int main() {
 
-	char * test = "hello!";
+	//define some goods
+	long sys_ret;
+
 	while (1) {
-		puts(test);
-		sleep(1);
+		sys_ret = syscall(1, 1, "hello!", 6);
+		sleep(2);
 	}
 
+	return 0;
 }
