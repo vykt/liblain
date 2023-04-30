@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-O0 -ggdb -Wall -fpic
 CFLAGS_DEBUG=-O0 -ggdb -Wall -L/home/vykt/programming/libpwu/libpwu -lpwu
-CFLAGS_TARGET=-O0 -ggdb -Wall -static
+CFLAGS_TARGET=-O0 -ggdb -Wall
 
 VPATH=debug libpwu tgt
 

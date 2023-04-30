@@ -1,6 +1,5 @@
 TO IMPLEMENT:
 
->changing region permissions
 >resizing segments?
 
 >loading shared objects?
@@ -17,14 +16,10 @@ https://github.com/rdbo/libmem
 
 
 TODO:
--when calling get pid by name, pass an arg to save first result to.
- this should make it not needed to call vector_get()
 
 -change 'fd' in libpwu.h to fd_mem
 
 -implement some way to easily search for memory regions that meet specified conditions 
-
--remember target compiles to static executable rn
 
 
 FUTURE CONSIDERATIONS:
