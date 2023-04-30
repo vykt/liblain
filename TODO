@@ -10,7 +10,6 @@ TO IMPLEMENT:
 
 INFO:
 syscall: 0x0f05
-	-search for this value in read & exec segments
 
 
 LOOK AT:
@@ -18,7 +17,13 @@ https://github.com/rdbo/libmem
 
 
 TODO:
--ADD VECTOR OF MAPS REGIONS AS THEY APPEAR, NOT ORGANISED BY BACKING OBJECT
+-when calling get pid by name, pass an arg to save first result to.
+ this should make it not needed to call vector_get()
+
+-change 'fd' in libpwu.h to fd_mem
+
+-implement some way to easily search for memory regions that meet specified conditions 
+
 -remember target compiles to static executable rn
 
 

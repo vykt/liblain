@@ -75,7 +75,6 @@ int build_obj_vector(maps_data * m_data) {
 int read_maps(maps_data * m_data, FILE * maps_stream) {
 
 	int ret;
-	int pos;
 	char line[LINE_LEN];
 	maps_entry temp_m_entry;
 

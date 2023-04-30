@@ -129,7 +129,7 @@ extern int new_name_pid(name_pid * n_pid, char * name);
 //returns: 0 - success, -1 - failed to deallocate object
 extern int del_name_pid(name_pid * n_pid);
 //returns: number of PIDs with matching name found, -1 on error
-extern int pid_by_name(name_pid * n_pid);
+extern int pid_by_name(name_pid * n_pid, pid_t * first_pid);
 
 
 // --- MISCELLANEOUS UTILITIES ---
@@ -138,6 +138,8 @@ extern int pid_by_name(name_pid * n_pid);
 // out's length = inp_len * 2
 // 0x omitted from beginning of out's string
 extern void bytes_to_hex(byte * inp, int inp_len, char * out);
+//returns: 0 - success, -1 - couldn't open memory file(s)
+extern int open_memory(pid_t pid, FILE ** fd_maps, int * fd_mem);
 //returns: 0 - success, -1 - fail
 extern int sig_stop(pid_t pid);
 //returns: 0 - success, -1 - fail

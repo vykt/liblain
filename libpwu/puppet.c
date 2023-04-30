@@ -133,9 +133,9 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd,
 
 		//setup registers for the call to mprotect
 		p_info->new_state.rax = __NR_mprotect; //mprotect syscall number
-		p_info->new_state.rdi = target_region->start_addr;
+		p_info->new_state.rdi = (long long int) target_region->start_addr;
 		p_info->new_state.rsi = perms;
-		p_info->new_state.rip = syscall_addr;
+		p_info->new_state.rip = (long long int) syscall_addr;
 
 		ret = puppet_write_regs(p_info);
 		if (ret == -1) return -1;
@@ -145,6 +145,9 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd,
 		if (ptrace_ret == -1) return -1;
 		ptrace_ret = ptrace(PTRACE_SYSCALL, p_info->pid, NULL, NULL);
 		if (ptrace_ret == -1) return -1;
+
+		//update own memory map to new value
+		target_region->perms = perms;
 
 		//now restore registers
 		memcpy(&p_info->new_state, &p_info->saved_state, 

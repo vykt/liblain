@@ -41,11 +41,12 @@ int del_name_pid(name_pid * n_pid) {
 
 
 //fill a vector with every name match of pid
-int pid_by_name(name_pid * n_pid) {
+int pid_by_name(name_pid * n_pid, pid_t * first_pid) {
 
 	int ret;
 	size_t rd_wr;
 	pid_t temp_pid;
+	int first_recorded = 0;
 
 	DIR * proc_dir;
 	struct dirent * entry;
@@ -103,6 +104,12 @@ int pid_by_name(name_pid * n_pid) {
 				if (ret == -1) {
 					closedir(proc_dir);
 					return -1;
+				}
+
+				//write first found PID to shortcut
+				if (first_pid != NULL && first_recorded == 0) {
+					*first_pid = temp_pid;
+					first_recorded = 1;
 				}
 
 			}//end if found process with matching name
