@@ -111,7 +111,7 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd,
 		if (ret == -1) return -1;
 
 		//continue if this region is not executable
-		if (m_entry_ref->perms % 2 == 0) continue;
+		if (m_entry_ref->perms < PROT_EXEC ) continue;
 		
 		//search the region
 		ptn.search_region = m_entry_ref;
@@ -134,7 +134,8 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd,
 		//setup registers for the call to mprotect
 		p_info->new_state.rax = __NR_mprotect; //mprotect syscall number
 		p_info->new_state.rdi = (long long int) target_region->start_addr;
-		p_info->new_state.rsi = perms;
+		p_info->new_state.rsi = target_region->end_addr - target_region->start_addr;
+		p_info->new_state.rdx = perms;
 		p_info->new_state.rip = (long long int) syscall_addr;
 
 		ret = puppet_write_regs(p_info);
@@ -143,8 +144,11 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd,
 		//catch entry and exit of syscall
 		ptrace_ret = ptrace(PTRACE_SYSCALL, p_info->pid, NULL, NULL);
 		if (ptrace_ret == -1) return -1;
+		waitpid(p_info->pid, 0, 0);
+
 		ptrace_ret = ptrace(PTRACE_SYSCALL, p_info->pid, NULL, NULL);
 		if (ptrace_ret == -1) return -1;
+		waitpid(p_info->pid, 0, 0);
 
 		//update own memory map to new value
 		target_region->perms = perms;

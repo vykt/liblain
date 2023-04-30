@@ -14,6 +14,7 @@
 int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, int bytes_ptn_len) {
 
 	int ret;
+	memset(ptn->pattern_bytes, 0, PATTERN_LEN);
 
 	memcpy(ptn->pattern_bytes, bytes_ptn, bytes_ptn_len);
 	ptn->pattern_len = bytes_ptn_len;
