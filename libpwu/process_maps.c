@@ -17,6 +17,60 @@
  *	4) call del_maps_data()
  */
 
+
+//populate objects
+int build_obj_vector(maps_data * m_data) {
+
+	int ret;
+	int pos;
+	maps_entry * temp_m_entry;
+	maps_obj temp_m_obj;
+	maps_obj * temp_m_obj_ref;
+
+	//for every maps entry
+	for (int i = 0; i < m_data->entry_vector.length; ++i) {
+
+		ret = vector_get_ref(&m_data->entry_vector, i, (byte **) &temp_m_entry);
+		if (ret == -1) return -1;
+
+		//get the object entry where the backing object for this entry occurs
+		pos = entry_path_match(*temp_m_entry, *m_data);
+		
+		//if it doesn't occur yet
+		if (pos == -1) {
+
+			//create new maps object
+			ret = new_maps_obj(&temp_m_obj, temp_m_entry->pathname);
+			if (ret == -1) return -1;
+
+			//add entry to this map object
+			ret = vector_add(&temp_m_obj.entry_vector, 0, (byte *) &temp_m_entry,
+					         APPEND_TRUE);
+			if (ret == -1) return -1;
+
+			//add map object to map data passed by caller
+			ret = vector_add(&m_data->obj_vector, 0, (byte *) &temp_m_obj,
+					         APPEND_TRUE);
+			if (ret == -1) return -1;
+
+		//if the name matches an object entry already present
+		} else {
+	
+			//fetch existing map object
+			ret = vector_get_ref(&m_data->obj_vector, pos, (byte **) &temp_m_obj_ref);
+			if (ret == -1) return -1;
+
+			ret = vector_add(&temp_m_obj_ref->entry_vector, 0, (byte *) &temp_m_entry, 
+					         APPEND_TRUE);
+			if (ret == -1) return -1;
+		}
+
+	}// for every maps entry
+
+	return 0;
+}
+
+
 //read /proc/<pid>/maps file
 int read_maps(maps_data * m_data, FILE * maps_stream) {
 
@@ -24,16 +78,6 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 	int pos;
 	char line[LINE_LEN];
 	maps_entry temp_m_entry;
-	maps_obj temp_m_obj;
-
-	/*	1) create temporary node, read next entry into it
-	 *
-	 *	2) search through nodes for matching name. return index if found, -1 if not
-	 *
-	 *		+if node does exist, add temporary node to its entry_vector
-	 *
-	 *		-if node does not exist, use next free slot to create new node with this name
-	 */
 
 	//while there are entries in /proc/<pid>/maps left to process
 	while(!get_maps_line(line, maps_stream)) {
@@ -43,44 +87,20 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 		if (ret == -1) return -1; //error reading maps file
 		
 		//store permissions and name of backing file in temporary entry
-		ret = get_perms_name(line, temp_m_entry.perms, temp_m_entry.pathname);
+		ret = get_perms_name(line, &temp_m_entry.perms, temp_m_entry.pathname);
 		
 		//if there is no pathname for a given entry, set it to tag
 		if (ret == -1) strcpy(temp_m_entry.pathname, "<NO_PATHNAME>");
 
-		//look for a matching maps_obj
-		pos = entry_path_match(temp_m_entry, *m_data);
-		
-		//if there isn't a matching backing file that exists
-		if (pos == -1) {
+		//add temporary entry to entry vector
+		ret = vector_add(&m_data->entry_vector, 0, (byte *) &temp_m_entry,
+						 APPEND_TRUE);
+		if (ret == -1) return -1;
 
-			//create new temporary map object
-			ret = new_maps_obj(&temp_m_obj, temp_m_entry.pathname);
-			if (ret == -1) return -1;
-			
-			//add temporary entry to temporary map object
-			ret = vector_add(&temp_m_obj.entry_vector, 0, (byte *) &temp_m_entry,
-			                 APPEND_TRUE);
-			if (ret == -1) return -1;
-			
-			//add temporary map object to vector array
-			ret = vector_add(&m_data->obj_vector, 0, (byte *) &temp_m_obj, 
-			                 APPEND_TRUE);
-			if (ret == -1) return -1;
+	}
 
-		} else {
-			//else append to existing object
-			ret = vector_get(&m_data->obj_vector, pos, (byte *) &temp_m_obj);
-			if (ret == -1) return -1;
-			ret = vector_add(&temp_m_obj.entry_vector, 0, (byte *) &temp_m_entry,
-			                 APPEND_TRUE);
-			if (ret == -1) return -1;
-			
-			//reset value in vector in case pointer changed
-			ret = vector_set(&m_data->obj_vector, pos, (byte *) &temp_m_obj);
-			if (ret == -1) return -1;
-		}
-	} //end while there are entries in /proc/<pid>/maps
+	//now populate
+	ret = build_obj_vector(m_data);
 
 	//if out of loop, all entries are read successfully
 	return 0;
@@ -115,6 +135,8 @@ int new_maps_data(maps_data * m_data) {
 
 	int ret;
 	ret = new_vector(&m_data->obj_vector, sizeof(maps_obj));
+	if (ret == -1) return -1;
+	ret = new_vector(&m_data->entry_vector, sizeof(maps_entry));
 	return ret; //return 0 on success, -1 on fail
 }
 
@@ -125,7 +147,7 @@ int del_maps_data(maps_data * m_data) {
 	int ret;
 	maps_obj m_obj;
 
-	//for every maps_data object
+	//for every maps_data object, delete it and its entry members
 	for (int i = 0; i < m_data->obj_vector.length; ++i) {
 
 		ret = vector_get(&m_data->obj_vector, i, (byte *) &m_obj);
@@ -137,6 +159,8 @@ int del_maps_data(maps_data * m_data) {
 	}
 
 	ret = del_vector(&m_data->obj_vector);
+	if (ret == -1) return -1;
+	ret = del_vector(&m_data->entry_vector);
 	return ret; //return 0 on success, -1 on fail
 }
 
@@ -166,7 +190,7 @@ int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX]) {
 	strcpy(m_obj->name, name);
 
 	//now, initialise vector member
-	ret = new_vector(&m_obj->entry_vector, sizeof(maps_entry));
+	ret = new_vector(&m_obj->entry_vector, sizeof(maps_entry *));
 	return ret; //return 0 on success, -1 on fail
 }
 
@@ -217,28 +241,36 @@ int get_addr_range(char line[LINE_LEN], void ** start_addr, void ** end_addr) {
 
 
 //get name for line in /proc/<pid>/maps
-int get_perms_name(char line[LINE_LEN], char perms[PERMS_LEN], char name[PATH_MAX]) {
+int get_perms_name(char line[LINE_LEN], byte * perms, char name[PATH_MAX]) {
 
 	//zero out name first
 	memset(name, '\0', PATH_MAX);
-	memset(perms, '\0', PERMS_LEN);
+	*perms = 0;
 
 	//get to end of line
 	int i = 0;
 	int j = 0;
 	size_t name_len;
 	int column_count = 0;
+
 	while (line[i] != '\0' && i < LINE_LEN-1) {
 		
 		//if at permissions
+		/*
+		 *	Permissions are 1 - read, 2 - write, 4 - exec
+		 *	Yes, that's the reverse of the filesystem perms. 
+		 *	This is the format mprotect() uses.
+		 */
 		if(column_count == 1) {
-			strncpy(perms, &line[i], PERMS_LEN-1);
+			if (line[i] == 'r') *perms = *perms + 1;
+			if (line[i+1] == 'w') *perms = *perms + 2;
+			if (line[i+2] == 'x') *perms = *perms + 4;
 			i+=4;
 		}
 
 		//if reached the void between offset and name
 		if (column_count == 5) {
-			if (line[i] == '\0') break;
+			if (line[i] == '\n') break;
 			if (line[i] == ' ') {
 				++i;
 				continue;
@@ -253,9 +285,8 @@ int get_perms_name(char line[LINE_LEN], char perms[PERMS_LEN], char name[PATH_MA
 	
 	//if name exists
 	if (j) {
-
 		name_len = strlen(name);
-		name[name_len-1] = '\0';
+		name[name_len] = '\0';
 		return 0;
 	}
 	//if no name exists

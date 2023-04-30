@@ -11,7 +11,6 @@
 #define APPEND_TRUE 1
 #define APPEND_FALSE 0
 
-#define PERMS_LEN 4
 #define PATTERN_LEN 1024
 
 
@@ -31,7 +30,7 @@ typedef struct {
 typedef struct {
 
         char pathname[PATH_MAX];
-        char perms[PERMS_LEN];
+        byte perms; //4 (read) + 2 (write) + 1 (exec)
         void * start_addr;
         void * end_addr;
 
@@ -41,16 +40,22 @@ typedef struct {
 typedef struct {
 
         char name[PATH_MAX];
-        vector entry_vector; //maps_entry
+        vector entry_vector; //maps_entry (pointer)
 
 } maps_obj;
 
 //entire memory map
 typedef struct {
 
+	/*	object vector holds entries sorted by type or backing disk object
+	 *
+	 *	entry_vector holds entries sorted by 
+	 */
         vector obj_vector; //maps_obj
+		vector entry_vector; //maps_entry
 
 } maps_data;
+
 
 //pattern to search for
 typedef struct {
@@ -85,6 +90,7 @@ typedef struct {
 } puppet_info;
 
 
+
 // --- READING PROCESS MEMORY MAPS ---
 //read /proc/<pid>/maps into allocated maps_data object
 extern int read_maps(maps_data * m_data, FILE * maps_stream);
@@ -113,7 +119,9 @@ extern int puppet_detach(puppet_info p_info);
 extern int puppet_save_regs(puppet_info * p_info);
 //returns: 0 - success, -1 - failed to write registers
 extern int puppet_write_regs(puppet_info * p_info);
-
+//returns: 0 - success, -1 - failed to perform operation, -2 - no syscall found
+extern int change_region_perms(puppet_info * p_info, byte perms, int fd,
+		                       maps_data * m_data, maps_entry * target_region);
 
 // --- FINDING PIDs BY NAME ---
 //returns: 0 - success, -1 - failed to allocate object

@@ -17,12 +17,13 @@ int new_maps_data(maps_data * m_data);
 int del_maps_data(maps_data * m_data);
 
 //internal
+int build_obj_vector(maps_data * m_data);
 int entry_path_match(maps_entry temp_m_entry, maps_data m_data);
 int get_maps_line(char line[LINE_LEN], FILE * maps_stream);
 int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX]);
 int del_maps_obj(maps_obj * m_obj);
 int get_addr_range(char line[LINE_LEN], void ** start_addr, void ** end_addr);
-int get_perms_name(char line[LINE_LEN], char perms[PERMS_LEN], char name[PATH_MAX]);
+int get_perms_name(char line[LINE_LEN], byte * perms, char name[PATH_MAX]);
 
 
 #endif
