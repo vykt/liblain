@@ -1,12 +1,15 @@
 CC=gcc
+ASM=nasm
 CFLAGS=-O0 -ggdb -Wall -fpic
 CFLAGS_DEBUG=-O0 -ggdb -Wall -L/home/vykt/programming/libpwu/libpwu -lpwu
 CFLAGS_TARGET=-O0 -ggdb -Wall
+ASMFLAGS_INJECT=-O0
 
 VPATH=debug libpwu tgt
 
 CLEAN_TARGETS=libpwu/libpwu.so libpwu/process_maps.o libpwu/util.o libpwu/rdwr_mem.o libpwu/caving.o libpwu/puppet.o libpwu/name_pid.o libpwu/pattern.o libpwu/vector.o DEBUG debug/DEBUG.o
 CLEAN_TARGETS_TGT=target tgt/target.o
+CLEAN_TARGETS_INJ=payload.o inj/inject.o
 
 all: libpwu.so DEBUG
 
@@ -49,8 +52,14 @@ target: tgt/target.o
 target.o: tgt/target.c
 	${CC} ${CFLAGS_TARGET} -c tgt/target.c
 
+inject: inj/inject.asm
+	${ASM} ${ASMFLAGS_INJECT} inj/inject.asm -o payload.o
+
 clean:
 	rm ${CLEAN_TARGETS}
 
 clean_target:
 	rm ${CLEAN_TARGETS_TGT}
+
+clean_inject:
+	rm ${CLEAN_TARGETS_INJ}

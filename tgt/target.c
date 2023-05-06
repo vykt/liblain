@@ -1,20 +1,25 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
-#include <fcntl.h>
 
-#include <sys/syscall.h>
-#include <sys/mman.h>
+
+int add_nums(int x, int y) {
+
+	int c;
+	c = x + y;
+	return c;
+}
 
 
 int main() {
 
-	//define some goods
-	long sys_ret;
+	int svetas_x = 4;
+	int svetas_y = 16;
+	int total;
 
 	while (1) {
-		sys_ret = syscall(1, 1, "hello!", 6);
+
+		total = add_nums(svetas_x, svetas_y);
+		printf("%d\n", total);
 		sleep(2);
 	}
 
