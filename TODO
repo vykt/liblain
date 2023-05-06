@@ -1,7 +1,6 @@
 TO IMPLEMENT:
 
 >resizing segments?
-
 >loading shared objects?
 >searching for symbols?
 >hooking functions?
@@ -15,11 +14,20 @@ LOOK AT:
 https://github.com/rdbo/libmem
 
 
+TOTEST:
+-cave.c
+-pattern.c/match_pattern (refactored)
+
+
 TODO:
 
+-unused memory in executable segments is set to 0 by default
 -change 'fd' in libpwu.h to fd_mem
-
 -implement some way to easily search for memory regions that meet specified conditions 
 
+
+REFACTOR:
+-Deletion (freeing) of maps_data. done via maps_obj, which aren't involved in its 
+ creation. Very silly.
 
 FUTURE CONSIDERATIONS:

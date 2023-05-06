@@ -13,7 +13,7 @@ int puppet_attach(puppet_info p_info);
 int puppet_detach(puppet_info p_info);
 int puppet_save_regs(puppet_info * p_info);
 int puppet_write_regs(puppet_info * p_info);
-int change_region_perms(puppet_info * p_info, byte perms, int fd,
+int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 		                maps_data * m_data, maps_entry * target_region);
 
 #endif

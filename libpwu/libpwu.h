@@ -26,13 +26,25 @@ typedef struct {
 
 } vector;
 
+//cave - unused region of memory, typically zero'ed out
+typedef struct {
+
+	void * addr;
+	int size;
+
+} cave;
+
 //single region in /proc/<pid>/maps
 typedef struct {
 
+		//read_maps()
         char pathname[PATH_MAX];
         byte perms; //4 (read) + 2 (write) + 1 (exec)
         void * start_addr;
         void * end_addr;
+		
+		//filled by get_caves() call on this specific region
+		vector cave_vector; //cave
 
 } maps_entry;
 
@@ -40,7 +52,7 @@ typedef struct {
 typedef struct {
 
         char name[PATH_MAX];
-        vector entry_vector; //maps_entry (pointer)
+        vector entry_vector; //*maps_entry
 
 } maps_obj;
 
@@ -100,6 +112,11 @@ extern int new_maps_data(maps_data * m_data);
 extern int del_maps_data(maps_data * m_data);
 
 
+// --- CAVING ---
+//returns: number of caves found on success, -1 - failed to search memory
+extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size);
+
+
 // --- SEARCHING FOR PATTERNS IN MEMORY ---
 //returns: 0 - success, -1 - failed to allocate object
 //search_region can be NULL and be set later
@@ -107,7 +124,7 @@ extern int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_p
 //returns: 0 - success, -1 - failed to deallocate object
 extern int del_pattern(pattern * ptn);
 //returns: n - number of patterns, -1 - failed to search for patterns
-extern int match_pattern(pattern * ptn, int fd);
+extern int match_pattern(pattern * ptn, int fd_mem);
 
 
 // --- ATTACHING TO PROCESS ---
@@ -120,7 +137,7 @@ extern int puppet_save_regs(puppet_info * p_info);
 //returns: 0 - success, -1 - failed to write registers
 extern int puppet_write_regs(puppet_info * p_info);
 //returns: 0 - success, -1 - failed to perform operation, -2 - no syscall found
-extern int change_region_perms(puppet_info * p_info, byte perms, int fd,
+extern int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 		                       maps_data * m_data, maps_entry * target_region);
 
 // --- FINDING PIDs BY NAME ---

@@ -88,7 +88,7 @@ int puppet_write_regs(puppet_info * p_info) {
 //change permissions of a region
 //perms = standard unix permission bits - 7 = rwx, 4 = r--, 3 = -wx
 //target_region HAS TO BE A REFERENCE to a region inside target_maps
-int change_region_perms(puppet_info * p_info, byte perms, int fd, 
+int change_region_perms(puppet_info * p_info, byte perms, int fd_mem, 
 		                maps_data * m_data, maps_entry * target_region) {
 
 	int ret;
@@ -115,7 +115,7 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd,
 		
 		//search the region
 		ptn.search_region = m_entry_ref;
-		ret = match_pattern(&ptn, fd);
+		ret = match_pattern(&ptn, fd_mem);
 		if (ret == -1) return -1;
 		if (ret == 0) continue;
 

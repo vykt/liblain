@@ -81,6 +81,10 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 	//while there are entries in /proc/<pid>/maps left to process
 	while(!get_maps_line(line, maps_stream)) {
 
+		//initiate cave vector, zero out initial values
+		ret = new_maps_entry(&temp_m_entry);
+		if (ret == -1) return -1;
+
 		//store address range in temporary entry
 		ret = get_addr_range(line, &temp_m_entry.start_addr, &temp_m_entry.end_addr);
 		if (ret == -1) return -1; //error reading maps file
@@ -197,10 +201,46 @@ int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX]) {
 //delete maps_obj
 int del_maps_obj(maps_obj * m_obj) {
 
-	//this is mostly a wrapper for old vector functions
 	int ret;
+	maps_entry * m_entry;
+
+	//for every entry vector member
+	for (int i = 0; i < m_obj->entry_vector.length; ++i) {
+		//get the entry
+		ret = vector_get(&m_obj->entry_vector, i, (byte *) &m_entry);
+		if (ret == -1) return -1;
+		//free its cave vector
+		ret = del_maps_entry(m_entry);
+		if (ret == -1) return -1;
+	}
+
+
 	ret = del_vector(&m_obj->entry_vector);
 	return ret; //return 0 on success, -1 on fail
+}
+
+
+//initialise new maps_entry
+int new_maps_entry(maps_entry * m_entry) {
+
+	int ret;
+
+	memset(m_entry->pathname, 0, PATH_MAX);
+	m_entry->perms = 0;
+	m_entry->start_addr = NULL;
+	m_entry->end_addr = NULL;
+
+	ret = new_vector(&m_entry->cave_vector, sizeof(cave));
+	return ret;
+}
+
+
+//delete maps_entry, free all allocated memory inside
+int del_maps_entry(maps_entry * m_entry) {
+
+	int ret;
+	ret = del_vector(&m_entry->cave_vector);
+	return ret;
 }
 
 

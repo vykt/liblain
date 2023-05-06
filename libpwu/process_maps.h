@@ -22,6 +22,8 @@ int entry_path_match(maps_entry temp_m_entry, maps_data m_data);
 int get_maps_line(char line[LINE_LEN], FILE * maps_stream);
 int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX]);
 int del_maps_obj(maps_obj * m_obj);
+int new_maps_entry(maps_entry * m_entry);
+int del_maps_entry(maps_entry * m_entry);
 int get_addr_range(char line[LINE_LEN], void ** start_addr, void ** end_addr);
 int get_perms_name(char line[LINE_LEN], byte * perms, char name[PATH_MAX]);
 
