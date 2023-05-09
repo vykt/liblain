@@ -14,27 +14,22 @@ tedious parts.
 
 Libpwu primarily deals with individual memory segments. The `read_maps()` call 
 processes `/proc/pid/maps` and returns a structure containing an organised vector of 
-these maps. Said maps can then be passed to analysis, injection or utility functions 
-together with relevant arguments like offsets.
+these segments. Said segments can then be passed to analysis, injection or utility 
+functions together with relevant arguments like offsets.
 
+---
 
-So far libpwu supports the following functionalities:
+So far Libpwu supports the following functionalities:
 
-- Changing memory region protection by attaching to the process and hijacking execution 
- to call `mprotect()`.
-- Injecting objects.
-- Identifying memory caves.
-- Pattern searching.
-- Saving and restoring process registers.
-- Arbitrary reads & writes.
-- Various other small utilities that make life easier.
-
-
-Plus the following planned features that are under development:
-
-- Spinning up threads with `clone()`.
-- Injecting shared objects.
-- Bindings for rust.
-
-
-Leave a star <3
+- [x] Changing memory region protection by attaching to the process and hijacking 
+      execution to call `mprotect()`.
+- [x] Injecting objects.
+- [x] Identifying memory caves.
+- [x] Pattern searching.
+- [x] Saving and restoring process registers.
+- [x] Arbitrary reads & writes.
+- [x] Various other small utilities that make life easier.
+- [ ] Spinning up threads with `clone()`.
+- [ ] Injecting shared objects.
+- [ ] Bindings for rust.
+- [ ] Documentation.
