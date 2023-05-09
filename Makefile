@@ -9,8 +9,8 @@ CFLAGS_TGT=-O0 -ggdb -Wall
 ASMFLAGS_PAYL=-O0
 
 #libpwu sources
-SOURCES_LIB=libpwu/process_maps.c libpwu/util.c libpwu/rdwr_mem.c libpwu/caving.c libpwu/inject.c libpwu/puppet.c libpwu/name_pid.c libpwu/pattern.c libpwu/vector.c
-HEADERS_LIB=libpwu/process_maps.h libpwu/util.h libpwu/rdwr_mem.h libpwu/caving.h libpwu/inject.h libpwu/puppet.h libpwu/name_pid.h libpwu/pattern.h libpwu/vector.h libpwu/libpwu.h
+SOURCES_LIB=libpwu/process_maps.c libpwu/util.c libpwu/rdwr_mem.c libpwu/inject.c libpwu/inject.c libpwu/puppet.c libpwu/name_pid.c libpwu/pattern.c libpwu/vector.c
+HEADERS_LIB=libpwu/process_maps.h libpwu/util.h libpwu/rdwr_mem.h libpwu/inject.h libpwu/inject.h libpwu/puppet.h libpwu/name_pid.h libpwu/pattern.h libpwu/vector.h libpwu/libpwu.h
 OBJECTS_LIB=${SOURCES_LIB:.c=.o}
 
 #debug sources

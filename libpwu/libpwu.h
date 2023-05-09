@@ -79,6 +79,17 @@ typedef struct {
 
 } cave;
 
+//injection metadata
+typedef struct {
+
+	map_entry * target_region;
+	void * offset;
+
+	byte * payload;
+	int payload_size;
+
+} raw_injection;
+
 //name to find matching PIDs for
 typedef struct {
 
@@ -99,9 +110,6 @@ typedef struct {
 	struct user_fpregs_struct new_float_state;
 
 } puppet_info;
-
-
-
 
 
 // --- READING PROCESS MEMORY MAPS ---
