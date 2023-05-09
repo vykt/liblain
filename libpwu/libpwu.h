@@ -26,14 +26,6 @@ typedef struct {
 
 } vector;
 
-//cave - unused region of memory, typically zero'ed out
-typedef struct {
-
-	void * addr;
-	int size;
-
-} cave;
-
 //single region in /proc/<pid>/maps
 typedef struct {
 
@@ -77,8 +69,15 @@ typedef struct {
 	int pattern_len;
 	vector instance_vector;
 
-
 } pattern;
+
+//cave - unused region of memory, typically zero'ed out
+typedef struct {
+
+	void * addr;
+	int size;
+
+} cave;
 
 //name to find matching PIDs for
 typedef struct {
@@ -100,6 +99,8 @@ typedef struct {
 	struct user_fpregs_struct new_float_state;
 
 } puppet_info;
+
+
 
 
 

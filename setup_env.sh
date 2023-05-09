@@ -1,3 +1,3 @@
 #!/bin/bash
 
-export LD_LIBRARY_PATH="$PWD/libpwu"
+export LD_LIBRARY_PATH="$PWD"

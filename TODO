@@ -5,23 +5,8 @@ TO IMPLEMENT:
 >searching for symbols?
 >hooking functions?
 
-
-INFO:
-syscall: 0x0f05
-
-
-LOOK AT:
-https://github.com/rdbo/libmem
-
-
-TOTEST:
--cave.c
--pattern.c/match_pattern (refactored)
-
-
 TODO:
 -implement some way to easily search for memory regions that meet specified conditions 
-
 
 REFACTOR:
 -Deletion (freeing) of maps_data. done via maps_obj, which aren't involved in its 

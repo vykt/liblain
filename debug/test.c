@@ -14,6 +14,9 @@
 
 int main() {
 
+	printf("temp test\n");
+
+	/*
 	int ret;
 	int cave_num;
 	int fd_mem;
@@ -82,5 +85,5 @@ int main() {
 
 	//delete data structures
 	ret = del_name_pid(&n_pid);
-	ret = del_maps_data(&m_data);
+	ret = del_maps_data(&m_data); */
 }

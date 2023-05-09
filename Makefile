@@ -1,65 +1,81 @@
+#compilers & assemblers
 CC=gcc
 ASM=nasm
-CFLAGS=-O0 -ggdb -Wall -fpic
-CFLAGS_DEBUG=-O0 -ggdb -Wall -L/home/vykt/programming/libpwu/libpwu -lpwu
-CFLAGS_TARGET=-O0 -ggdb -Wall
-ASMFLAGS_INJECT=-O0
 
-VPATH=debug libpwu tgt
+#flags for each component
+CFLAGS_LIB=-O0 -ggdb -Wall -fpic
+CFLAGS_TEST=-O0 -ggdb -Wall -L/home/vykt/programming/libpwu -lpwu
+CFLAGS_TGT=-O0 -ggdb -Wall
+ASMFLAGS_PAYL=-O0
 
-CLEAN_TARGETS=libpwu/libpwu.so libpwu/process_maps.o libpwu/util.o libpwu/rdwr_mem.o libpwu/caving.o libpwu/puppet.o libpwu/name_pid.o libpwu/pattern.o libpwu/vector.o DEBUG debug/DEBUG.o
-CLEAN_TARGETS_TGT=target tgt/target.o
-CLEAN_TARGETS_INJ=payload.o inj/inject.o
+#libpwu sources
+SOURCES_LIB=libpwu/process_maps.c libpwu/util.c libpwu/rdwr_mem.c libpwu/caving.c libpwu/inject.c libpwu/puppet.c libpwu/name_pid.c libpwu/pattern.c libpwu/vector.c
+HEADERS_LIB=libpwu/process_maps.h libpwu/util.h libpwu/rdwr_mem.h libpwu/caving.h libpwu/inject.h libpwu/puppet.h libpwu/name_pid.h libpwu/pattern.h libpwu/vector.h libpwu/libpwu.h
+OBJECTS_LIB=${SOURCES_LIB:.c=.o}
 
-all: libpwu.so DEBUG
+#debug sources
+SOURCES_TEST=debug/test.c
+HEADERS_TEST=libpwu/libpwu.h
+OBJECTS_TEST=${SOURCES_TEST:.c=.o}
 
-libpwu.so: libpwu/libpwu.h libpwu/process_maps.o libpwu/process_maps.h libpwu/util.o libpwu/util.h libpwu/rdwr_mem.o libpwu/rdwr_mem.h libpwu/caving.o libpwu/caving.h libpwu/puppet.o libpwu/puppet.h libpwu/name_pid.o libpwu/name_pid.h libpwu/pattern.o libpwu/pattern.h libpwu/vector.o libpwu/vector.h
-	${CC} ${CFLAGS} -shared -o libpwu/libpwu.so libpwu/libpwu.h libpwu/util.{o,h} libpwu/rdwr_mem.{c,h} libpwu/caving.{o,h} libpwu/process_maps.{o,h} libpwu/name_pid.{o,h} libpwu/puppet.{o,h} libpwu/pattern.{o,h} libpwu/vector.{o,h}
+SOURCES_TGT=debug/target.c
+OBJECTS_TGT=${SOURCES_TGT:.c=.o}
 
-process_maps.o: libpwu/process_maps.c libpwu/process_maps.h libpwu/vector.h libpwu/libpwu.h
-	${CC} ${CFLAGS} -c libpwu/process_maps.{c,h} libpwu/libpwu.h libpwu/vector.h
+SOURCES_PAYL=debug/payload.asm
 
-util.o: libpwu/utils.c libpwu/utils.h libpwu/libpwu.h
-	${CC} ${CFLAGS} -c libpwu/utils.{c,h} libpwu/libpwu.h
+#built programs / objects
+LIBPWU=libpwu.so
+TEST=test
+TARGET=target
+PAYLOAD=payload.o
 
-rdwr_mem.o: libpwu/rdwr_mem.c libpwu/rdwr_mem.h libpwu/libpwu.h
-	${CC} ${CFLAGS} -c libpwu/rdwr_mem.{c,h} libpwu/libpwu.h
 
-caving.o: libpwu/caving.c libpwu/caving.h libpwu/vector.h libpwu/libpwu.h
-	${CC} ${CFLAGS} -c libpwu/caving.{c,h} libpwu/vector.h libpwu/libpwu.h
+#build targets
+lib: ${LIBPWU}
+test: ${TEST}
+tgt: ${TARGET}
+payl: ${PAYLOAD}
 
-puppet.o: libpwu/puppet.c libpwu/puppet.h libpwu/libpwu.h
-	${CC} ${CFLAGS} -c libpwu/puppet.{c,h} libpwu/libpwu.h
 
-name_pid.o: libpwu/name_pid.c libpwu/name_pid.h libpwu/vector.h libpwu/libpwu.h
-	${CC} ${CFLAGS} -c libpwu/name_pid.{c,h} libpwu/vector.h libpwu/libpwu.h
+#libpwu subtargets
+${LIBPWU}: ${OBJECTS_LIB}
+	${CC} ${CFLAGS_LIB} -shared -o ${LIBPWU} ${OBJECTS_LIB} ${HEADERS_LIB}
 
-pattern.o: libpwu/pattern.c libpwu/pattern.h libpwu/vector.h libpwu/libpwu.h
-	${CC} ${CFLAGS} -c libpwu/pattern.{c,h} libpwu/vector.h libpwu/libpwu.h
+libpwu/%.o: libpwu/%.c ${HEADERS_LIB}
+	${CC} ${CFLAGS_LIB} -c $< -o $@
 
-vector.o: libpwu/vector.c libpwu/vector.h libpwu/libpwu.h
-	${CC} ${CFLAGS} -c libpwu/vector.{c,h} libpwu/libpwu.h
+#test subtargets
+${TEST}: ${OBJECTS_TEST}
+	${CC} ${CFLAGS_TEST} ${OBJECTS_TEST} ${HEADERS_TEST} -o ${TEST}
 
-DEBUG: debug/DEBUG.o
-	${CC} ${CFLAGS_DEBUG} -o DEBUG debug/DEBUG.o
+debug/deb%.o: debug/deb%.c ${HEADERS_TEST}
+	${CC} ${CFLAGS_TEST} -c $< ${HEADERS_TEST} -o $@
 
-DEBUG.o: debug/DEBUG.c
-	${CC} ${CFLAGS_DEBUG} -c debug/DEBUG.c
+#target subtargets
+${TARGET}: ${OBJECTS_TGT}
+	${CC} ${CFLAGS_TGT} ${OBJECTS_TGT} -o ${TARGET}
 
-target: tgt/target.o
-	${CC} ${CFLAGS_TARGET} -o target tgt/target.o
+debug/tar%.o: debug/tar%.c
+	${CC} ${CFLAGS_TEST} -c $< -o $@
 
-target.o: tgt/target.c
-	${CC} ${CFLAGS_TARGET} -c tgt/target.c
+#payload subtargets
+${PAYLOAD}: debug/payload.asm
+	${ASM} ${ASMFLAGS_PAYL} $< -o $@
 
-inject: inj/inject.asm
-	${ASM} ${ASMFLAGS_INJECT} inj/inject.asm -o payload.o
 
+#clean targets
+#repeat in case of error
 clean:
-	rm ${CLEAN_TARGETS}
+	rm ${OBJECTS_LIB} ${LIBPWU} ${OBJECTS_TEST} ${TEST} ${OBJECTS_TGT} ${TARGET} ${PAYLOAD}
 
-clean_target:
-	rm ${CLEAN_TARGETS_TGT}
+clean_lib:
+	rm ${OBJECTS_LIB} ${LIBPWU}
 
-clean_inject:
-	rm ${CLEAN_TARGETS_INJ}
+clean_test:
+	rm ${OBJECTS_TEST} ${TEST}
+
+clean_tgt:
+	rm ${OBJECTS_TGT} ${TARGET}
+
+clean_payl:
+	rm ${PAYLOAD}
