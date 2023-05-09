@@ -7,7 +7,7 @@
 ### ABOUT:
 
 Libpwu is a process manipulation library that offers an organised & structured 
-view of memory that unifies the most useful components of `ptrace`, `dlfcn` and other 
+view of memory and unifies the most useful components of `ptrace`, `dlfcn` and other 
 Linux utilities under a single interface. The library provides a range of capabilities 
 from declarative calls to precise, low level operations that automate only the most 
 tedious parts.
