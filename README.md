@@ -6,32 +6,35 @@
 
 ### ABOUT:
 
-libpwu is a process memory manipulation library for linux systems written in C. libpwu 
-provides a sorted & structured interface to the memory of a process. So far, libpwu 
-provides the following functionality:
+Libpwu is a process manipulation library that offers an organised & structured 
+view of memory that unifies the most useful components of ptrace, dlfcn and other 
+Linux utilities under a single interface. The library provides a range of capabilities 
+from declarative calls to precise, low level operations that automate only the most 
+tedious parts.
 
-	>Organising /proc/[pid]/maps into a sorted data structure.
-	>Orbitrary reads/writes of process memory.
-	>Searching for byte patterns.
-
-Plus the following features that will be develoed soon:
-
-	>Signalling wrappers for suspending and resuming the target process.
-	>Resolving PID by name.
-	>Changing memory region permissions.
-	>Resizing memory regions.
+Libpwu primarily deals with individual memory segments. The read\_maps() call 
+processes /proc/pid/maps and returns a structure containing an organised vector of 
+these maps. Said maps can then be passed to analysis, injection or utility functions 
+together with relevant arguments like offsets.
 
 
-### INSTALLATION:
+So far libpwu supports the following functionalities:
 
-	Coming!
+-Changing memory region protection by attaching to the process and hijacking execution 
+ to call mprotect().
+-Injecting objects.
+-Identifying memory caves.
+-Pattern searching.
+-Saving and restoring process registers.
+-Arbitrary reads & writes.
+-Various other small utilities that make life easier.
 
 
-### USE:
+Plus the following planned features that are under development:
 
-	Coming!
+-Spinning up threads with clone().
+-Injecting shared objects.
+-Bindings for rust.
 
 
-### DEVELOPMENT:
-
-	Coming!
+Leave a star <3
