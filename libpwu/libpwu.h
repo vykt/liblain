@@ -82,13 +82,24 @@ typedef struct {
 //injection metadata
 typedef struct {
 
-	map_entry * target_region;
-	void * offset;
+	maps_entry * target_region;
+	unsigned int offset;
 
 	byte * payload;
 	int payload_size;
 
 } raw_injection;
+
+//relative 32bit jump hook
+typedef struct {
+
+	maps_entry * from_region;
+	unsigned int from_offset; //address of jump instruction
+
+	maps_entry * to_region;
+	unsigned int to_offset; //address of jump instruction
+
+} rel_jump_hook;
 
 //name to find matching PIDs for
 typedef struct {
@@ -121,10 +132,11 @@ extern int new_maps_data(maps_data * m_data);
 extern int del_maps_data(maps_data * m_data);
 
 
-// --- CAVING ---
+// --- INJECTION ---
 //returns: number of caves found on success, -1 - failed to search memory
 extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size);
-
+//returns: 0 - success, -1 - failed to inject
+extern int raw_inject(raw_injection r_injection, int fd_mem);
 
 // --- SEARCHING FOR PATTERNS IN MEMORY ---
 //returns: 0 - success, -1 - failed to allocate object

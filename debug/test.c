@@ -14,9 +14,6 @@
 
 int main() {
 
-	printf("temp test\n");
-
-	/*
 	int ret;
 	int cave_num;
 	int fd_mem;
@@ -58,25 +55,8 @@ int main() {
 	if (ret == -1) return -1;
 
 	//change enable write permissions for .text segment
-	//ret = change_region_perms(&p_info, 7, fd_mem, &m_data, m_entry);
-	//if (ret == -1) return -1;
-
-	//TODO new test
-
-	cave_num = get_caves(m_entry, fd_mem, 50);
-	if (cave_num == -1) return -1;
-
-	//for every acquired cave, print address
-	for (int i = 0; i < cave_num; ++i) {
-
-		ret = vector_get(&m_entry->cave_vector, i, (byte *) &cav);
-		if (ret == -1) return -1;
-
-		printf("cave at: %p\tsize: %lx\n", cav.addr, cav.size);
-
-	}
-	
-	//TODO end new test
+	ret = change_region_perms(&p_info, 7, fd_mem, &m_data, m_entry);
+	if (ret == -1) return -1;
 
 	//CLEANUP
 	//detach from the target process
@@ -85,5 +65,5 @@ int main() {
 
 	//delete data structures
 	ret = del_name_pid(&n_pid);
-	ret = del_maps_data(&m_data); */
+	ret = del_maps_data(&m_data);
 }

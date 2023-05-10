@@ -11,7 +11,8 @@
 
 
 //initiate new pattern, search_region can be NULL and set by user later
-int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, int bytes_ptn_len) {
+int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, 
+		        int bytes_ptn_len) {
 
 	int ret;
 	memset(ptn->pattern_bytes, 0, PATTERN_LEN);

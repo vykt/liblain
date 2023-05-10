@@ -89,5 +89,5 @@ int raw_inject(raw_injection r_injection, int fd_mem) {
 	int ret;
 	ret = write_mem(fd_mem, r_injection.target_region->start_addr + r_injection.offset, 
 			        r_injection.payload, r_injection.payload_size);
-	if (ret == -1) return -1;
+	return ret;
 }

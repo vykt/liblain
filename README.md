@@ -7,7 +7,7 @@
 ### ABOUT:
 
 Libpwu is a process manipulation library that offers an organised & structured 
-view of memory and unifies the most useful components of `ptrace`, `dlfcn` and other 
+view of memory. Libpwu unifies the most useful components of `ptrace`, `dlfcn` and other
 Linux utilities under a single interface. The library provides a range of capabilities 
 from declarative calls to precise, low level operations that automate only the most 
 tedious parts.
@@ -15,7 +15,7 @@ tedious parts.
 Libpwu primarily deals with individual memory segments. The `read_maps()` call 
 processes `/proc/pid/maps` and returns a structure containing an organised vector of 
 these segments. Said segments can then be passed to analysis, injection or utility 
-functions together with relevant arguments like offsets.
+functions together with relevant arguments, such as offsets.
 
 ---
 
