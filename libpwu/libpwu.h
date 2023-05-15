@@ -2,6 +2,7 @@
 #define _LIBPWU_H
 
 #include <stdio.h>
+#include <stdint.h>
 
 #include <sys/user.h>
 #include <sys/types.h>
@@ -74,7 +75,7 @@ typedef struct {
 //cave - unused region of memory, typically zero'ed out
 typedef struct {
 
-	void * addr;
+	unsigned int offset;
 	int size;
 
 } cave;
@@ -86,7 +87,7 @@ typedef struct {
 	unsigned int offset;
 
 	byte * payload;
-	int payload_size;
+	unsigned int payload_size;
 
 } raw_injection;
 
@@ -94,10 +95,10 @@ typedef struct {
 typedef struct {
 
 	maps_entry * from_region;
-	unsigned int from_offset; //address of jump instruction
+	uint32_t from_offset; //address of jump instruction
 
 	maps_entry * to_region;
-	unsigned int to_offset; //address of jump instruction
+	uint32_t to_offset; //address of jump instruction
 
 } rel_jump_hook;
 
@@ -134,9 +135,20 @@ extern int del_maps_data(maps_data * m_data);
 
 // --- INJECTION ---
 //returns: number of caves found on success, -1 - failed to search memory
-extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size);
+extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size,
+		             unsigned int * first_offset);
 //returns: 0 - success, -1 - failed to inject
 extern int raw_inject(raw_injection r_injection, int fd_mem);
+//returns: 0 - success, -1 - fail
+extern int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
+                      unsigned int offset, char * payload_filename);
+//returns: 0 - success, -1 - fail
+extern int del_raw_injection(raw_injection * r_injection);
+
+// --- HOOKING ---
+//returns: old relative jump offset on success, NULL on fail to hook
+extern void * hook_rj(rel_jump_hook rj_hook, int fd_mem);
+
 
 // --- SEARCHING FOR PATTERNS IN MEMORY ---
 //returns: 0 - success, -1 - failed to allocate object

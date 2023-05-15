@@ -1,15 +1,15 @@
 TO IMPLEMENT:
 
 >resizing segments?
->loading shared objects?
+>loading shared objects
 >searching for symbols?
->hooking functions?
+>hooking functions
 >spin up new threads harharhar
 
 
 TOTEST:
--new read_mem() and write_mem() for high amount of data. Check if it works as expected
 -raw_inject()
+-rj_hook()
 
 
 TODO:

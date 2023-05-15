@@ -25,7 +25,7 @@ void * hook_rj(rel_jump_hook rj_hook, int fd_mem) {
 	if (rdwr_ret == -1) return NULL;
 
 	//write new offset
-	ret = lseek(fd_mem (off_t) rj_hook.from_region->start_addr + rj_hook.from_offset
+	ret = lseek(fd_mem, (off_t) rj_hook.from_region->start_addr + rj_hook.from_offset
 			    + 1, SEEK_SET);
 	if (ret == -1) return NULL;
 	rdwr_ret = write(fd_mem, &new_offset, 4);

@@ -2,7 +2,7 @@ BITS 64;
 
 add_sveta:
 	push rbp
-	mov rbp, rsp	; le stack is ready
+	mov rbp, rsp	; stack setup
 
 	mov rax, rdi
 	add rax, rsi
