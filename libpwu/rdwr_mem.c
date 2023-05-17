@@ -41,9 +41,9 @@ int write_mem(int fd, void * addr, byte * write_buf, int len) {
 
 	long page_size;
 	ssize_t rdwr_ret;
+	size_t rdwr_size;
+	size_t rdwr_total = 0;
 	off_t off_ret;
-
-	ssize_t wr_done = 0;
 
 	//get page size
 	page_size = sysconf(_SC_PAGESIZE);
@@ -56,13 +56,20 @@ int write_mem(int fd, void * addr, byte * write_buf, int len) {
 	//write page_size bytes repeatedly until done
 	do {
 
-		//write from buffer
-		rdwr_ret = write(fd, write_buf, page_size);
-		//if error or EOF before writing len bytes
-		if (rdwr_ret == -1 || (rdwr_ret == 0 && wr_done < len)) return -1;
-		wr_done += rdwr_ret;
+		//get size to write
+		if ((rdwr_total + page_size) > len) {
+			rdwr_size = len - rdwr_total;
+		} else {
+			rdwr_size = page_size;
+		}
 
-	} while (wr_done < len);
+		//write from buffer
+		rdwr_ret = write(fd, write_buf, rdwr_size);
+		//if error or EOF before writing len bytes
+		if (rdwr_ret == -1 || (rdwr_ret == 0 && rdwr_ret < len)) return -1;
+		rdwr_total += rdwr_ret;
+
+	} while (rdwr_total < len);
 	
 	return 0;
 }

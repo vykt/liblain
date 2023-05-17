@@ -12,8 +12,7 @@
 
 //find caves in memory region and fill vector with them
 //return number of caves found, -1 on error
-int get_caves(maps_entry * m_entry, int fd_mem, int min_size, 
-		      unsigned int * first_offset) {
+int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave) {
 
 	int ret;
 	int cave_count = 0;	
@@ -62,8 +61,8 @@ int get_caves(maps_entry * m_entry, int fd_mem, int min_size,
 					ret = vector_add(&m_entry->cave_vector, 0, (byte *) &cur_cave,
 							         APPEND_TRUE);
 					if (ret == -1) { free(mem_page); return -1; }
-					//if this is the first cave, set first_offset
-					if (cave_count == 0) *first_offset = cur_cave.offset;
+					//if this is the first cave, set first_cave
+					if (cave_count == 0) *first_cave = cur_cave;
 					cave_count++;
 				}
 
@@ -79,6 +78,8 @@ int get_caves(maps_entry * m_entry, int fd_mem, int min_size,
 		ret = vector_add(&m_entry->cave_vector, 0, (byte *) &cur_cave,
 						 APPEND_TRUE);
 		if (ret == -1) { free(mem_page); return -1; }
+		//if this is the first cave, set first_cave
+		if (cave_count == 0) *first_cave = cur_cave;
 		++cave_count;
 	}
 
@@ -130,8 +131,8 @@ int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
 	//fp_stat.st_size
 
 	//allocate payload size
-	r_injection.payload = malloc(fp_stat.st_size);
-	if (r_injection.payload == NULL) { fclose(fp); return -1; }
+	r_injection->payload = malloc(fp_stat.st_size);
+	if (r_injection->payload == NULL) { fclose(fp); return -1; }
 
 	//read whole payload file
 	while (rdwr_total < fp_stat.st_size) {
@@ -141,9 +142,9 @@ int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
 		else { read_size = fp_stat.st_size - rdwr_total; }
 
 		//read bytes to next appropriate place in payload buffer
-		rdwr = fread(r_injection.payload+rdwr_total, page_size, 1, fp);
+		rdwr = fread(r_injection->payload+rdwr_total, 1, read_size, fp);
 		if (rdwr == -1) {
-			free(f_injection.paylod);
+			free(r_injection->payload);
 			fclose(fp);
 			return -1;
 		} else { 
@@ -151,16 +152,14 @@ int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
 		}
 	}//end read whole payload file
 
-	r_injection.payload_size = rdwr_total;
+	r_injection->payload_size = rdwr_total;
 	
 	return 0;
 }
 
 
 //delete raw injection
-int del_raw_injection(raw_injection * r_injection) {
+void del_raw_injection(raw_injection * r_injection) {
 
-	int ret;
-	ret = free(r_injection->payload);
-	return ret;
+	free(r_injection->payload);
 }

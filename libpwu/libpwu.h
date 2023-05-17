@@ -14,6 +14,8 @@
 
 #define PATTERN_LEN 1024
 
+#define REL_JUMP_LEN 5
+
 
 //byte
 typedef char byte;
@@ -135,19 +137,18 @@ extern int del_maps_data(maps_data * m_data);
 
 // --- INJECTION ---
 //returns: number of caves found on success, -1 - failed to search memory
-extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size,
-		             unsigned int * first_offset);
+extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave);
 //returns: 0 - success, -1 - failed to inject
 extern int raw_inject(raw_injection r_injection, int fd_mem);
 //returns: 0 - success, -1 - fail
 extern int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
                       unsigned int offset, char * payload_filename);
 //returns: 0 - success, -1 - fail
-extern int del_raw_injection(raw_injection * r_injection);
+extern void del_raw_injection(raw_injection * r_injection);
 
 // --- HOOKING ---
-//returns: old relative jump offset on success, NULL on fail to hook
-extern void * hook_rj(rel_jump_hook rj_hook, int fd_mem);
+//returns: old relative jump offset on success, 0 on fail to hook
+extern uint32_t hook_rj(rel_jump_hook rj_hook, int fd_mem);
 
 
 // --- SEARCHING FOR PATTERNS IN MEMORY ---

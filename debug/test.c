@@ -20,8 +20,8 @@ int main() {
 	int fd_mem;
 	FILE * fd_maps;
 
-	unsigned int cave_offset;
-	
+	uint32_t old_jump_offset;
+
 	char * payload_filename = "payload.o";
 	unsigned int target_offset = 0x17f;
 
@@ -68,16 +68,16 @@ int main() {
 	if (ret == -1) return -1;
 
 	//TODO debug
-	printf("debug -> write permissions granted (press enter)");
-	scanf("%c", &debug_char);
+	//printf("debug -> write permissions granted (press enter)");
+	//scanf("%c", &debug_char);
 
 	//-----INJECTING
 	//get caves and make sure there's at least one available
-	ret = get_caves(m_entry, fd_mem, 20, &cave_offset); //get caves of size 20+
+	ret = get_caves(m_entry, fd_mem, 20, &cav); //get caves of size 20+
 	if (ret <= 0) return -1;
 
 	//inject payload
-	ret = new_raw_injection(&r_injection, m_entry, cave_offset, payload_filename);
+	ret = new_raw_injection(&r_injection, m_entry, cav.offset, payload_filename);
 	if (ret == -1) return -1;
 
 	ret = raw_inject(r_injection, fd_mem);
@@ -87,16 +87,15 @@ int main() {
 	hook.from_region = m_entry;
 	hook.from_offset = target_offset;
 	hook.to_region = m_entry;
-	hook.to_offset = cave_offset;
+	hook.to_offset = cav.offset;
 
-	ret = hook_rj(hook, fd_mem);
-	if (ret == -1) return -1;
+	old_jump_offset = hook_rj(hook, fd_mem);
+	if (old_jump_offset == 0) return -1;
 
 
 	//-----CLEANUP
 	//delete injection data
-	ret = del_raw_injection(&r_injection);
-	if (ret == -1) return -1;
+	del_raw_injection(&r_injection);
 
 	//change restore r-x permissions for .text segment
 	ret = change_region_perms(&p_info, 5, fd_mem, &m_data, m_entry);

@@ -14,6 +14,7 @@ TOTEST:
 
 TODO:
 -implement some way to easily search for memory regions that meet specified conditions 
+-fix the Makefile 'errors'
 
 REFACTOR:
 -Deletion (freeing) of maps_data. done via maps_obj, which aren't involved in its 
