@@ -93,7 +93,8 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 
 	int ret;
 	long ptrace_ret;
-	void * syscall_addr;
+	unsigned int syscall_offset;
+    void * syscall_addr;
 	int success = 0;
 
 	maps_entry * m_entry_ref;
@@ -120,8 +121,9 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 		if (ret == 0) continue;
 
 		//if a match was found, carry out mprotect syscall
-		ret = vector_get(&ptn.instance_vector, 0, (byte *) &syscall_addr);
+		ret = vector_get(&ptn.instance_vector, 0, (byte *) &syscall_offset);
 		if (ret == -1) return -1;
+        syscall_addr = m_entry_ref->start_addr + syscall_offset;
 		ret = puppet_save_regs(p_info);
 		if (ret == -1) return -1;
 

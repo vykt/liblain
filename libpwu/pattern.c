@@ -22,7 +22,7 @@ int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn,
 	
 	if (search_region != NULL) ptn->search_region = search_region;
 
-	ret = new_vector(&ptn->instance_vector, sizeof(void *));
+	ret = new_vector(&ptn->offset_vector, sizeof(unsigned int));
 	return ret; //0 on success, -1 on fail
 }
 
@@ -31,7 +31,7 @@ int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn,
 int del_pattern(pattern * ptn) {
 
 	int ret;
-	ret = del_vector(&ptn->instance_vector);
+	ret = del_vector(&ptn->offset_vector);
 	return ret; //0 on success, -1 on fail
 }
 
@@ -42,7 +42,7 @@ int match_pattern(pattern * ptn, int fd_mem) {
 	int ret;
 	int ptn_count = 0;
 
-	void * match_addr;
+	unsigned int match_offset;
 
 	long page_size;
 	byte * mem_page;
@@ -74,10 +74,8 @@ int match_pattern(pattern * ptn, int fd_mem) {
 				if (ptn_count == ptn->pattern_len) {
 
 					//add address where pattern began to instances
-					match_addr = ptn->search_region->start_addr 
-						         + (page_size * i) + byte_index 
-								 - (ptn->pattern_len - 1);
-					ret = vector_add(&ptn->instance_vector, 0, (byte *) &match_addr, 
+					match_offset = (page_size * i) + byte_index - (ptn->pattern_len - 1);
+					ret = vector_add(&ptn->offset_vector, 0, (byte *) &match_offset,
 							         APPEND_TRUE);
 					if (ret == -1) return -1;
 					//reset pattern count
@@ -93,5 +91,5 @@ int match_pattern(pattern * ptn, int fd_mem) {
 	}//end read process region page
 
 	//return number of patterns matched
-	return ptn->instance_vector.length;
+	return ptn->offset_vector.length;
 }

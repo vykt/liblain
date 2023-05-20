@@ -22,24 +22,24 @@ typedef char byte;
 
 //vector
 typedef struct {
-	
-	byte * vector;
-	size_t data_size;
-	unsigned long length;
+    
+    byte * vector;
+    size_t data_size;
+    unsigned long length;
 
 } vector;
 
 //single region in /proc/<pid>/maps
 typedef struct {
 
-		//read_maps()
+        //read_maps()
         char pathname[PATH_MAX];
         byte perms; //4 (read) + 2 (write) + 1 (exec)
         void * start_addr;
         void * end_addr;
-		
-		//filled by get_caves() call on this specific region
-		vector cave_vector; //cave
+        
+        //get_caves()
+        vector cave_vector; //cave
 
 } maps_entry;
 
@@ -54,12 +54,8 @@ typedef struct {
 //entire memory map
 typedef struct {
 
-	/*	object vector holds entries sorted by type or backing disk object
-	 *
-	 *	entry_vector holds entries sorted by 
-	 */
-        vector obj_vector; //maps_obj
-		vector entry_vector; //maps_entry
+        vector obj_vector;   //maps_obj
+        vector entry_vector; //maps_entry
 
 } maps_data;
 
@@ -67,61 +63,61 @@ typedef struct {
 //pattern to search for
 typedef struct {
 
-	maps_entry * search_region;
-	byte pattern_bytes[PATTERN_LEN];
-	int pattern_len;
-	vector instance_vector;
+    maps_entry * search_region;
+    byte pattern_bytes[PATTERN_LEN];
+    int pattern_len;
+    vector offset_vector;
 
 } pattern;
 
 //cave - unused region of memory, typically zero'ed out
 typedef struct {
 
-	unsigned int offset;
-	int size;
+    unsigned int offset;
+    int size;
 
 } cave;
 
 //injection metadata
 typedef struct {
 
-	maps_entry * target_region;
-	unsigned int offset;
+    maps_entry * target_region;
+    unsigned int offset;
 
-	byte * payload;
-	unsigned int payload_size;
+    byte * payload;
+    unsigned int payload_size;
 
 } raw_injection;
 
 //relative 32bit jump hook
 typedef struct {
 
-	maps_entry * from_region;
-	uint32_t from_offset; //address of jump instruction
+    maps_entry * from_region;
+    uint32_t from_offset; //address of jump instruction
 
-	maps_entry * to_region;
-	uint32_t to_offset; //address of jump instruction
+    maps_entry * to_region;
+    uint32_t to_offset;
 
 } rel_jump_hook;
 
 //name to find matching PIDs for
 typedef struct {
 
-	char name[NAME_MAX];
-	vector pid_vector;
+    char name[NAME_MAX];
+    vector pid_vector; //pid_t
 
 } name_pid;
 
 //information about puppet process
 typedef struct {
 
-	pid_t pid;
+    pid_t pid;
 
-	struct user_regs_struct saved_state;
-	struct user_fpregs_struct saved_float_state;
+    struct user_regs_struct saved_state;
+    struct user_fpregs_struct saved_float_state;
 
-	struct user_regs_struct new_state;
-	struct user_fpregs_struct new_float_state;
+    struct user_regs_struct new_state;
+    struct user_fpregs_struct new_float_state;
 
 } puppet_info;
 
@@ -142,7 +138,7 @@ extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * firs
 extern int raw_inject(raw_injection r_injection, int fd_mem);
 //returns: 0 - success, -1 - fail
 extern int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
-                      unsigned int offset, char * payload_filename);
+                             unsigned int offset, char * payload_filename);
 //returns: 0 - success, -1 - fail
 extern void del_raw_injection(raw_injection * r_injection);
 
@@ -154,7 +150,8 @@ extern uint32_t hook_rj(rel_jump_hook rj_hook, int fd_mem);
 // --- SEARCHING FOR PATTERNS IN MEMORY ---
 //returns: 0 - success, -1 - failed to allocate object
 //search_region can be NULL and be set later
-extern int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, int bytes_ptn_len);
+extern int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, 
+                       int bytes_ptn_len);
 //returns: 0 - success, -1 - failed to deallocate object
 extern int del_pattern(pattern * ptn);
 //returns: n - number of patterns, -1 - failed to search for patterns
@@ -172,7 +169,7 @@ extern int puppet_save_regs(puppet_info * p_info);
 extern int puppet_write_regs(puppet_info * p_info);
 //returns: 0 - success, -1 - failed to perform operation, -2 - no syscall found
 extern int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
-		                       maps_data * m_data, maps_entry * target_region);
+                               maps_data * m_data, maps_entry * target_region);
 
 // --- FINDING PIDs BY NAME ---
 //returns: 0 - success, -1 - failed to allocate object
