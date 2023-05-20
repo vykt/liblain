@@ -8,16 +8,13 @@ TO IMPLEMENT:
 
 
 TOTEST:
--raw_inject()
--rj_hook()
 
 
 TODO:
 -implement some way to easily search for memory regions that meet specified conditions 
 -fix the Makefile 'errors'
+-puppet_info has no reason to exist
 
 REFACTOR:
 -Deletion (freeing) of maps_data. done via maps_obj, which aren't involved in its 
  creation. Very silly.
-
-FUTURE CONSIDERATIONS:
