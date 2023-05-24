@@ -88,19 +88,19 @@ int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave)
 }
 
 
-//inject contents of r_injection.payload into target_region at offset
+//inject contents of r_injection_dat.payload into target_region at offset
 //region needs write permissions. get them from puppet.c
-int raw_inject(raw_injection r_injection, int fd_mem) {
+int raw_inject(raw_injection r_injection_dat, int fd_mem) {
 
 	int ret;
-	ret = write_mem(fd_mem, r_injection.target_region->start_addr + r_injection.offset, 
-			        r_injection.payload, r_injection.payload_size);
+	ret = write_mem(fd_mem, r_injection_dat.target_region->start_addr + r_injection_dat.offset, 
+			        r_injection_dat.payload, r_injection_dat.payload_size);
 	return ret;
 }
 
 
 //initialise new raw injection
-int new_raw_injection(raw_injection * r_injection, maps_entry * target_region, 
+int new_raw_injection(raw_injection * r_injection_dat, maps_entry * target_region, 
 		              unsigned int offset, char * payload_filename) {
 
 	int ret;
@@ -114,8 +114,8 @@ int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
 	struct stat fp_stat;
 
 	//setup half the struct
-	r_injection->target_region = target_region;
-	r_injection->offset = offset;
+	r_injection_dat->target_region = target_region;
+	r_injection_dat->offset = offset;
 
 	//get page_size;
 	page_size = sysconf(_SC_PAGESIZE);
@@ -131,8 +131,8 @@ int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
 	//fp_stat.st_size
 
 	//allocate payload size
-	r_injection->payload = malloc(fp_stat.st_size);
-	if (r_injection->payload == NULL) { fclose(fp); return -1; }
+	r_injection_dat->payload = malloc(fp_stat.st_size);
+	if (r_injection_dat->payload == NULL) { fclose(fp); return -1; }
 
 	//read whole payload file
 	while (rdwr_total < fp_stat.st_size) {
@@ -142,9 +142,9 @@ int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
 		else { read_size = fp_stat.st_size - rdwr_total; }
 
 		//read bytes to next appropriate place in payload buffer
-		rdwr = fread(r_injection->payload+rdwr_total, 1, read_size, fp);
+		rdwr = fread(r_injection_dat->payload+rdwr_total, 1, read_size, fp);
 		if (rdwr == -1) {
-			free(r_injection->payload);
+			free(r_injection_dat->payload);
 			fclose(fp);
 			return -1;
 		} else { 
@@ -152,14 +152,14 @@ int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
 		}
 	}//end read whole payload file
 
-	r_injection->payload_size = rdwr_total;
+	r_injection_dat->payload_size = rdwr_total;
 	
 	return 0;
 }
 
 
 //delete raw injection
-void del_raw_injection(raw_injection * r_injection) {
+void del_raw_injection(raw_injection * r_injection_dat) {
 
-	free(r_injection->payload);
+	free(r_injection_dat->payload);
 }

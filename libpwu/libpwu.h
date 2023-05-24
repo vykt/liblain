@@ -124,6 +124,7 @@ typedef struct {
 
 // --- READING PROCESS MEMORY MAPS ---
 //read /proc/<pid>/maps into allocated maps_data object
+//returns: 0 - success, -1 - failed to read maps
 extern int read_maps(maps_data * m_data, FILE * maps_stream);
 //returns: 0 - success, -1 - failed to allocate space
 extern int new_maps_data(maps_data * m_data);
@@ -135,16 +136,16 @@ extern int del_maps_data(maps_data * m_data);
 //returns: number of caves found on success, -1 - failed to search memory
 extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave);
 //returns: 0 - success, -1 - failed to inject
-extern int raw_inject(raw_injection r_injection, int fd_mem);
+extern int raw_inject(raw_injection r_injection_dat, int fd_mem);
 //returns: 0 - success, -1 - fail
-extern int new_raw_injection(raw_injection * r_injection, maps_entry * target_region,
+extern int new_raw_injection(raw_injection * r_injection_dat, maps_entry * target_region,
                              unsigned int offset, char * payload_filename);
 //returns: 0 - success, -1 - fail
-extern void del_raw_injection(raw_injection * r_injection);
+extern void del_raw_injection(raw_injection * r_injection_dat);
 
 // --- HOOKING ---
 //returns: old relative jump offset on success, 0 on fail to hook
-extern uint32_t hook_rj(rel_jump_hook rj_hook, int fd_mem);
+extern uint32_t hook_rj(rel_jump_hook rj_hook_dat, int fd_mem);
 
 
 // --- SEARCHING FOR PATTERNS IN MEMORY ---

@@ -32,8 +32,8 @@ int main() {
 	puppet_info p_info;
 
 	cave cav;
-	raw_injection r_injection;
-	rel_jump_hook hook;
+	raw_injection r_injection_dat;
+	rel_jump_hook hook_dat;
 
 	//-----INIT
 	ret = new_maps_data(&m_data);
@@ -77,25 +77,25 @@ int main() {
 	if (ret <= 0) return -1;
 
 	//inject payload
-	ret = new_raw_injection(&r_injection, m_entry, cav.offset, payload_filename);
+	ret = new_raw_injection(&r_injection_dat, m_entry, cav.offset, payload_filename);
 	if (ret == -1) return -1;
 
-	ret = raw_inject(r_injection, fd_mem);
+	ret = raw_inject(r_injection_dat, fd_mem);
 	if (ret == -1) return -1;
 
 	//hook call from target to payload
-	hook.from_region = m_entry;
-	hook.from_offset = target_offset;
-	hook.to_region = m_entry;
-	hook.to_offset = cav.offset;
+	hook_dat.from_region = m_entry;
+	hook_dat.from_offset = target_offset;
+	hook_dat.to_region = m_entry;
+	hook_dat.to_offset = cav.offset;
 
-	old_jump_offset = hook_rj(hook, fd_mem);
+	old_jump_offset = hook_rj(hook_dat, fd_mem);
 	if (old_jump_offset == 0) return -1;
 
 
 	//-----CLEANUP
 	//delete injection data
-	del_raw_injection(&r_injection);
+	del_raw_injection(&r_injection_dat);
 
 	//change restore r-x permissions for .text segment
 	ret = change_region_perms(&p_info, 5, fd_mem, &m_data, m_entry);
