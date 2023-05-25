@@ -44,12 +44,12 @@ typedef struct {
 ```
 
 ### description
-`maps_entry` represents a single line in a `/proc/\<pid\>\maps` file for a single process, sorted into the desired components. Data specific to each segment is also stored here. Created automatically.
+`maps_entry` represents a single line in a `/proc/<pid>/maps` file for a single process, sorted into the desired components. Data specific to each segment is also stored here. Created automatically.
 
 ### elements
 - `pathname`    : name of the backing file for this segment. refer to `proc(5)`.
 - `perms`       : permissions for the region in the format taken by `mprotect(2)`.
-- `start_addr`  : address of the start of this segment in `/proc/\<pid\>/mem`.
+- `start_addr`  : address of the start of this segment in `/proc/<pid>/mem`.
 - `end_addr`    : address of the end of this segment in `/proc\<pid\>/mem`.
 - `cave_vector` : vector of `cave` struct.
 
@@ -94,11 +94,11 @@ typedef struct {
 ```
 
 ### description
-`maps_data` is the <b>overarching</b> data structure representing the entire `/proc/\<pid\>/maps` file for a single process. Requires initialisation. Filled by `read_maps()`.
+`maps_data` is the <b>overarching</b> data structure representing the entire `/proc/<pid>/maps` file for a single process. Requires initialisation. Filled by `read_maps()`.
 
 ### elements
 - `obj_vector`   : vector storing a backing file oriented view of segments.
-- `entry_vector` : vector storing segments as they appear in `/proc/\<pid\>/maps`.
+- `entry_vector` : vector storing segments as they appear in `/proc/<pid>/maps`.
 
 ### functions
 - `new_maps_data()`
