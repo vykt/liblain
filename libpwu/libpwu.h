@@ -204,9 +204,8 @@ extern int vector_get_ref(vector * v, unsigned long pos, byte ** data);
 
 // --- MEMORY OPERATIONS ---
 //returns: 0 - success, -1 - fail
-extern int read_mem(int fd, void * addr, byte * read_buf, int len);
+extern int read_mem(int fd_mem, void * addr, byte * read_buf, int len);
 //returns: 0 - success, -1 - fail
-extern int write_mem(int fd, void * addr, byte * write_buf, int len);
-
+extern int write_mem(int fd_mem, void * addr, byte * write_buf, int len);
 
 #endif

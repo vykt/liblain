@@ -15,3 +15,6 @@ int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave)
 
 ### return value
 number of found caves is returned on success, `-1` on fail.
+
+### notes
+The search is performed by searching for continuous 0x00 or 0xFF bytes.

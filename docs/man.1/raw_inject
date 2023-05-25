@@ -1,0 +1,17 @@
+.\" generated with Ronn-NG/v0.9.1
+.\" http://github.com/apjanke/ronn-ng/tree/0.9.1
+.TH "RAW_INJECT" "" "May 2023" ""
+.SH "NAME"
+\fBraw_inject\fR
+.SH "raw_inject()"
+\fBc int raw_inject(raw_injection r_injection_dat, int fd_mem);\fR
+.SS "description"
+\fBraw_inject()\fR injects a paylaod at an arbitrary address\. NOTE: write permissions are required\. See \fBchange_region_perms()\fR\.
+.SS "parameters"
+.IP "\[ci]" 4
+\fBr_injection_dat\fR : injection information\.
+.IP "\[ci]" 4
+\fBfd_mem\fR : open file descriptor for \fB/proc/<pid>/mem\fR for the target process\.
+.IP "" 0
+.SS "return value"
+\fB0\fR on success, \fB\-1\fR on fail\.

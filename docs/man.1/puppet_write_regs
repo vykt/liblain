@@ -1,0 +1,15 @@
+.\" generated with Ronn-NG/v0.9.1
+.\" http://github.com/apjanke/ronn-ng/tree/0.9.1
+.TH "PUPPET_WRITE_REGS" "" "May 2023" ""
+.SH "NAME"
+\fBpuppet_write_regs\fR
+.SH "puppet_write_regs()"
+\fBc int puppet_write_regs(puppet_info * p_info);\fR
+.SS "description"
+\fBpuppet_write_regs()\fR writes the registers of the tracee inside \fBp_info\fR\.
+.SS "parameters"
+.IP "\[ci]" 4
+\fB*p_info\fR : pointer to the tracee information structure\.
+.IP "" 0
+.SS "return value"
+\fB0\fR on success, \fB\-1\fR on fail\.

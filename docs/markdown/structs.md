@@ -1,4 +1,4 @@
-# -------- DATA STRUCTURES
+# data structures
 
 ## vector
 
@@ -14,10 +14,15 @@ typedef struct {
 
 ### description
 `vector` is this library's vector implementation.
+
 ### elements
 - `vector`    : pointer to heap allocation holding the vector.
 - `data_size` : size of each element.
 - `length`    : number of elements in the vector.
+
+### functions
+- `vector_get()`
+- `vector_get_ref()`
 
 <br>
 
@@ -48,6 +53,9 @@ typedef struct {
 - `end_addr`    : address of the end of this segment in `/proc\<pid\>/mem`.
 - `cave_vector` : vector of `cave` struct.
 
+### functions
+- `get_caves()`
+
 <br>
 
 ## maps\_obj
@@ -67,6 +75,9 @@ typedef struct {
 ### elements
 - `name`         : name of the backing file.
 - `entry_vector` : vector of pointers to `maps_entry` structures belonging to this backing file.
+
+### functions
+none.
 
 <br>
 
@@ -88,6 +99,11 @@ typedef struct {
 ### elements
 - `obj_vector`   : vector storing a backing file oriented view of segments.
 - `entry_vector` : vector storing segments as they appear in `/proc/\<pid\>/maps`.
+
+### functions
+- `new_maps_data()`
+- `del_maps_data()`
+- `read_maps()`
 
 <br>
 
@@ -113,6 +129,11 @@ typedef struct {
 - `pattern_len`     : length of the pattern of bytes to search for.
 - `offset_vector`   : vector of offsets at which the pattern occurs (first byte).
 
+### functions
+- `new_pattern()`
+- `del_pattern()`
+- `match_pattern()`
+
 <br>
 
 ## cave
@@ -132,6 +153,9 @@ typedef struct {
 ### elements
 - `offset` : offset at which the cave begins (first byte).
 - `size`   : size of the cave, in bytes.
+
+### functions
+- `get_caves()`
 
 <br>
 
@@ -158,6 +182,11 @@ typedef struct {
 - `payload`       : pointer to heap allocated space holding the payload.
 - `payload_size`  : size of the payload on the heap in bytes.
 
+### functions
+- `new_raw_injection()`
+- `del_raw_injection()`
+- `raw_inject()`
+
 <br>
 
 ## rel\_jump\_hook
@@ -183,6 +212,9 @@ typedef struct {
 - `to_region`   : `maps_entry` segment where the target relative jump will now jump to.
 - `to_offset`   : offset to which the target relative jump will now jump to inside the `to_region` segment.
 
+### functions
+- `hook_rj()`
+
 <br>
 
 ## name\_pid
@@ -203,6 +235,11 @@ typedef struct {
 ### elements
 - `name`       : name of the target process
 - `pid_vector` : vector of process IDs that match `name`.
+
+### functions
+- `new_name_pid()`
+- `del_name_pid()`
+- `pid_by_name()`
 
 <br>
 
@@ -232,3 +269,10 @@ typedef struct {
 - `saved_float_state` : floating point registers at time of puppet.
 - `new_state`         : registers for `mprotect` syscall.
 - `new_float_state`   : floating point registers for `mprotect` call.
+
+### functions
+- `puppet_attach()`
+- `puppet_detach()`
+- `puppet_save_regs()`
+- `puppet_write_regs()`
+- `change_region_perms()`

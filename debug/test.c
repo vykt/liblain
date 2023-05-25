@@ -18,7 +18,7 @@ int main() {
 	int ret;
 	int cave_num;
 	int fd_mem;
-	FILE * fd_maps;
+	FILE * fs_maps;
 
 	uint32_t old_jump_offset;
 
@@ -49,11 +49,11 @@ int main() {
 	if (ret == -1) return -1;
 
 	//open the process's memory and memory maps
-	ret = open_memory(p_info.pid, &fd_maps, &fd_mem);
+	ret = open_memory(p_info.pid, &fs_maps, &fd_mem);
 	if (ret == -1) return -1;
 
 	//read the maps
-	ret = read_maps(&m_data, fd_maps);
+	ret = read_maps(&m_data, fs_maps);
 
 	//get the second memory region (it's known here that it is the right one)
 	ret = vector_get_ref(&m_data.entry_vector, 1, (byte **) &m_entry);

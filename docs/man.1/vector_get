@@ -1,0 +1,19 @@
+.\" generated with Ronn-NG/v0.9.1
+.\" http://github.com/apjanke/ronn-ng/tree/0.9.1
+.TH "VECTOR_GET" "" "May 2023" ""
+.SH "NAME"
+\fBvector_get\fR
+.SH "vector_get()"
+\fBc int vector_get(vector * v, unsigned long pos, byte * data);\fR
+.SS "description"
+\fBvector_get()\fR retrieves a copy of the data stored inside a vector\.
+.SS "parameters"
+.IP "\[ci]" 4
+\fB*v\fR : pointer to a \fBvector\fR structure\.
+.IP "\[ci]" 4
+\fBpos\fR : index of item to get\.
+.IP "\[ci]" 4
+\fB*data\fR : pointer to the buffer to copy the item into\.
+.IP "" 0
+.SS "return value"
+\fB0\fR on success, \fB\-1\fR on fail\.

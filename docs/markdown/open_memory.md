@@ -14,3 +14,6 @@ int open_memory(pid_t pid, FILE ** fd_maps, int * fd_mem);
 
 ### return value
 `0` on success, `-1` on fail.
+
+### notes
+It is not possible to mmap process memory (anonymous maps excluded).

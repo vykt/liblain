@@ -4,7 +4,7 @@
 #include "libpwu.h"
 
 //external
-int read_mem(int fd, void * addr, byte * read_buf, int len);
-int write_mem(int fd, void * addr, byte * write_buf, int len);
+int read_mem(int fd_mem, void * addr, byte * read_buf, int len);
+int write_mem(int fd_mem, void * addr, byte * write_buf, int len);
 
 #endif
