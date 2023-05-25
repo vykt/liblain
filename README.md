@@ -8,6 +8,7 @@
 
 Libpwu is a process manipulation library that offers an organised & structured view of processes and their memory. Libpwu unifies the most useful components of <i>ptrace</i>, <i>dlfcn</i> and other Linux utilities under a single interface. The library provides a range of capabilities from declarative calls to precise, low level operations that automate only the most tedious parts. High level functions are made to be extensible and modular. libpwu aims to provide the user with the ability to seamlessly intertwine high level functions with the user's own low level implementations through the modular and extensible nature of its components.
 
+---
 
 ### INSTALLATION:
 
@@ -29,6 +30,7 @@ Install:
 # ./install.sh
 ```
 
+---
 
 ### LINKING:
 
@@ -44,11 +46,13 @@ The <i>-l</i> option takes the name of the library minus the 'lib' prefix and th
 #include <libpwu.h>
 ```
 
+---
 
 ### GETTING STARTED:
 
 For a walkthrough and implementation of libpwu's core components, see <i>docs/markdown/intro.md</i>. For an overview of data structures and their related functions, see <i>docs/markdown/structs.md</i>. Example implementations are available in <i>examples</i>.
 
+---
 
 ### CHECKLIST:
 
