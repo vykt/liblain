@@ -53,7 +53,7 @@ debug/tes%.o: debug/tes%.c ${HEADERS_TEST}
 
 #target subtargets
 ${TARGET}: ${OBJECTS_TGT}
-	${CC} ${CFLAGS_TGT} ${OBJECTS_TGT} -o ${TARGET}
+	${CC} ${CFLAGS_TGT} ${OBJECTS_TGT} --static -o ${TARGET}
 
 debug/tar%.o: debug/tar%.c
 	${CC} ${CFLAGS_TEST} -c $< -o $@

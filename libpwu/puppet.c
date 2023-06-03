@@ -1,6 +1,9 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <sched.h>
 
 #include <sys/types.h>
 #include <sys/ptrace.h>
@@ -54,6 +57,56 @@ int puppet_detach(puppet_info p_info) {
 }
 
 
+//find syscall instruction in process
+int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
+
+    int ret;
+    unsigned int syscall_offset;
+    pattern ptn;
+    maps_entry * m_entry_ref;
+
+	//create new pattern object to search for a syscall
+	ret = new_pattern(&ptn, NULL, "\x0f\x05", 2);
+	if (ret == -1) return -1;
+
+	//for every region
+	for (int i = 0; i < m_data->entry_vector.length; ++i) {
+		
+		//get region
+		ret = vector_get_ref(&m_data->entry_vector, i, (byte **) &m_entry_ref);
+		if (ret == -1) return -1;
+
+		//continue if this region is not executable
+		if (m_entry_ref->perms < PROT_EXEC ) continue;
+		
+		//search the region
+		ptn.search_region = m_entry_ref;
+		ret = match_pattern(&ptn, fd_mem);
+        
+        //pattern match failed
+        if (ret == -1) { 
+            del_pattern(&ptn);
+            return -1;
+        //syscall not found
+        } else if (ret == 0) { 
+            continue;
+        //syscall found
+        } else {
+            ret = vector_get(&ptn.offset_vector, 0, (byte *) &syscall_offset);
+            if (ret == -1) {
+                del_pattern(&ptn);
+                return -1;
+            }
+            p_info->syscall_addr = m_entry_ref->start_addr + syscall_offset;
+            return 0;
+        }//end search result
+    
+    }//end for every region
+
+    return -2;
+}
+
+
 //save registers of puppeted process
 int puppet_save_regs(puppet_info * p_info) {
 
@@ -85,92 +138,162 @@ int puppet_write_regs(puppet_info * p_info) {
 }
 
 
+//copy registers 
+void puppet_copy_regs(puppet_info * p_info, int mode) {
+
+    struct user_regs_struct * dest_regs;
+    struct user_regs_struct * src_regs;
+    struct user_fpregs_struct * dest_fp_regs;
+    struct user_fpregs_struct * src_fp_regs;
+
+    //if copying new registers to old
+    if (mode == COPY_NEW) {
+        dest_regs = &p_info->saved_state;
+        src_regs = &p_info->new_state;
+        dest_fp_regs = &p_info->saved_float_state;
+        src_fp_regs = &p_info->new_float_state;
+    //else if copying old registers to new
+    } else {
+        dest_regs = &p_info->new_state;
+        src_regs = &p_info->saved_state;
+        dest_fp_regs = &p_info->new_float_state;
+        src_fp_regs = &p_info->saved_float_state;
+    }
+
+    memcpy(dest_regs, src_regs, sizeof(struct user_regs_struct));
+    memcpy(dest_fp_regs, src_fp_regs, sizeof(struct user_fpregs_struct));
+}
+
+
+//generic function for calling an arbitrary syscall
+//p_info->new_state needs to be set by caller
+int arbitrary_syscall(puppet_info * p_info, int fd_mem, 
+                      unsigned long long * syscall_ret) {
+
+    int ret;
+    long ret_long;
+    long ptrace_ret;
+    struct user_regs_struct temp_state;
+
+    //save registers
+    ret = puppet_save_regs(p_info);
+    if (ret == -1) return -1;
+
+    //write new registers
+    ret = puppet_write_regs(p_info);
+    if (ret == -1) return -1;
+
+    //catch entry and exit of syscall
+    ptrace_ret = ptrace(PTRACE_SYSCALL, p_info->pid, NULL, NULL);
+    if (ptrace_ret == -1) return -1;
+    waitpid(p_info->pid, 0, 0);
+
+    ptrace_ret = ptrace(PTRACE_SYSCALL, p_info->pid, NULL, NULL);
+    if (ptrace_ret == -1) return -1;
+    waitpid(p_info->pid, 0, 0);
+
+    //if caller asked for return value, fetch it
+    if (syscall_ret != NULL) {    
+        ret_long = ptrace(PTRACE_GETREGS, p_info->pid, NULL, &temp_state);
+        if (ret_long == -1) return -1;
+        *syscall_ret = temp_state.rax;
+    }
+
+    //now restore registers
+    memcpy(&p_info->new_state, &p_info->saved_state, 
+           sizeof(struct user_regs_struct));
+    memcpy(&p_info->new_float_state, &p_info->saved_float_state,
+           sizeof(struct user_fpregs_struct));
+    ret = puppet_write_regs(p_info);
+    if (ret == -1) return -1;
+
+    return 0;
+}
+
+
 //change permissions of a region
-//perms = standard unix permission bits - 7 = rwx, 4 = r--, 3 = -wx
-//target_region HAS TO BE A REFERENCE to a region inside target_maps
+//perms = mprotect permission bits (man 2 mprotect)
+//target_region is a REFERENCE to a region inside target_maps
 int change_region_perms(puppet_info * p_info, byte perms, int fd_mem, 
-		                maps_data * m_data, maps_entry * target_region) {
+		                maps_entry * target_region) {
 
 	int ret;
-	long ptrace_ret;
-	unsigned int syscall_offset;
-    void * syscall_addr;
-	int success = 0;
 
-	maps_entry * m_entry_ref;
-	pattern ptn;
-	
-	//create new pattern object to search for a syscall
-	ret = new_pattern(&ptn, NULL, "\x0f\x05", 2);
-	if (ret == -1) return -1;
+    //get registers & copy them
+    ret = puppet_save_regs(p_info);
+    if (ret == -1) return -1;
+    puppet_copy_regs(p_info, COPY_OLD);
 
-	//for every region
-	for (int i = 0; i < m_data->entry_vector.length; ++i) {
-		
-		//get region
-		ret = vector_get_ref(&m_data->entry_vector, i, (byte **) &m_entry_ref);
-		if (ret == -1) return -1;
+    //setup registers for the call to mprotect
+    p_info->new_state.rax = __NR_mprotect; //mprotect syscall number
+    p_info->new_state.rdi = (unsigned long long) target_region->start_addr;
+    p_info->new_state.rsi = target_region->end_addr - target_region->start_addr;
+    p_info->new_state.rdx = perms;
+    p_info->new_state.rip = (unsigned long long) p_info->syscall_addr;
 
-		//continue if this region is not executable
-		if (m_entry_ref->perms < PROT_EXEC ) continue;
-		
-		//search the region
-		ptn.search_region = m_entry_ref;
-		ret = match_pattern(&ptn, fd_mem);
-		if (ret == -1) return -1;
-		if (ret == 0) continue;
+    //call arbitrary syscall
+    ret = arbitrary_syscall(p_info, fd_mem, NULL);
+    if (ret == -1) return -1;
 
-		//if a match was found, carry out mprotect syscall
-		ret = vector_get(&ptn.offset_vector, 0, (byte *) &syscall_offset);
-		if (ret == -1) return -1;
-        syscall_addr = m_entry_ref->start_addr + syscall_offset;
-		ret = puppet_save_regs(p_info);
-		if (ret == -1) return -1;
+    //update own memory map to new value
+    target_region->perms = perms;
 
-		//copy saved registers to new registers
-		memcpy(&p_info->new_state, &p_info->saved_state, 
-			   sizeof(struct user_regs_struct));
-		memcpy(&p_info->new_float_state, &p_info->saved_float_state,
-			   sizeof(struct user_fpregs_struct));
+    return 0;
+}
 
-		//setup registers for the call to mprotect
-		p_info->new_state.rax = __NR_mprotect; //mprotect syscall number
-		p_info->new_state.rdi = (long long int) target_region->start_addr;
-		p_info->new_state.rsi = target_region->end_addr - target_region->start_addr;
-		p_info->new_state.rdx = perms;
-		p_info->new_state.rip = (long long int) syscall_addr;
 
-		ret = puppet_write_regs(p_info);
-		if (ret == -1) return -1;
+//create new anonymous map inside target process
+int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr, 
+                        unsigned int stack_size) {
 
-		//catch entry and exit of syscall
-		ptrace_ret = ptrace(PTRACE_SYSCALL, p_info->pid, NULL, NULL);
-		if (ptrace_ret == -1) return -1;
-		waitpid(p_info->pid, 0, 0);
+    int ret;
 
-		ptrace_ret = ptrace(PTRACE_SYSCALL, p_info->pid, NULL, NULL);
-		if (ptrace_ret == -1) return -1;
-		waitpid(p_info->pid, 0, 0);
+    //get registers & copy them
+    ret = puppet_save_regs(p_info);
+    if (ret == -1) return -1;
+    puppet_copy_regs(p_info, COPY_OLD);
 
-		//update own memory map to new value
-		target_region->perms = perms;
+    //setup registers for te call to mmap
+    p_info->new_state.rax = __NR_mmap; //mmap syscall number
+    p_info->new_state.rdi = 0;         //any destination
+    p_info->new_state.rsi = (unsigned long long) stack_size;
+    p_info->new_state.rdx = PROT_READ | PROT_WRITE;
+    p_info->new_state.r10 = MAP_PRIVATE | MAP_ANONYMOUS;
+    p_info->new_state.r9  = 0;
+    p_info->new_state.r8  = -1;
+    p_info->new_state.rip = (unsigned long long) p_info->syscall_addr;
 
-		//now restore registers
-		memcpy(&p_info->new_state, &p_info->saved_state, 
-			   sizeof(struct user_regs_struct));
-		memcpy(&p_info->new_float_state, &p_info->saved_float_state,
-			   sizeof(struct user_fpregs_struct));
-		ret = puppet_write_regs(p_info);
-		if (ret == -1) return -1;
+    //call arbitrary syscall
+    ret = arbitrary_syscall(p_info, fd_mem, (unsigned long long *) stack_addr);
+    if (ret == -1) return -1;
 
-		//done, exit
-		success = 1;
-		break;
-	}
+    return 0;
+}
 
-	ret = del_pattern(&ptn);
-	if (ret == -1) return -1;
 
-	if (success) return 0;
-	return -2;
+//start a new thread, executing function starting at exec_addr
+int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem, 
+                 void * stack_addr, unsigned int stack_size, int * tid) {
+
+    int ret;
+
+    //get registers & copy them
+    ret = puppet_save_regs(p_info);
+    if (ret == -1) return -1;
+    puppet_copy_regs(p_info, COPY_OLD);
+
+    //setup registers for call to clone
+    p_info->new_state.rax = __NR_clone; //clone syscall number
+    p_info->new_state.rdi = CLONE_VM | CLONE_SIGHAND | CLONE_THREAD 
+                            | CLONE_FS | CLONE_FILES | CLONE_PARENT | CLONE_IO;
+    //stacks grow down, so give pointer to end. a stack of size 0x1000 will go
+    //from 0x3000 to 0x3fff, so have to subtract a 64bit aligned 8 bytes from end.
+    p_info->new_state.rsi = (unsigned long long) stack_addr + stack_size - 8;
+    p_info->new_state.rip = (unsigned long long) p_info->syscall_addr;
+
+    //call arbitrary syscall
+    ret = arbitrary_syscall(p_info, fd_mem, (unsigned long long *) tid);
+    if (ret == -1) return -1;
+
+    return 0;
 }

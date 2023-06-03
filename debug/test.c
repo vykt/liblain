@@ -6,99 +6,115 @@
 #include <fcntl.h>
 
 #include <linux/limits.h>
-
-//DEBUG TODO
 #include <sys/mman.h>
 
 #include "../libpwu/libpwu.h"
 
 int main() {
 
-	char debug_char;
-	int ret;
-	int cave_num;
-	int fd_mem;
-	FILE * fs_maps;
-
-	uint32_t old_jump_offset;
-
+	//everything that is required is to inject & hook is here
 	char * payload_filename = "payload.o";
-	unsigned int target_offset = 0x17f;
+	unsigned int target_offset = 0x6c7;      //static
+    unsigned int thread_work_offset = 0x6fe; //static
+	int region_num = 1;
 
+	int ret;
+	int fd_mem;
+	FILE * fd_maps;
+	uint32_t old_jump_offset;
+    void * stack_addr;
+    int tid;
+    unsigned int stack_size = 0x4000;
+
+	//define uninitialised libpwu structs (see header for details)
 	maps_data m_data;
 	maps_entry * m_entry;
-
 	name_pid n_pid;
 	puppet_info p_info;
-
 	cave cav;
-	raw_injection r_injection_dat;
-	rel_jump_hook hook_dat;
+	raw_injection r_injection;
+	rel_jump_hook hook;
 
 	//-----INIT
+	//initialise the maps_data struct on the heap
 	ret = new_maps_data(&m_data);
 	if (ret == -1) return -1;
 
+	//initialise the name_pid struct on the heap
 	ret = new_name_pid(&n_pid, "target");
 	if (ret == -1) return -1;
 
 
 	//-----SETUP & PERMISSIONS
-	//get pid for the process
+	//get pid for the process by its name
 	ret = pid_by_name(&n_pid, &p_info.pid);
 	if (ret == -1) return -1;
 
 	//open the process's memory and memory maps
-	ret = open_memory(p_info.pid, &fs_maps, &fd_mem);
+	ret = open_memory(p_info.pid, &fd_maps, &fd_mem);
 	if (ret == -1) return -1;
 
 	//read the maps
-	ret = read_maps(&m_data, fs_maps);
+	ret = read_maps(&m_data, fd_maps);
+    if (ret == -1) return -1;
 
-	//get the second memory region (it's known here that it is the right one)
-	ret = vector_get_ref(&m_data.entry_vector, 1, (byte **) &m_entry);
+    //find syscall instruction for puppeting
+    ret = puppet_find_syscall(&p_info, &m_data, fd_mem);
+    if (ret == -1) return -1;
+
+	//get the second memory region (check /proc/pid/maps to see which region you need)
+	ret = vector_get_ref(&m_data.entry_vector, region_num, (byte **) &m_entry);
 	if (ret == -1) return -1;
 
 	//attach to the target process
 	ret = puppet_attach(p_info);
 	if (ret == -1) return -1;
 
-	//change enable write permissions for .text segment
-	ret = change_region_perms(&p_info, 7, fd_mem, &m_data, m_entry);
+	//change enable write permissions for the .text region
+	ret = change_region_perms(&p_info, 7, fd_mem, m_entry);
 	if (ret == -1) return -1;
-
-	//TODO debug
-	//printf("debug -> write permissions granted (press enter)");
-	//scanf("%c", &debug_char);
 
 	//-----INJECTING
 	//get caves and make sure there's at least one available
 	ret = get_caves(m_entry, fd_mem, 20, &cav); //get caves of size 20+
 	if (ret <= 0) return -1;
 
-	//inject payload
-	ret = new_raw_injection(&r_injection_dat, m_entry, cav.offset, payload_filename);
+	//initialise a new raw injection struct and read the payload into memory
+	ret = new_raw_injection(&r_injection, m_entry, cav.offset, payload_filename);
 	if (ret == -1) return -1;
 
-	ret = raw_inject(r_injection_dat, fd_mem);
+	//inject the payload into a cave
+	ret = raw_inject(r_injection, fd_mem);
 	if (ret == -1) return -1;
 
 	//hook call from target to payload
-	hook_dat.from_region = m_entry;
-	hook_dat.from_offset = target_offset;
-	hook_dat.to_region = m_entry;
-	hook_dat.to_offset = cav.offset;
+	hook.from_region = m_entry;
+	hook.from_offset = target_offset;
+	hook.to_region = m_entry;
+	hook.to_offset = cav.offset;
 
-	old_jump_offset = hook_rj(hook_dat, fd_mem);
+	old_jump_offset = hook_rj(hook, fd_mem);
 	if (old_jump_offset == 0) return -1;
 
+    //-----THREAD SHENANIGANS
+    //allocate some memory for a thread stack
+    ret = create_thread_stack(&p_info, fd_mem, &stack_addr, stack_size);
+    if (ret == -1) return -1;
+
+    //run the new thread
+    ret = start_thread(&p_info, m_entry->start_addr+thread_work_offset, fd_mem,
+                       stack_addr, stack_size, &tid);
+    if (ret == -1) return -1;
+
+    printf("press enter to continue: ");
+    scanf("%*c");
 
 	//-----CLEANUP
 	//delete injection data
-	del_raw_injection(&r_injection_dat);
+	del_raw_injection(&r_injection);
 
 	//change restore r-x permissions for .text segment
-	ret = change_region_perms(&p_info, 5, fd_mem, &m_data, m_entry);
+	ret = change_region_perms(&p_info, 5, fd_mem, m_entry);
 	if (ret == -1) return -1;
 
 	//detach from the target process

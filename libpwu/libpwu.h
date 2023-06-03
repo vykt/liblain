@@ -13,8 +13,10 @@
 #define APPEND_FALSE 0
 
 #define PATTERN_LEN 1024
-
 #define REL_JUMP_LEN 5
+
+#define COPY_OLD 0
+#define COPY_NEW 1
 
 
 //byte
@@ -113,6 +115,8 @@ typedef struct {
 
     pid_t pid;
 
+    void * syscall_addr; //address of a syscall instruction
+
     struct user_regs_struct saved_state;
     struct user_fpregs_struct saved_float_state;
 
@@ -164,13 +168,27 @@ extern int match_pattern(pattern * ptn, int fd_mem);
 extern int puppet_attach(puppet_info p_info);
 //returns: 0 - success, -1 - failed to detach
 extern int puppet_detach(puppet_info p_info);
+//returns: 0 - success, -1 - no syscall found, -2 - failed to perform search
+extern int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem);
 //returns: 0 - success, -1 - failed to save registers
 extern int puppet_save_regs(puppet_info * p_info);
 //returns: 0 - success, -1 - failed to write registers
 extern int puppet_write_regs(puppet_info * p_info);
-//returns: 0 - success, -1 - failed to perform operation, -2 - no syscall found
+//returns: void
+extern void puppet_copy_regs(puppet_info * p_info, int mode);
+
+//returns: 0 - success, -1 - failed to execute syscall
+extern int arbitrary_syscall(puppet_info * p_info, int fd_mem,
+                             unsigned long long * syscall_ret);
+//returns: 0 - success, -1 - failed to change region permissions
 extern int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
-                               maps_data * m_data, maps_entry * target_region);
+                               maps_entry * target_region);
+//returns: 0 - success, -1 - failed create new thread stack
+extern int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
+                               unsigned int stack_size);
+//returns: 0 - success, -1 - failed to start thread
+extern int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem, 
+                        void * stack_addr, unsigned int stack_size, int * tid);
 
 // --- FINDING PIDs BY NAME ---
 //returns: 0 - success, -1 - failed to allocate object

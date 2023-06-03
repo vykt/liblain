@@ -20,21 +20,9 @@ uint32_t hook_rj(rel_jump_hook rj_hook_dat, int fd_mem) {
 	//get new offset
 	ptr_math_buf = (rj_hook_dat.to_region->start_addr + rj_hook_dat.to_offset)
 		            - (rj_hook_dat.from_region->start_addr + rj_hook_dat.from_offset
-					   + REL_JUMP_LEN);
+					+ REL_JUMP_LEN);
 
 	new_offset = (uint32_t) ptr_math_buf;
-
-	//TODO debug
-	/*void * ptr_math_buf1;
-	void * ptr_math_buf2;
-	
-	ptr_math_buf1 = rj_hook_dat.from_region->start_addr + rj_hook_dat.from_offset;
-	ptr_math_buf2 = rj_hook_dat.to_region->start_addr + rj_hook_dat.to_offset;
-	
-	ptr_math_buf1 = ptr_math_buf2 - ptr_math_buf1;
-	new_offset = (uint32_t) ptr_math_buf1;
-	*/
-	//TODO end debug
 
 	//save old jump offset
 	ret = lseek(fd_mem, (off_t) rj_hook_dat.from_region->start_addr + rj_hook_dat.from_offset 

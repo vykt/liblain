@@ -1,9 +1,7 @@
 TO IMPLEMENT:
 
->resizing segments?
 >loading shared objects
 >searching for symbols?
->hooking functions
 >spin up new threads harharhar
 
 
@@ -13,7 +11,6 @@ TOTEST:
 TODO:
 -implement some way to easily search for memory regions that meet specified conditions 
 -fix the Makefile 'errors'
--fix man page format documentation
 -write an install script
 
 

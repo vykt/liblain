@@ -4,6 +4,7 @@
 #include <signal.h>
 
 #include <sys/types.h>
+#include <sys/mman.h>
 
 #include <linux/limits.h>
 
@@ -46,11 +47,12 @@ int open_memory(pid_t pid, FILE ** fd_maps, int * fd_mem) {
 	*fd_maps = fopen(maps_buf, "r");
 	*fd_mem = open(mem_buf, O_RDWR);
 	if (*fd_maps == NULL || *fd_mem == -1) return -1;
-	return 0;
+
+    return 0;
 }
 
 
-//send SIGSTOP to process, wrapper for clib's <signal.h>
+//send SIGSTOP to process, wrapper for libc's <signal.h>
 int sig_stop(pid_t pid) {
 
 	int ret;
@@ -59,7 +61,7 @@ int sig_stop(pid_t pid) {
 }
 
 
-//send SIGCONT to process, wrapper for clib's <signal.h>
+//send SIGCONT to process, wrapper for libc's <signal.h>
 int sig_cont(pid_t pid) {
 
 	int ret;

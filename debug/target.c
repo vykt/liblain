@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <unistd.h>
 
@@ -19,9 +21,18 @@ int main() {
 	while (1) {
 
 		total = add_nums(svetas_x, svetas_y);
-		printf("%d\n", total);
+		printf("This is thread: %d, number is: %d\n", gettid(), total);
 		sleep(2);
 	}
 
 	return 0;
+}
+
+
+int thread_work() {
+
+    while (1) {
+        puts("new thread is running");
+        sleep(2);
+    }
 }

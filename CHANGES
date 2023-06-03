@@ -1,0 +1,3 @@
+-refactor of puppet.c
+    >add puppet_find_syscall
+    >argument changes to functions in puppet.c
