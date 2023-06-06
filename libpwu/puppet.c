@@ -21,7 +21,7 @@
 //sends SIGSTOP itself, don't call util's sig_stop()
 int puppet_attach(puppet_info p_info) {
 
-	long ret;	
+	long ret;
 	pid_t ret_pid;
 	time_t timeout;
 
@@ -71,24 +71,24 @@ int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
 
 	//for every region
 	for (int i = 0; i < m_data->entry_vector.length; ++i) {
-		
+
 		//get region
 		ret = vector_get_ref(&m_data->entry_vector, i, (byte **) &m_entry_ref);
 		if (ret == -1) return -1;
 
 		//continue if this region is not executable
 		if (m_entry_ref->perms < PROT_EXEC ) continue;
-		
+
 		//search the region
 		ptn.search_region = m_entry_ref;
 		ret = match_pattern(&ptn, fd_mem);
-        
+
         //pattern match failed
-        if (ret == -1) { 
+        if (ret == -1) {
             del_pattern(&ptn);
             return -1;
         //syscall not found
-        } else if (ret == 0) { 
+        } else if (ret == 0) {
             continue;
         //syscall found
         } else {
@@ -100,7 +100,7 @@ int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
             p_info->syscall_addr = m_entry_ref->start_addr + syscall_offset;
             return 0;
         }//end search result
-    
+
     }//end for every region
 
     return -2;
@@ -111,7 +111,7 @@ int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
 int puppet_save_regs(puppet_info * p_info) {
 
 	long ret;
-	
+
 	//get process registers
 	ret = ptrace(PTRACE_GETREGS, p_info->pid, NULL, &p_info->saved_state);
 	if (ret == -1) return -1;
@@ -138,7 +138,7 @@ int puppet_write_regs(puppet_info * p_info) {
 }
 
 
-//copy registers 
+//copy registers
 void puppet_copy_regs(puppet_info * p_info, int mode) {
 
     struct user_regs_struct * dest_regs;
@@ -167,7 +167,7 @@ void puppet_copy_regs(puppet_info * p_info, int mode) {
 
 //generic function for calling an arbitrary syscall
 //p_info->new_state needs to be set by caller
-int arbitrary_syscall(puppet_info * p_info, int fd_mem, 
+int arbitrary_syscall(puppet_info * p_info, int fd_mem,
                       unsigned long long * syscall_ret) {
 
     int ret;
@@ -193,14 +193,14 @@ int arbitrary_syscall(puppet_info * p_info, int fd_mem,
     waitpid(p_info->pid, 0, 0);
 
     //if caller asked for return value, fetch it
-    if (syscall_ret != NULL) {    
+    if (syscall_ret != NULL) {
         ret_long = ptrace(PTRACE_GETREGS, p_info->pid, NULL, &temp_state);
         if (ret_long == -1) return -1;
         *syscall_ret = temp_state.rax;
     }
 
     //now restore registers
-    memcpy(&p_info->new_state, &p_info->saved_state, 
+    memcpy(&p_info->new_state, &p_info->saved_state,
            sizeof(struct user_regs_struct));
     memcpy(&p_info->new_float_state, &p_info->saved_float_state,
            sizeof(struct user_fpregs_struct));
@@ -214,7 +214,7 @@ int arbitrary_syscall(puppet_info * p_info, int fd_mem,
 //change permissions of a region
 //perms = mprotect permission bits (man 2 mprotect)
 //target_region is a REFERENCE to a region inside target_maps
-int change_region_perms(puppet_info * p_info, byte perms, int fd_mem, 
+int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 		                maps_entry * target_region) {
 
 	int ret;
@@ -243,7 +243,7 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 
 
 //create new anonymous map inside target process
-int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr, 
+int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
                         unsigned int stack_size) {
 
     int ret;
@@ -272,7 +272,7 @@ int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
 
 
 //start a new thread, executing function starting at exec_addr
-int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem, 
+int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem,
                  void * stack_addr, unsigned int stack_size, int * tid) {
 
     int ret;
@@ -284,7 +284,7 @@ int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem,
 
     //setup registers for call to clone
     p_info->new_state.rax = __NR_clone; //clone syscall number
-    p_info->new_state.rdi = CLONE_VM | CLONE_SIGHAND | CLONE_THREAD 
+    p_info->new_state.rdi = CLONE_VM | CLONE_SIGHAND | CLONE_THREAD
                             | CLONE_FS | CLONE_FILES | CLONE_PARENT | CLONE_IO;
     //stacks grow down, so give pointer to end. a stack of size 0x1000 will go
     //from 0x3000 to 0x3fff, so have to subtract a 64bit aligned 8 bytes from end.
