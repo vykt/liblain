@@ -15,7 +15,7 @@
 int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave) {
 
 	int ret;
-	int cave_count = 0;	
+	int cave_count = 0;
 
 	cave cur_cave;
 	cur_cave.offset = 0;
@@ -33,12 +33,12 @@ int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave)
 	if (page_size < 0) return -1;
 	mem_page = malloc(page_size);
 	if (mem_page == NULL) return -1;
-	
+
 	//for every page in region
 	for (int i = 0; i < (m_entry->end_addr - m_entry->start_addr) / page_size; ++i) {
 
 		//read page
-		ret = read_mem(fd_mem, m_entry->start_addr + (page_size * i), 
+		ret = read_mem(fd_mem, m_entry->start_addr + (page_size * i),
 				       mem_page, page_size);
 		if (ret == -1) { free(mem_page); return -1; }
 
@@ -52,7 +52,7 @@ int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave)
 					cur_cave.offset = (page_size*i) + j;
 				}
 				cur_cave.size += 1;
-			
+
 			//else not zero
 			} else {
 				//if cave above min_size
@@ -88,19 +88,42 @@ int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave)
 }
 
 
+//find cave that meets size requirement
+int find_cave(maps_entry * m_entry, int fd_mem, int required_size,
+	          cave * matched_cave) {
+
+	int ret;
+	cave * cave_buf;
+
+	//for every cave in region
+	for (int i = 0; i < m_entry->cave_vector.length; ++i) {
+
+		ret = vector_get_ref(&m_entry->cave_vector, i, (byte **) &cave_buf);
+		if (ret == -1) return -2;
+
+		//if cave size exceeds requirement
+		if (cave_buf->size >= required_size) {
+			matched_cave = cave_buf;
+			return 0;
+		}
+	} //end for every cave
+	return -1;
+}
+
+
 //inject contents of r_injection_dat.payload into target_region at offset
 //region needs write permissions. get them from puppet.c
 int raw_inject(raw_injection r_injection_dat, int fd_mem) {
 
 	int ret;
-	ret = write_mem(fd_mem, r_injection_dat.target_region->start_addr + r_injection_dat.offset, 
+	ret = write_mem(fd_mem, r_injection_dat.target_region->start_addr + r_injection_dat.offset,
 			        r_injection_dat.payload, r_injection_dat.payload_size);
 	return ret;
 }
 
 
 //initialise new raw injection
-int new_raw_injection(raw_injection * r_injection_dat, maps_entry * target_region, 
+int new_raw_injection(raw_injection * r_injection_dat, maps_entry * target_region,
 		              unsigned int offset, char * payload_filename) {
 
 	int ret;
@@ -147,13 +170,13 @@ int new_raw_injection(raw_injection * r_injection_dat, maps_entry * target_regio
 			free(r_injection_dat->payload);
 			fclose(fp);
 			return -1;
-		} else { 
+		} else {
 			rdwr_total += rdwr;
 		}
 	}//end read whole payload file
 
 	r_injection_dat->payload_size = rdwr_total;
-	
+
 	return 0;
 }
 

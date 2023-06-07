@@ -271,9 +271,70 @@ int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
 }
 
 
+//setup thread payload
+int setup_new_thread_payload(int fd_mem, new_thread_setup n_t_setup,
+                             void * stack_addr) {
+
+	const int rbp_offset = 0xC;
+	const int rsp_offset = 0x16;
+	const int jmp_offset = 0x20;
+
+	int ret;
+
+	vector mutation_vector;
+	mutation temp_mutation;
+	raw_injection r_injection;
+
+	//setup mutation vector
+	ret = new_vector(&mutation_vector, sizeof(mutation));
+	if (ret == -1) return -1;
+
+	//add first mutation for RBP
+	temp_mutation.offset = rbp_offset;
+	memcpy(temp_mutation.mod, (unsigned int *) &stack_addr, sizeof(void *));
+	temp_mutation.mod_len = sizeof(void *);
+	ret = vector_add(&mutation_vector, 0, (byte *) &temp_mutation, APPEND_TRUE);
+	if (ret == -1) return -1;
+
+	//add second mutation for RSP
+	temp_mutation.offset = rsp_offset;
+	memcpy(temp_mutation.mod, (unsigned int *) &stack_addr, sizeof(void *));
+	temp_mutation.mod_len = sizeof(void *);
+	ret = vector_add(&mutation_vector, 0, (byte *) &temp_mutation, APPEND_TRUE);
+	if (ret == -1) return -1;
+
+	//add third mutation for jump to thread function
+	temp_mutation.offset = jmp_offset;
+	memcpy(temp_mutation.mod, (unsigned int *) &jump_offset, sizeof(void *));
+	temp_mutation.mod_len = sizeof(void *);
+	ret = vector_add(&mutation_vector, 0, (byte *) &temp_mutation, APPEND_TRUE);
+	if (ret == -1) return -1;
+
+	//read payload
+	ret = new_raw_injection(&r_injection, n_t_setup.setup_region,
+	                        n_t_setup.setup_offset, new_thread_payload_path);
+	if (ret == -1) return -1;
+
+	//mutate payload with mutation vector
+	ret = apply_mutations(r_injection.payload, mutation_vector);
+	if (ret == -1) return -1;
+
+	//inject payload into process
+	ret = raw_inject(r_injection, fd_mem);
+	if (ret == -1) return -1;
+
+	//clean up
+	del_raw_injection(&r_injection);
+	ret = del_vector(&mutation_vector);
+	if (ret == -1) return -1;
+
+	return 0;
+}
+
+
 //start a new thread, executing function starting at exec_addr
-int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem,
-                 void * stack_addr, unsigned int stack_size, int * tid) {
+int start_thread(puppet_info * p_info, int fd_mem, maps_entry * thread_func_region,
+	             unsigned int thread_func_offset, void * stack_addr, int * tid) {
 
     int ret;
 
@@ -289,7 +350,8 @@ int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem,
     //stacks grow down, so give pointer to end. a stack of size 0x1000 will go
     //from 0x3000 to 0x3fff, so have to subtract a 64bit aligned 8 bytes from end.
     p_info->new_state.rsi = (unsigned long long) stack_addr + stack_size - 8;
-    p_info->new_state.rip = (unsigned long long) p_info->syscall_addr;
+    p_info->new_state.rip = (unsigned long long) thread_func_region->start_addr
+	                                             + thread_func_offset;
 
     //call arbitrary syscall
     ret = arbitrary_syscall(p_info, fd_mem, (unsigned long long *) tid);

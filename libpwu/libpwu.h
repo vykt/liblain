@@ -9,6 +9,7 @@
 
 #include <linux/limits.h>
 
+//generic macros
 #define APPEND_TRUE 1
 #define APPEND_FALSE 0
 
@@ -18,13 +19,19 @@
 #define COPY_OLD 0
 #define COPY_NEW 1
 
+#define APPEND_TRUE 1
+#define APPEND_FALSE 0
+
+//payload size macros
+#define PAYL_NEW_THREAD 41
+
 
 //byte
 typedef char byte;
 
 //vector
 typedef struct {
-    
+
     byte * vector;
     size_t data_size;
     unsigned long length;
@@ -39,7 +46,7 @@ typedef struct {
         byte perms; //4 (read) + 2 (write) + 1 (exec)
         void * start_addr;
         void * end_addr;
-        
+
         //get_caves()
         vector cave_vector; //cave
 
@@ -125,6 +132,15 @@ typedef struct {
 
 } puppet_info;
 
+//payload mutations structure
+typedef struct {
+
+	unsigned int offset;
+	byte[32] mod;
+	int mod_len; //beware of bounds, i trust you!
+
+} mutation;
+
 
 // --- READING PROCESS MEMORY MAPS ---
 //read /proc/<pid>/maps into allocated maps_data object
@@ -139,6 +155,9 @@ extern int del_maps_data(maps_data * m_data);
 // --- INJECTION ---
 //returns: number of caves found on success, -1 - failed to search memory
 extern int get_caves(maps_entry * m_entry, int fd_mem, int min_size, cave * first_cave);
+//returns: 0 - success, -1 - failed to find big enough cave, -2 fail to search_region
+extern int find_cave(maps_entry * m_entry, int fd_mem, int required_size,
+	                 cave * matched_cave);
 //returns: 0 - success, -1 - failed to inject
 extern int raw_inject(raw_injection r_injection_dat, int fd_mem);
 //returns: 0 - success, -1 - fail
@@ -155,7 +174,7 @@ extern uint32_t hook_rj(rel_jump_hook rj_hook_dat, int fd_mem);
 // --- SEARCHING FOR PATTERNS IN MEMORY ---
 //returns: 0 - success, -1 - failed to allocate object
 //search_region can be NULL and be set later
-extern int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn, 
+extern int new_pattern(pattern * ptn, maps_entry * search_region, byte * bytes_ptn,
                        int bytes_ptn_len);
 //returns: 0 - success, -1 - failed to deallocate object
 extern int del_pattern(pattern * ptn);
@@ -187,7 +206,7 @@ extern int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 extern int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
                                unsigned int stack_size);
 //returns: 0 - success, -1 - failed to start thread
-extern int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem, 
+extern int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem,
                         void * stack_addr, unsigned int stack_size, int * tid);
 
 // --- FINDING PIDs BY NAME ---
@@ -213,7 +232,20 @@ extern int sig_stop(pid_t pid);
 extern int sig_cont(pid_t pid);
 
 
+// --- PAYLOAD MUTATIONS
+//return 0 on success, -1 on fail
+extern int apply_mutations(byte * payload_buffer, vector mutation_vector);
+
+
 // --- VECTOR OPERATIONS ---
+//returns: 0 - success, -1 - fail
+int new_vector(vector * v, size_t data_size);
+//returns: 0 - success, -1 - fail
+int del_vector(vector * v);
+//returns: 0 - success, -1 - fail
+int vector_add(vector * v, unsigned long pos, byte * data, unsigned short append);
+//returns: 0 - success, -1 - fail
+int vector_rmv(vector * v, unsigned long pos);
 //returns: 0 - success, -1 - fail
 extern int vector_get(vector * v, unsigned long pos, byte * data);
 //returns: 0 - success, -1 - fail
