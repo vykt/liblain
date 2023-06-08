@@ -132,6 +132,18 @@ typedef struct {
 
 } puppet_info;
 
+//information for bootstrapping a new thread via an auto payload
+typedef struct {
+
+	maps_entry * thread_func_region;
+	maps_entry * setup_region;
+	unsigned int thread_func_offset;
+	unsigned int setup_offset;
+	void * stack_addr; //as returned by create_thread_stack()
+	unsigned int stack_size;
+
+} new_thread_setup;
+
 //payload mutations structure
 typedef struct {
 
@@ -206,8 +218,8 @@ extern int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 extern int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
                                unsigned int stack_size);
 //returns: 0 - success, -1 - failed to start thread
-extern int start_thread(puppet_info * p_info, void * exec_addr, int fd_mem,
-                        void * stack_addr, unsigned int stack_size, int * tid);
+extern int start_thread(puppet_info * p_info, int fd_mem,
+	                    new_thread_setup n_t_setup, int * tid);
 
 // --- FINDING PIDs BY NAME ---
 //returns: 0 - success, -1 - failed to allocate object

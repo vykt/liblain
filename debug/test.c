@@ -13,17 +13,18 @@
 int main() {
 
 	//everything that is required is to inject & hook is here
-	char * payload_filename = "payload.o";
-	unsigned int target_offset = 0x6c7;      //static
-    unsigned int thread_work_offset = 0x6fe; //static
-	int region_num = 1;
+	const char * payload_filename = "payload.o";
+	const int payload_size = 18;
+	const unsigned int target_offset = 0x6c7;      //static
+    const unsigned int thread_work_offset = 0x6fe; //static
+	const int region_num = 1;
 
 	int ret;
 	int fd_mem;
+	int tid;
 	FILE * fd_maps;
 	uint32_t old_jump_offset;
     void * stack_addr;
-    int tid;
     unsigned int stack_size = 0x4000;
 
 	//define uninitialised libpwu structs (see header for details)
@@ -34,6 +35,7 @@ int main() {
 	cave cav;
 	raw_injection r_injection;
 	rel_jump_hook hook;
+	new_thread_setup n_t_setup;
 
 	//-----INIT
 	//initialise the maps_data struct on the heap
@@ -101,9 +103,17 @@ int main() {
     ret = create_thread_stack(&p_info, fd_mem, &stack_addr, stack_size);
     if (ret == -1) return -1;
 
+	//assign info for thread bootstrapping
+	n_t_setup.thread_func_region = m_entry;
+	n_t_setup.thread_func_offset = thread_work_offset;
+	n_t_setup.setup_region = m_entry;
+	//put bootstrap payload immediately after the previously injected payload
+	n_t_setup.setup_offset = cav.offset + payload_size;
+	n_t_setup.stack_addr = stack_addr;
+	n_t_setup.stack_size = stack_size;
+
     //run the new thread
-    ret = start_thread(&p_info, m_entry->start_addr+thread_work_offset, fd_mem,
-                       stack_addr, stack_size, &tid);
+	ret = start_thread(&p_info, fd_mem, n_t_setup, &tid);
     if (ret == -1) return -1;
 
     printf("press enter to continue: ");

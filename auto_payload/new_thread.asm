@@ -12,7 +12,7 @@ child_thread_loop:
 	mov rbp, 0xFEDCBA9876543210 ; stack base      | SET AT INJECT TIME
 	mov rsp, 0x0123456789ABCDEF ; stack pointer   | SET AT INJECT TIME
 	mov rax, 0x0000000000000000 ; jump address    | SET AT INJECT TIME
-	jmp qword [rax]             ; thread function | SET AT INJECT TIME
+	jmp qword [rax]             ; jump to thread function
 
 parent_thread_loop:
 	nop
