@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "libpwu.h"
-#include "mutate.c"
+#include "mutate.h"
 #include "vector.h"
 
 //apply mutations to payload

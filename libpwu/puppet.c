@@ -275,12 +275,13 @@ int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
 int setup_new_thread_payload(int fd_mem, new_thread_setup n_t_setup) {
 
 	//offsets specific to the new_thread.o auto payload
-	const char * new_thread_payload_path = "auto_payload/new_thread.o";
-	const int rbp_offset = 0xC;
-	const int rsp_offset = 0x16;
-	const int jmp_offset = 0x20;
+	char * new_thread_payload_path = "auto_payload/new_thread.o";
+	int rbp_offset = 0xC;
+	int rsp_offset = 0x16;
+	int jmp_offset = 0x20;
 
 	int ret;
+    void * thread_func_addr;
 
 	vector mutation_vector;
 	mutation temp_mutation;
@@ -292,22 +293,23 @@ int setup_new_thread_payload(int fd_mem, new_thread_setup n_t_setup) {
 
 	//add first mutation for RBP
 	temp_mutation.offset = rbp_offset;
-	memcpy(temp_mutation.mod, (unsigned int *) &n_t_setup.stack_addr, sizeof(void *));
+	memcpy(temp_mutation.mod, &n_t_setup.stack_addr, sizeof(void *));
 	temp_mutation.mod_len = sizeof(void *);
 	ret = vector_add(&mutation_vector, 0, (byte *) &temp_mutation, APPEND_TRUE);
 	if (ret == -1) return -1;
 
 	//add second mutation for RSP
 	temp_mutation.offset = rsp_offset;
-	memcpy(temp_mutation.mod, (unsigned int *) &n_t_setup.stack_addr, sizeof(void *));
+	memcpy(temp_mutation.mod, &n_t_setup.stack_addr, sizeof(void *));
 	temp_mutation.mod_len = sizeof(void *);
 	ret = vector_add(&mutation_vector, 0, (byte *) &temp_mutation, APPEND_TRUE);
 	if (ret == -1) return -1;
 
 	//add third mutation for jump to thread function
+    thread_func_addr = n_t_setup.thread_func_region->start_addr 
+                       + n_t_setup.thread_func_offset;
 	temp_mutation.offset = jmp_offset;
-	memcpy(temp_mutation.mod, (unsigned int *) &n_t_setup.thread_func_region->start_addr
-	       + n_t_setup.thread_func_offset, sizeof(void *));
+	memcpy(temp_mutation.mod, &thread_func_addr, sizeof(void *));
 	temp_mutation.mod_len = sizeof(void *);
 	ret = vector_add(&mutation_vector, 0, (byte *) &temp_mutation, APPEND_TRUE);
 	if (ret == -1) return -1;
@@ -335,14 +337,15 @@ int setup_new_thread_payload(int fd_mem, new_thread_setup n_t_setup) {
 
 
 //start a new thread, executing function starting at exec_addr
-int start_thread(puppet_info * p_info, int fd_mem, new_thread_setup n_t_setup,
-	             int * tid) {
+int start_thread(puppet_info * p_info, int fd_mem, new_thread_setup n_t_setup, 
+                 int * tid) {
 
     int ret;
 	void * real_stack_addr;
 
 	//stack grows down, so get the end address
-	real_stack_addr = n_t_setup.stack_addr + n_t_setup.stack_size - 8;
+	real_stack_addr = n_t_setup.stack_addr + n_t_setup.stack_size - 0x1000; //-0x8;
+    n_t_setup.stack_addr = real_stack_addr;
 
 	//setup the bootstrap payload for a new thread
 	ret = setup_new_thread_payload(fd_mem, n_t_setup);
@@ -357,9 +360,9 @@ int start_thread(puppet_info * p_info, int fd_mem, new_thread_setup n_t_setup,
     p_info->new_state.rax = __NR_clone; //clone syscall number
     p_info->new_state.rdi = CLONE_VM | CLONE_SIGHAND | CLONE_THREAD
                             | CLONE_FS | CLONE_FILES | CLONE_PARENT | CLONE_IO;
-    p_info->new_state.rsi = (unsigned long long) real_stack_addr;
-    p_info->new_state.rip = (unsigned long long) n_t_setup.thread_func_region->start_addr
-	                                             + n_t_setup.thread_func_offset;
+    p_info->new_state.rsi = (unsigned long long)(n_t_setup.stack_addr);
+    p_info->new_state.rip = (unsigned long long)(n_t_setup.thread_func_region->start_addr
+	                                             + n_t_setup.thread_func_offset);
 
     //call arbitrary syscall
     ret = arbitrary_syscall(p_info, fd_mem, (unsigned long long *) tid);

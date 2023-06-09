@@ -23,6 +23,6 @@ int change_region_perms(puppet_info * p_info, byte perms, int fd_mem,
 int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
                         unsigned int stack_size);
 int start_thread(puppet_info * p_info, int fd_mem, new_thread_setup n_t_setup,
-	             int * tid) {
+	             int * tid);
 
 #endif

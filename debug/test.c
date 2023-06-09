@@ -15,8 +15,8 @@ int main() {
 	//everything that is required is to inject & hook is here
 	const char * payload_filename = "payload.o";
 	const int payload_size = 18;
-	const unsigned int target_offset = 0x6c7;      //static
-    const unsigned int thread_work_offset = 0x6fe; //static
+	const unsigned int target_offset = 0x687;      //static
+    const unsigned int thread_work_offset = 0x6be; //static
 	const int region_num = 1;
 
 	int ret;
@@ -78,7 +78,7 @@ int main() {
 
 	//-----INJECTING
 	//get caves and make sure there's at least one available
-	ret = get_caves(m_entry, fd_mem, 20, &cav); //get caves of size 20+
+	ret = get_caves(m_entry, fd_mem, 66, &cav); //get caves of size 20+
 	if (ret <= 0) return -1;
 
 	//initialise a new raw injection struct and read the payload into memory

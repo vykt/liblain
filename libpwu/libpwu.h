@@ -148,7 +148,7 @@ typedef struct {
 typedef struct {
 
 	unsigned int offset;
-	byte[32] mod;
+	byte mod[32];
 	int mod_len; //beware of bounds, i trust you!
 
 } mutation;

@@ -21,7 +21,7 @@ int main() {
 	while (1) {
 
 		total = add_nums(svetas_x, svetas_y);
-		printf("This is thread: %d, number is: %d\n", gettid(), total);
+		printf("This is tid: %d, inject check: %d\n", gettid(), total);
 		sleep(2);
 	}
 
@@ -32,7 +32,7 @@ int main() {
 int thread_work() {
 
     while (1) {
-        puts("new thread is running");
+        printf("This is tid: %d", gettid());
         sleep(2);
     }
 }
