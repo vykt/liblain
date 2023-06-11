@@ -361,8 +361,8 @@ int start_thread(puppet_info * p_info, int fd_mem, new_thread_setup n_t_setup,
     p_info->new_state.rdi = CLONE_VM | CLONE_SIGHAND | CLONE_THREAD
                             | CLONE_FS | CLONE_FILES | CLONE_PARENT | CLONE_IO;
     p_info->new_state.rsi = (unsigned long long)(n_t_setup.stack_addr);
-    p_info->new_state.rip = (unsigned long long)(n_t_setup.thread_func_region->start_addr
-	                                             + n_t_setup.thread_func_offset);
+    p_info->new_state.rip = (unsigned long long)(n_t_setup.setup_region->start_addr
+	                                             + n_t_setup.setup_offset);
 
     //call arbitrary syscall
     ret = arbitrary_syscall(p_info, fd_mem, (unsigned long long *) tid);

@@ -15,8 +15,8 @@ int main() {
 	//everything that is required is to inject & hook is here
 	const char * payload_filename = "payload.o";
 	const int payload_size = 18;
-	const unsigned int target_offset = 0x687;      //static
-    const unsigned int thread_work_offset = 0x6be; //static
+	const unsigned int target_offset = 0x6c7;      //static
+    const unsigned int thread_work_offset = 0x843; //static
 	const int region_num = 1;
 
 	int ret;
@@ -25,7 +25,7 @@ int main() {
 	FILE * fd_maps;
 	uint32_t old_jump_offset;
     void * stack_addr;
-    unsigned int stack_size = 0x4000;
+    unsigned int stack_size = 0x800000;
 
 	//define uninitialised libpwu structs (see header for details)
 	maps_data m_data;
@@ -115,9 +115,6 @@ int main() {
     //run the new thread
 	ret = start_thread(&p_info, fd_mem, n_t_setup, &tid);
     if (ret == -1) return -1;
-
-    printf("press enter to continue: ");
-    scanf("%*c");
 
 	//-----CLEANUP
 	//delete injection data
