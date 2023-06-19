@@ -13,12 +13,11 @@
 
 int main() {
 
-
 	//everything that is required is to inject & hook is here
 	char * payload_filename = "payload.o";
 	int payload_size = 18;
-	unsigned int target_offset = 0x1bf;      //dynamic
-    unsigned int thread_work_offset = 0x33b; //dynamic
+	unsigned int target_offset = 0x6c7;      //static
+    unsigned int thread_work_offset = 0x843; //static
 	int region_num = 1;
 
 	int ret;
@@ -28,11 +27,6 @@ int main() {
 	uint32_t old_jump_offset;
     void * stack_addr;
     unsigned int stack_size = 0x800000;
-    
-    int own_fd_mem;
-    FILE * own_fd_maps;
-    unsigned int matched_offset;
-    pid_t own_pid;
 
 	//define uninitialised libpwu structs (see header for details)
 	maps_data m_data;
@@ -43,10 +37,6 @@ int main() {
 	raw_injection r_injection;
 	rel_jump_hook hook;
 	new_thread_setup n_t_setup;
-
-    sym_resolve s_resolve;
-    maps_data own_maps;
-    maps_entry * matched_region;
 
 	//-----INIT
 	//initialise the maps_data struct on the heap
@@ -87,7 +77,6 @@ int main() {
 	ret = change_region_perms(&p_info, 7, fd_mem, m_entry);
 	if (ret == -1) return -1;
 
-
 	//-----INJECTING
 	//get caves and make sure there's at least one available
 	ret = get_caves(m_entry, fd_mem, 66, &cav); //get caves of size 20+
@@ -109,40 +98,6 @@ int main() {
 
 	old_jump_offset = hook_rj(hook, fd_mem);
 	if (old_jump_offset == 0) return -1;
-
-
-    //-----RESOLVE puts() ADDRESS IN TARGET
-    //open a handle on libc
-    ret = open_lib("libc.so.6", &s_resolve);
-    if (ret == -1) return -1;
-
-    //initialise own process maps
-    ret = new_maps_data(&own_maps);
-
-    //get own pid
-    own_pid = getpid();
-
-	//open own memory and memory maps
-	ret = open_memory(own_pid, &own_fd_maps, &own_fd_mem);
-	if (ret == -1) return -1;
-
-	//read own memory maps
-	ret = read_maps(&own_maps, own_fd_maps);
-    if (ret == -1) return -1;
-
-    //put together the symbol resolving struct
-    s_resolve.host_m_data = &own_maps;
-    s_resolve.target_m_data = &m_data;
-
-    //resolve puts() symbol
-    ret = resolve_symbol("puts", s_resolve, &matched_region, &matched_offset);
-
-    printf("The address of puts() in target is: %p\n", 
-           matched_region->start_addr + matched_offset);
-
-    //close the handle on libc
-    close_lib(&s_resolve);
-
 
     //-----THREAD SHENANIGANS
     //allocate some memory for a thread stack

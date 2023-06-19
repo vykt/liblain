@@ -66,7 +66,7 @@ int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
     maps_entry * m_entry_ref;
 
 	//create new pattern object to search for a syscall
-	ret = new_pattern(&ptn, NULL, "\x0f\x05", 2);
+	ret = new_pattern(&ptn, NULL, (byte *) "\x0f\x05", 2);
 	if (ret == -1) return -1;
 
 	//for every region

@@ -27,7 +27,7 @@
 
 
 //byte
-typedef char byte;
+typedef unsigned char byte;
 
 //vector
 typedef struct {
@@ -153,6 +153,15 @@ typedef struct {
 
 } mutation;
 
+//symbol address resolution structure
+typedef struct {
+
+    void * lib_handle;
+    maps_data * host_m_data;
+    maps_data * target_m_data;
+
+} sym_resolve;
+
 
 // --- READING PROCESS MEMORY MAPS ---
 //read /proc/<pid>/maps into allocated maps_data object
@@ -247,6 +256,26 @@ extern int sig_cont(pid_t pid);
 // --- PAYLOAD MUTATIONS
 //return 0 on success, -1 on fail
 extern int apply_mutations(byte * payload_buffer, vector mutation_vector);
+
+
+// --- SYMBOL RESOLVING
+//returns: 0 - success, -1 - fail
+extern int open_lib(char * lib_path, sym_resolve * s_resolve);
+//returns: void
+extern void close_lib(sym_resolve * s_resolve);
+//returns: symbol address - success, NULL - fail
+extern void * get_symbol_addr(char * symbol, sym_resolve s_resolve);
+//returns: 0 - success, -1 - no match found, -2 - fail
+extern int get_region_by_addr(void * addr, maps_entry ** matched_region,
+                              unsigned int * offset, int * obj_index, 
+                              maps_data * m_data);
+//returns: 0 - success, -1 - no match found, -2 - fail
+extern int get_region_by_meta(char * pathname, int index, maps_entry ** matched_region,
+                              maps_data * m_data);
+//returns: 0 - success, -1 - no match found, -2 - fail
+extern int resolve_symbol(char * symbol, sym_resolve s_resolve,
+                          maps_entry ** matched_region, unsigned int * matched_offset);
+
 
 
 // --- VECTOR OPERATIONS ---

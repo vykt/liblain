@@ -3,14 +3,14 @@ CC=gcc
 ASM=nasm
 
 #flags for each component
-CFLAGS_LIB=-O0 -ggdb -Wall -fpic
+CFLAGS_LIB=-O0 -ggdb -Wall -fPIC
 CFLAGS_TEST=-O0 -ggdb -Wall -L/home/vykt/programming/libpwu -lpwu
 CFLAGS_TGT=-O0 -ggdb -Wall
 ASMFLAGS_PAYL=-O0
 
 #libpwu sources
-SOURCES_LIB=libpwu/process_maps.c libpwu/util.c libpwu/rdwr_mem.c libpwu/hook.c libpwu/inject.c libpwu/puppet.c libpwu/name_pid.c libpwu/pattern.c libpwu/mutate.c libpwu/vector.c
-HEADERS_LIB=libpwu/process_maps.h libpwu/util.h libpwu/rdwr_mem.h libpwu/inject.h libpwu/hook.h libpwu/puppet.h libpwu/name_pid.h libpwu/pattern.h libpwu/mutate.h libpwu/vector.h libpwu/libpwu.h
+SOURCES_LIB=libpwu/process_maps.c libpwu/util.c libpwu/rdwr_mem.c libpwu/hook.c libpwu/inject.c libpwu/puppet.c libpwu/name_pid.c libpwu/pattern.c libpwu/resolve.c libpwu/mutate.c libpwu/vector.c
+HEADERS_LIB=libpwu/process_maps.h libpwu/util.h libpwu/rdwr_mem.h libpwu/inject.h libpwu/hook.h libpwu/puppet.h libpwu/name_pid.h libpwu/pattern.h libpwu/resolve.h libpwu/mutate.h libpwu/vector.h libpwu/libpwu.h
 OBJECTS_LIB=${SOURCES_LIB:.c=.o}
 
 #debug sources
@@ -53,7 +53,7 @@ debug/tes%.o: debug/tes%.c ${HEADERS_TEST}
 
 #target subtargets
 ${TARGET}: ${OBJECTS_TGT}
-	${CC} ${CFLAGS_TGT} ${OBJECTS_TGT} --static -o ${TARGET}
+	${CC} ${CFLAGS_TGT} ${OBJECTS_TGT} -o ${TARGET}
 
 debug/tar%.o: debug/tar%.c
 	${CC} ${CFLAGS_TEST} -c $< -o $@
