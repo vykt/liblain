@@ -4,17 +4,12 @@ CC=gcc
 ASM=nasm
 CFLAGS_EXEC=-O0 -ggdb -Wall -lpwu
 CFLAGS_TGT=-O0 -ggdb -Wall
-ASMFLAGS_PAYL=-O0
 
 simple_hook: exec.c target.c payload.asm
 	${CC} ${CFLAGS_EXEC} -o exec exec.c
 
 target: target.c
 	${CC} ${CFLAGS_TGT} -o target target.c
-
-payload: payload.asm
-	${ASM} ${ASMFLAGS_PAYL} payload.asm
-	mv payload payload.o
 
 clean:
 	rm exec

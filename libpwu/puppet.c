@@ -67,14 +67,14 @@ int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
 
 	//create new pattern object to search for a syscall
 	ret = new_pattern(&ptn, NULL, (byte *) "\x0f\x05", 2);
-	if (ret == -1) return -1;
+	if (ret == -1) return -2;
 
 	//for every region
 	for (int i = 0; i < m_data->entry_vector.length; ++i) {
 
 		//get region
 		ret = vector_get_ref(&m_data->entry_vector, i, (byte **) &m_entry_ref);
-		if (ret == -1) return -1;
+		if (ret == -1) return -2;
 
 		//continue if this region is not executable
 		if (m_entry_ref->perms < PROT_EXEC ) continue;
@@ -86,7 +86,7 @@ int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
         //pattern match failed
         if (ret == -1) {
             del_pattern(&ptn);
-            return -1;
+            return -2;
         //syscall not found
         } else if (ret == 0) {
             continue;
@@ -95,7 +95,7 @@ int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
             ret = vector_get(&ptn.offset_vector, 0, (byte *) &syscall_offset);
             if (ret == -1) {
                 del_pattern(&ptn);
-                return -1;
+                return -2;
             }
             p_info->syscall_addr = m_entry_ref->start_addr + syscall_offset;
             return 0;
@@ -103,7 +103,7 @@ int puppet_find_syscall(puppet_info * p_info, maps_data * m_data, int fd_mem) {
 
     }//end for every region
 
-    return -2;
+    return -1;
 }
 
 

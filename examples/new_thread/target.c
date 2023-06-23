@@ -5,55 +5,39 @@
 #include <fcntl.h>
 #include <string.h>
 
-int add_nums(int x, int y) {
 
-	int c;
-	c = x + y;
-	return c;
-}
-
-
+//main function will loop before and after our new thread is started
 int main() {
-
-	int svetas_x = 4;
-	int svetas_y = 16;
-	int total;
 
 	while (1) {
 
-		total = add_nums(svetas_x, svetas_y);
-		printf("This is tid: %d, inject check: %d\n", gettid(), total);
-		sleep(2);
+		printf("This is tid: %d\n", gettid());
+		sleep(1);
 	}
 
 	return 0;
 }
 
 
+//an internal function to convert an integer thread ID to a string for printing 
 void int2ascii(int num, char* str) {
    int i = 0, sign = 0;
    
-   // Handle negative numbers
    if (num < 0) {
       num = -num;
       sign = 1;
    }
-   
-   // Build string in reverse order
+
    do {
       str[i++] = (num % 10) + '0';
       num /= 10;
    } while (num > 0);
    
-   // Add sign if necessary
    if (sign) {
       str[i++] = '-';
    }
    
-   // Null terminate the string
    str[i] = '\0';
-
-   // Reverse the string
    int j, len = strlen(str);
    for(j = 0; j < i / 2; j++){
        char t = str[j];
@@ -63,6 +47,7 @@ void int2ascii(int num, char* str) {
 }
 
 
+//our new thread will begin at this function
 int thread_work() {
 
     ssize_t ret;

@@ -6,7 +6,7 @@
 
 ### ABOUT:
 
-Libpwu is a process manipulation library that offers an organised & structured view of processes and their memory. Libpwu unifies the most useful components of <i>ptrace</i>, <i>dlfcn</i> and other Linux utilities under a single interface. The library provides a range of capabilities from declarative calls to precise, low level operations that automate only the most tedious parts. High level functions are made to be extensible and modular. libpwu aims to provide the user with the ability to seamlessly intertwine high level functions with the user's own low level implementations through the modular and extensible nature of its components.
+Libpwu is a process exploitation library that offers an organised & structured view of processes and their memory. Libpwu unifies the most useful components of <i>ptrace</i>, <i>dlfcn</i> and other Linux utilities under a single interface. The library provides a range of capabilities from declarative calls to precise, low level operations that automate only the most tedious parts. High level functions are made to be extensible and modular. libpwu aims to provide the user with the ability to seamlessly intertwine high level functions with the user's own low level implementations through the modular and extensible nature of its components.
 
 ---
 
@@ -27,7 +27,12 @@ $ make lib
 
 Install:
 ```
-# ./install.sh
+# make install
+```
+
+If you would like documentation in markdown:
+```
+# make install_doc
 ```
 
 ---
@@ -50,24 +55,4 @@ The <i>-l</i> option takes the name of the library minus the 'lib' prefix and th
 
 ### GETTING STARTED:
 
-For a walkthrough and implementation of libpwu's core components, see <i>docs/markdown/intro.md</i>. For an overview of data structures and their related functions, see <i>docs/markdown/structs.md</i>. Example implementations are available in <i>examples</i>.
-
----
-
-### CHECKLIST:
-
-So far Libpwu supports the following functionalities:
-
-- [x] Changing memory region protection by attaching to the process and hijacking 
-      execution to call <i>mprotect()</i>.
-- [x] Injecting objects.
-- [x] Identifying memory caves.
-- [x] Pattern searching.
-- [x] Saving and restoring process registers.
-- [x] Arbitrary reads & writes.
-- [x] Various other small utilities that make life easier.
-- [ ] Spinning up threads with <i>clone()</i>.
-- [ ] Injecting shared objects.
-- [ ] Bindings for rust.
-- [ ] Installation script.
-- [x] Documentation.
+For a walkthrough and implementation of libpwu's core components, see <i>docs/markdown/intro.md</i>. For an overview of data structures and their related functions, see <i>docs/markdown/structs.md</i>. Examples of using libpwu are available in <i>examples</i>.

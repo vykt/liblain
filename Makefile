@@ -2,6 +2,13 @@
 CC=gcc
 ASM=nasm
 
+#installation directories
+LIB_INSTALL=/usr/local/lib
+MAN_PAGE_INSTALL=/usr/local/share/man/man3
+DOC_INSTALL=/usr/local/share/doc/libpwu
+#NOTE: the auto payloads directory is hardcoded to:
+#      /usr/local/share/libpwu/auto_payloads
+
 #flags for each component
 CFLAGS_LIB=-O0 -ggdb -Wall -fPIC
 CFLAGS_TEST=-O0 -ggdb -Wall -L/home/vykt/programming/libpwu -lpwu
@@ -29,6 +36,10 @@ TEST=testing
 TARGET=target
 PAYLOAD=payload.o
 
+#installation objects
+AUTO_PAYLOAD=auto_payload
+MAN_PAGES=docs/man.3
+DOC_FILES=docs/markdown
 
 #build targets
 lib: ${LIBPWU}
@@ -63,8 +74,21 @@ ${PAYLOAD}: debug/payload.asm
 	${ASM} ${ASMFLAGS_PAYL} $< -o $@
 
 
+#install targets
+install:
+	mkdir -p ${LIB_INSTALL}
+	cp ${LIBPWU} ${LIB_INSTALL}
+	mkdir -p /usr/local/share/libpwu/auto_payloads
+	cp -R ${AUTO_PAYLOAD}/*.o /usr/local/share/libpwu/auto_payloads	
+	mkdir -p ${MAN_PAGES_INSTALL}
+	cp -R ${MAN_PAGES}/* ${MAN_PAGES_INSTALL}
+
+install_docs:
+	mkdir -p ${DOC_INSTALL}
+	cp -R ${DOC_FILES}/* ${DOC_INSTALL}
+
+
 #clean targets
-#repeat in case of error
 clean:
 	rm ${OBJECTS_LIB} ${LIBPWU} ${OBJECTS_TEST} ${TEST} ${OBJECTS_TGT} ${TARGET} ${PAYLOAD}
 

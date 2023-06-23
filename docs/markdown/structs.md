@@ -250,6 +250,8 @@ typedef struct {
 
     pid_t pid;
 
+    void * syscall_addr;
+
     struct user_regs_struct saved_state;
     struct user_fpregs_struct saved_float_state;
 
@@ -265,6 +267,7 @@ typedef struct {
 
 ### elements
 - `pid`               : target process ID.
+- `*syscall_addr`     : syscall instruction address in executable memory of puppet.
 - `saved_state`       : registers at time of puppet.
 - `saved_float_state` : floating point registers at time of puppet.
 - `new_state`         : registers for `mprotect` syscall.
@@ -273,6 +276,96 @@ typedef struct {
 ### functions
 - `puppet_attach()`
 - `puppet_detach()`
+- `puppet_find_syscall()`
 - `puppet_save_regs()`
 - `puppet_write_regs()`
+- `puppet_copy_regs()`
 - `change_region_perms()`
+
+<br>
+
+## new\_thread\_setup
+
+```c
+typedef struct {
+
+    maps_entry * thread_func_region;
+    maps_entry * setup_region;
+    unsigned int thread_func_offset;
+    unsigned int setup_offset;
+    void * stack_addr;
+    unsigned int stack_size;
+
+} new_thread_setup;
+
+```
+
+### description
+`new_thread_setup` contains data needed to create a new thread inside the target process. `stack_addr` must be initialised with `create_thread_stack()`. `thread_func_region` and `thread_func_offset` must be set manually.
+
+### elements
+- `thread_func_region` : segment where the thread function resides, set manually.
+- `setup_region`       : segment where the setup payload will be injected, set manually.
+- `thread_func_offset` : offset for the thread function in its segment, set manually.
+- `setup_offset`       : offset to inject at inside the setup segment, set manually.
+- `stack_addr`         : new thread stack, set by `create_thread_stack()` 
+- `stack_size`         : stack size, set manually prior to `create_thread_stack()`
+
+### functions
+- `create_thread_stack()`
+- `start_thread()`
+
+<br>
+
+## mutation
+
+```c
+typedef struct {
+
+    unsigned int offset;
+    byte mod[32];
+    int mod_len;
+
+} mutation;
+
+```
+
+### description
+`mutation` is a single mutation applied to a payload by the `apply_mutations()` function, which takes a vector of `mutation` structures.
+
+### elements
+- `offset`  : offset into the payload at which to begin the mutation.
+- `mod[32]` : buffer holding the mutation, up to 32bytes in size;
+- `mod_len` : the real length of the mutation stored in `mod[32]`.
+
+### functions
+- `apply_mutations()`
+
+<br>
+
+## sym\_resolve
+
+```c
+typedef struct {
+
+    void * lib_handle;
+    maps_data * host_m_data;
+    maps_data * target_m_data;
+
+} sym_resolve;
+
+```
+
+### description
+`sym_resolve` stores data for resolving shared object symbols in the target process.
+
+### elements
+- `*lib_handle`    : shared object handle returned by `open_lib()`.
+- `*host_m_data`   : own process process maps, populate manually.
+- `*target_m_data` : target process maps, populate manually.
+
+### functions
+- `open_lib()`
+- `close_lib()`
+- `get_symbol_addr()`
+- `resolve_symbol()`

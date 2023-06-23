@@ -8,31 +8,20 @@
 #include <linux/limits.h>
 #include <sys/mman.h>
 
-#include "../libpwu/libpwu.h"
+#include <libpwu.h>
 
 
 int main() {
 
-
-	//everything that is required is to inject & hook is here
-	char * payload_filename = "payload.o";
-	int payload_size = 18;
-	unsigned int target_offset = 0x1bf;      //dynamic
-    unsigned int thread_work_offset = 0x33b; //dynamic
+    unsigned int thread_work_offset = 0x2f6;
 	int region_num = 1;
 
 	int ret;
 	int fd_mem;
 	int tid;
 	FILE * fd_maps;
-	uint32_t old_jump_offset;
     void * stack_addr;
-    unsigned int stack_size = 0x800000;
-    
-    int own_fd_mem;
-    FILE * own_fd_maps;
-    unsigned int matched_offset;
-    pid_t own_pid;
+    unsigned int stack_size = 0x800000; //8Mb
 
 	//define uninitialised libpwu structs (see header for details)
 	maps_data m_data;
@@ -40,13 +29,7 @@ int main() {
 	name_pid n_pid;
 	puppet_info p_info;
 	cave cav;
-	raw_injection r_injection;
-	rel_jump_hook hook;
 	new_thread_setup n_t_setup;
-
-    sym_resolve s_resolve;
-    maps_data own_maps;
-    maps_entry * matched_region;
 
 	//-----INIT
 	//initialise the maps_data struct on the heap
@@ -88,63 +71,11 @@ int main() {
 	if (ret == -1) return -1;
 
 
-	//-----INJECTING
+    //-----START NEW THREAD 
 	//get caves and make sure there's at least one available
-	ret = get_caves(m_entry, fd_mem, 66, &cav); //get caves of size 20+
+	ret = get_caves(m_entry, fd_mem, 48, &cav); //get caves of size 48+
 	if (ret <= 0) return -1;
 
-	//initialise a new raw injection struct and read the payload into memory
-	ret = new_raw_injection(&r_injection, m_entry, cav.offset, payload_filename);
-	if (ret == -1) return -1;
-
-	//inject the payload into a cave
-	ret = raw_inject(r_injection, fd_mem);
-	if (ret == -1) return -1;
-
-	//hook call from target to payload
-	hook.from_region = m_entry;
-	hook.from_offset = target_offset;
-	hook.to_region = m_entry;
-	hook.to_offset = cav.offset;
-
-	old_jump_offset = hook_rj(hook, fd_mem);
-	if (old_jump_offset == 0) return -1;
-
-
-    //-----RESOLVE puts() ADDRESS IN TARGET
-    //open a handle on libc
-    ret = open_lib("libc.so.6", &s_resolve);
-    if (ret == -1) return -1;
-
-    //initialise own process maps
-    ret = new_maps_data(&own_maps);
-
-    //get own pid
-    own_pid = getpid();
-
-	//open own memory and memory maps
-	ret = open_memory(own_pid, &own_fd_maps, &own_fd_mem);
-	if (ret == -1) return -1;
-
-	//read own memory maps
-	ret = read_maps(&own_maps, own_fd_maps);
-    if (ret == -1) return -1;
-
-    //put together the symbol resolving struct
-    s_resolve.host_m_data = &own_maps;
-    s_resolve.target_m_data = &m_data;
-
-    //resolve puts() symbol
-    ret = resolve_symbol("puts", s_resolve, &matched_region, &matched_offset);
-
-    printf("The address of puts() in target is: %p\n", 
-           matched_region->start_addr + matched_offset);
-
-    //close the handle on libc
-    close_lib(&s_resolve);
-
-
-    //-----THREAD SHENANIGANS
     //allocate some memory for a thread stack
     ret = create_thread_stack(&p_info, fd_mem, &stack_addr, stack_size);
     if (ret == -1) return -1;
@@ -162,10 +93,8 @@ int main() {
 	ret = start_thread(&p_info, fd_mem, n_t_setup, &tid);
     if (ret == -1) return -1;
 
-	//-----CLEANUP
-	//delete injection data
-	del_raw_injection(&r_injection);
 
+	//-----CLEANUP
 	//change restore r-x permissions for .text segment
 	ret = change_region_perms(&p_info, 5, fd_mem, m_entry);
 	if (ret == -1) return -1;
@@ -177,5 +106,4 @@ int main() {
 	//delete data structures
 	ret = del_name_pid(&n_pid);
 	ret = del_maps_data(&m_data);
-    ret = del_maps_data(&own_m_data);
 }
