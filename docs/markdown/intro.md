@@ -55,7 +55,7 @@ p_info.pid = <pid>; //manually set the desired process ID
 //attach to the target process
 ret = puppet_attach(p_info);
 //change the segment permissions to read, write & execute.
-ret = change_region_perms(&p.inf, 7, fd_mem, &m_data, m_entry);
+ret = change_region_perms(&p.inf, 7, fd_mem, m_entry);
 ```
 
 NOTE: Unlike POSIX file permissions, memory permissions are inverted. 1 = read, 2 = write, 4 = exec (man 2 mprotect).

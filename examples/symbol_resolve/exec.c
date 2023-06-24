@@ -14,22 +14,21 @@
 int main() {
 
 	int ret;
-	int fd_mem;
-	FILE * fd_maps;
+	int fd_mem;     //fd for /proc/<pid>mem
+	FILE * fd_maps; //stream for /proc/<pid>/maps
     
-    int own_fd_mem;
-    FILE * own_fd_maps;
-    unsigned int matched_offset;
-    pid_t target_pid;
-    pid_t own_pid;
+    int own_fd_mem;              //fd for our own /proc/<pid>/mem
+    FILE * own_fd_maps;          //stream for our own /proc/<pid>/maps
+    pid_t target_pid;            //target pid, filled by pid_by_name
+    pid_t own_pid;               //our own pid
 
 	//define uninitialised libpwu structs (see header for details)
-	maps_data m_data;
-	name_pid n_pid;
-
-    sym_resolve s_resolve;
-    maps_data own_m_data;
-    maps_entry * matched_region;
+	maps_data m_data;            //structure of target's /proc/<pid>/maps
+	name_pid n_pid;              //struct to get pid using process' name
+    sym_resolve s_resolve;       //struct to resolve a symbol addr in the target process
+    maps_data own_m_data;        //structure of our own /proc/<pid>/maps
+    maps_entry * matched_region; //segment in the target process where the symbol occurs 
+    unsigned int matched_offset; //offset for matched_region where the symbol occurs
 
 	//-----INIT
 	//initialise the maps_data struct on the heap

@@ -12,23 +12,22 @@
 
 int main() {
 
-	//everything that is required is to inject & hook is here
-	char * payload_filename = "payload.o";
-	unsigned int target_offset = 0x17f;
-	int region_num = 1;
+	char * payload_filename = "payload.o"; //name of our payload
+	unsigned int target_offset = 0x17f;    //offset of the relative jump we're hooking
+	int region_num = 1;                    //index of the segment where the jump is
 
 	int ret;
-	int fd_mem;
-	FILE * fd_maps;
-	uint32_t old_jump_offset;
+	int fd_mem;               //fd for /proc/<pid>/mem
+	FILE * fd_maps;           //stream for /proc/<pid>/maps
+	uint32_t old_jump_offset; //buffer to store old relative jump offset
 
-	//define uninitialised libpwu structs (see header for details)
-	maps_data m_data;
-	maps_entry * m_entry;
-	name_pid n_pid;
-	puppet_info p_info;
-	cave cav;
-	raw_injection r_injection;
+	//define uninitialised libpwu structs (see structs.md or man libpwu_structs)
+	maps_data m_data;          //structure of target's /proc/<pid>/maps
+	maps_entry * m_entry;      //pointer for a segment in m_data
+	name_pid n_pid;            //struct to get pid using process' name
+	puppet_info p_info;        //puppeting struct (see structs.md or man libpwu_structs)
+	cave cav;                  //a found cave in the target process
+	raw_injection r_injection; //struct for injecting a payload into the target
 	rel_jump_hook hook;
 
 	//-----INIT

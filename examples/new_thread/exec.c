@@ -13,23 +13,23 @@
 
 int main() {
 
-    unsigned int thread_work_offset = 0x2f6;
-	int region_num = 1;
+    unsigned int thread_work_offset = 0x2f6; //offset of the function our thread will run
+	int region_num = 1;                      //index of the segment where the function is
 
 	int ret;
-	int fd_mem;
-	int tid;
-	FILE * fd_maps;
-    void * stack_addr;
+	int fd_mem;        //fd for /proc/<pid>/mem 
+	FILE * fd_maps;    //stream for /proc/<pid>/maps
+    int tid;           //store thread ID the thread we're going to starting
+    void * stack_addr; //address of the stack we'll allocate for the new thread
     unsigned int stack_size = 0x800000; //8Mb
 
 	//define uninitialised libpwu structs (see header for details)
-	maps_data m_data;
-	maps_entry * m_entry;
-	name_pid n_pid;
-	puppet_info p_info;
-	cave cav;
-	new_thread_setup n_t_setup;
+	maps_data m_data;           //structure of target's /proc/<pid>/maps
+	maps_entry * m_entry;       //pointer for a segment in m_data
+	name_pid n_pid;             //struct to get pid using process' name
+	puppet_info p_info;         //puppeting struct (see structs.md or man libpwu_structs)
+	cave cav;                   //a found cave in the target process
+	new_thread_setup n_t_setup; //struct for injecting a payload into the target
 
 	//-----INIT
 	//initialise the maps_data struct on the heap
