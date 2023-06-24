@@ -4,7 +4,8 @@ ASM=nasm
 
 #installation directories
 LIB_INSTALL=/usr/local/lib
-MAN_PAGE_INSTALL=/usr/local/share/man/man3
+LIB_HEADERS_INSTALL=/usr/local/include
+MAN_PAGES_INSTALL=/usr/local/share/man/man3
 DOC_INSTALL=/usr/local/share/doc/libpwu
 #NOTE: the auto payloads directory is hardcoded to:
 #      /usr/local/share/libpwu/auto_payloads
@@ -78,10 +79,14 @@ ${PAYLOAD}: debug/payload.asm
 install:
 	mkdir -p ${LIB_INSTALL}
 	cp ${LIBPWU} ${LIB_INSTALL}
+	mkdir -p ${LIB_HEADERS_INSTALL}
+	cp libpwu/libpwu.h ${LIB_HEADERS_INSTALL}
 	mkdir -p /usr/local/share/libpwu/auto_payloads
 	cp -R ${AUTO_PAYLOAD}/*.o /usr/local/share/libpwu/auto_payloads	
 	mkdir -p ${MAN_PAGES_INSTALL}
 	cp -R ${MAN_PAGES}/* ${MAN_PAGES_INSTALL}
+	ldconfig
+	mandb
 
 install_docs:
 	mkdir -p ${DOC_INSTALL}

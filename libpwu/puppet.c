@@ -275,7 +275,6 @@ int create_thread_stack(puppet_info * p_info, int fd_mem, void ** stack_addr,
 int setup_new_thread_payload(int fd_mem, new_thread_setup n_t_setup) {
 
 	//offsets specific to the new_thread.o auto payload
-	char * new_thread_payload_path = "auto_payload/new_thread.o";
 	int rbp_offset = 0xC;
 	int rsp_offset = 0x16;
 	int jmp_offset = 0x20;
@@ -316,7 +315,7 @@ int setup_new_thread_payload(int fd_mem, new_thread_setup n_t_setup) {
 
 	//read payload
 	ret = new_raw_injection(&r_injection, n_t_setup.setup_region,
-	                        n_t_setup.setup_offset, new_thread_payload_path);
+	                        n_t_setup.setup_offset, new_thread_payload);
 	if (ret == -1) return -1;
 
 	//mutate payload with mutation vector

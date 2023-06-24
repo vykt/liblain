@@ -85,7 +85,7 @@ int main() {
 	n_t_setup.thread_func_offset = thread_work_offset;
 	n_t_setup.setup_region = m_entry;
 	//put bootstrap payload immediately after the previously injected payload
-	n_t_setup.setup_offset = cav.offset + payload_size;
+	n_t_setup.setup_offset = cav.offset;
 	n_t_setup.stack_addr = stack_addr;
 	n_t_setup.stack_size = stack_size;
 

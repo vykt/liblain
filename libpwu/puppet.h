@@ -8,6 +8,9 @@
 
 #define STOP_TIMEOUT 3
 
+//internal
+char * new_thread_payload = "/usr/local/share/libpwu/auto_payloads/new_thread.o";
+
 //external
 int puppet_attach(puppet_info p_info);
 int puppet_detach(puppet_info p_info);

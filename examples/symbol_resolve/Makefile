@@ -5,7 +5,7 @@ ASM=nasm
 CFLAGS_EXEC=-O0 -ggdb -Wall -lpwu
 CFLAGS_TGT=-O0 -ggdb -Wall
 
-simple_hook: exec.c target.c payload.asm
+symbol_resolve: exec.c
 	${CC} ${CFLAGS_EXEC} -o exec exec.c
 
 target: target.c

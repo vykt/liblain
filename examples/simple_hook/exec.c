@@ -62,7 +62,7 @@ int main() {
 	if (ret == -1) return -1;
 
 	//change enable write permissions for the .text region
-	ret = change_region_perms(&p_info, 7, fd_mem, &m_data, m_entry);
+	ret = change_region_perms(&p_info, 7, fd_mem, m_entry);
 	if (ret == -1) return -1;
 
 	//-----INJECTING
@@ -93,7 +93,7 @@ int main() {
 	del_raw_injection(&r_injection);
 
 	//change restore r-x permissions for .text segment
-	ret = change_region_perms(&p_info, 5, fd_mem, &m_data, m_entry);
+	ret = change_region_perms(&p_info, 5, fd_mem, m_entry);
 	if (ret == -1) return -1;
 
 	//detach from the target process

@@ -20,15 +20,15 @@ int main() {
     int own_fd_mem;
     FILE * own_fd_maps;
     unsigned int matched_offset;
+    pid_t target_pid;
     pid_t own_pid;
 
 	//define uninitialised libpwu structs (see header for details)
 	maps_data m_data;
-	maps_entry * m_entry;
 	name_pid n_pid;
 
     sym_resolve s_resolve;
-    maps_data own_maps;
+    maps_data own_m_data;
     maps_entry * matched_region;
 
 	//-----INIT
@@ -43,11 +43,11 @@ int main() {
 
 	//-----SETUP
 	//get pid for the process by its name
-	ret = pid_by_name(&n_pid, &p_info.pid);
+	ret = pid_by_name(&n_pid, &target_pid);
 	if (ret == -1) return -1;
 
 	//open the process's memory and memory maps
-	ret = open_memory(p_info.pid, &fd_maps, &fd_mem);
+	ret = open_memory(target_pid, &fd_maps, &fd_mem);
 	if (ret == -1) return -1;
 
 	//read the maps
@@ -61,7 +61,7 @@ int main() {
     if (ret == -1) return -1;
 
     //initialise own process maps
-    ret = new_maps_data(&own_maps);
+    ret = new_maps_data(&own_m_data);
 
     //get own pid
     own_pid = getpid();
@@ -71,11 +71,11 @@ int main() {
 	if (ret == -1) return -1;
 
 	//read own memory maps
-	ret = read_maps(&own_maps, own_fd_maps);
+	ret = read_maps(&own_m_data, own_fd_maps);
     if (ret == -1) return -1;
 
     //put together the symbol resolving struct
-    s_resolve.host_m_data = &own_maps;
+    s_resolve.host_m_data = &own_m_data;
     s_resolve.target_m_data = &m_data;
 
     //resolve puts() symbol
