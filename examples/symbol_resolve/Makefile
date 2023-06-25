@@ -5,11 +5,9 @@ ASM=nasm
 CFLAGS_EXEC=-O0 -ggdb -Wall
 CFLAGS_TGT=-O0 -ggdb -Wall
 
-symbol_resolve: exec.c
+symbol_resolve: exec.c target.c
 	${CC} ${CFLAGS_EXEC} -o exec exec.c -lpwu -ldl
-
-target: target.c
 	${CC} ${CFLAGS_TGT} -o target target.c
 
 clean:
-	rm exec
+	rm exec target

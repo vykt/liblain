@@ -13,7 +13,7 @@
 int main() {
 
 	char * payload_filename = "payload.o"; //name of our payload
-	unsigned int target_offset = 0x17f;    //offset of the relative jump we're hooking
+	unsigned int target_offset = 0x687;    //offset of the relative jump we're hooking
 	int region_num = 1;                    //index of the segment where the jump is
 
 	int ret;

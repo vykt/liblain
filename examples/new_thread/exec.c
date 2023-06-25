@@ -13,7 +13,7 @@
 
 int main() {
 
-    unsigned int thread_work_offset = 0x2f6; //offset of the function our thread will run
+    unsigned int thread_work_offset = 0x7fe; //offset of the function our thread will run
 	int region_num = 1;                      //index of the segment where the function is
 
 	int ret;

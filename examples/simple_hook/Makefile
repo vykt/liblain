@@ -3,7 +3,7 @@
 CC=gcc
 ASM=nasm
 CFLAGS_EXEC=-O0 -ggdb -Wall
-CFLAGS_TARGET=-O0 -ggdb -Wall
+CFLAGS_TARGET=-O0 -ggdb -Wall --static
 ASMFLAGS_PAYL=-O0
 
 simple_hook: exec.c

@@ -6,6 +6,3 @@ $ ./target
 Then, in the same directory in a separate terminal:
 
 $ ./exec
-
-
-Sources for the target are included, but I heavily advise you to use the included target binary in your tests rather than building the target from source. Differences compilers are likely to invalidate the offsets used by this example.
