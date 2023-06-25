@@ -2,11 +2,11 @@
 
 CC=gcc
 ASM=nasm
-CFLAGS_EXEC=-O0 -ggdb -Wall -lpwu
+CFLAGS_EXEC=-O0 -ggdb -Wall
 CFLAGS_TGT=-O0 -ggdb -Wall
 
 new_thread: exec.c
-	${CC} ${CFLAGS_EXEC} -o exec exec.c
+	${CC} ${CFLAGS_EXEC} -o exec exec.c -lpwu -ldl
 
 target: target.c
 	${CC} ${CFLAGS_TGT} -o target target.c

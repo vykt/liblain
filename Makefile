@@ -12,7 +12,7 @@ DOC_INSTALL=/usr/local/share/doc/libpwu
 
 #flags for each component
 CFLAGS_LIB=-O0 -ggdb -Wall -fPIC
-CFLAGS_TEST=-O0 -ggdb -Wall -L/home/vykt/programming/libpwu -lpwu
+CFLAGS_TEST=-O0 -ggdb -Wall -L/home/vykt/programming/libpwu
 CFLAGS_TGT=-O0 -ggdb -Wall
 ASMFLAGS_PAYL=-O0
 
@@ -51,17 +51,17 @@ payl: ${PAYLOAD}
 
 #libpwu subtargets
 ${LIBPWU}: ${OBJECTS_LIB}
-	${CC} ${CFLAGS_LIB} -shared -o ${LIBPWU} ${OBJECTS_LIB} ${HEADERS_LIB}
+	${CC} ${CFLAGS_LIB} -shared -o ${LIBPWU} ${OBJECTS_LIB} ${HEADERS_LIB} -ldl
 
 libpwu/%.o: libpwu/%.c ${HEADERS_LIB}
-	${CC} ${CFLAGS_LIB} -c $< -o $@
+	${CC} ${CFLAGS_LIB} -c $< -o $@ -ldl
 
 #test subtargets
 ${TEST}: ${OBJECTS_TEST}
-	${CC} ${CFLAGS_TEST} ${OBJECTS_TEST} ${HEADERS_TEST} -o ${TEST}
+	${CC} ${CFLAGS_TEST} ${OBJECTS_TEST} ${HEADERS_TEST} -o ${TEST} -lpwu
 
 debug/tes%.o: debug/tes%.c ${HEADERS_TEST}
-	${CC} ${CFLAGS_TEST} -c $< -o $@
+	${CC} ${CFLAGS_TEST} -c $< -o $@ -lpwu
 
 #target subtargets
 ${TARGET}: ${OBJECTS_TGT}
