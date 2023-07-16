@@ -1,3 +1,5 @@
+In this example the target process consists of 2 functions. One function is running in a loop, the other is not used. Here libpwu is used to create a new thread which will execute the unused function. In reality, you will probably want to inject your own code and then run it in a new thread.
+
 To run this example:
 
 $ make
