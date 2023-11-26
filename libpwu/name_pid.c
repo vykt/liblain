@@ -20,6 +20,9 @@ int new_name_pid(name_pid * n_pid, char * name) {
 	int ret;
 	size_t size_ret;
 
+    //zero out the buffer
+    memset(n_pid->name, 0, NAME_MAX);
+
 	//copy name string into fixed size buffer, don't allow invalid names
 	size_ret = strlen(name);
 	if (size_ret >= NAME_MAX) return -1;
