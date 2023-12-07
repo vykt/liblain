@@ -11,8 +11,7 @@
 int open_lib(char * lib_path, sym_resolve * s_resolve) {
 
     void * lib_handle;
-    //lib_handle = dlopen(lib_path, RTLD_NOW);
-    lib_handle = dlopen("libc.so.6", RTLD_NOW);
+    lib_handle = dlopen(lib_path, RTLD_NOW);
     if (lib_handle == NULL) return -1;
     s_resolve->lib_handle = lib_handle;
     return 0;
@@ -113,7 +112,6 @@ int resolve_symbol(char * symbol, sym_resolve s_resolve,
     int obj_index;
     maps_entry * host_matched_region;
     maps_entry * temp_entry;
-    maps_obj * temp_obj;
 
     //get address of symbol in own process
     temp_addr = get_symbol_addr(symbol, s_resolve);
@@ -125,8 +123,6 @@ int resolve_symbol(char * symbol, sym_resolve s_resolve,
     if (ret != 0) return ret;
 
     //find the corresponding backing file in target process
-    //ret = vector_get_ref(&s_resolve.host_m_data->obj_vector, obj_index, 
-    //                     (byte **) &temp_obj);
     ret = get_region_by_meta(host_matched_region->pathname, obj_index, &temp_entry,
                              s_resolve.target_m_data);
     if (ret != 0) return ret;

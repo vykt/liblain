@@ -1,6 +1,10 @@
 #ifndef _LIBPWU_H
 #define _LIBPWU_H
 
+#ifdef __cplusplus
+extern "C"{
+#endif
+
 #include <stdio.h>
 #include <stdint.h>
 
@@ -298,5 +302,9 @@ extern int vector_get_ref(vector * v, unsigned long pos, byte ** data);
 extern int read_mem(int fd_mem, void * addr, byte * read_buf, int len);
 //returns: 0 - success, -1 - fail
 extern int write_mem(int fd_mem, void * addr, byte * write_buf, int len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

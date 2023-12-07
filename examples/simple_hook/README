@@ -1,3 +1,5 @@
+Here the target process is repeatedly printing the sum of 4 and 16. In this example, libpwu is used to hook the summing function and add 3 to the sum. Many practical uses here, like hooking TLS encryption to get the plaintext.
+
 To run this example:
 
 $ make

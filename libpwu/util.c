@@ -26,23 +26,9 @@ int open_memory(pid_t pid, FILE ** fd_maps, int * fd_mem) {
 
 	char maps_buf[PATH_MAX] = {0};
 	char mem_buf[PATH_MAX] = {0};
-	char pid_buf[NAME_MAX] = {0};
 
-	char * proc = "/proc/";
-	char * maps = "/maps";
-	char * mem = "/mem";
-
-	snprintf(pid_buf, NAME_MAX, "%d", pid);
-
-	//concatinate alllll the strings
-	strcat(maps_buf, proc);
-	strcat(mem_buf, proc);
-
-	strcat(maps_buf, pid_buf);
-	strcat(mem_buf, pid_buf);
-
-	strcat(maps_buf, maps);
-	strcat(mem_buf, mem);
+    snprintf(maps_buf, PATH_MAX, "/proc/%d/maps", pid);
+    snprintf(mem_buf, PATH_MAX, "/proc/%d/mem", pid);
 
 	*fd_maps = fopen(maps_buf, "r");
 	*fd_mem = open(mem_buf, O_RDWR);
