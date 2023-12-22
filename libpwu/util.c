@@ -30,9 +30,16 @@ int open_memory(pid_t pid, FILE ** fd_maps, int * fd_mem) {
     snprintf(maps_buf, PATH_MAX, "/proc/%d/maps", pid);
     snprintf(mem_buf, PATH_MAX, "/proc/%d/mem", pid);
 
-	*fd_maps = fopen(maps_buf, "r");
-	*fd_mem = open(mem_buf, O_RDWR);
-	if (*fd_maps == NULL || *fd_mem == -1) return -1;
+    //only open maps if requested
+    if (fd_maps != NULL) {
+	    *fd_maps = fopen(maps_buf, "r");
+        if (*fd_maps == NULL) return -1;
+    }
+    //only opem mem if requested
+    if (fd_mem != NULL) {
+	    *fd_mem = open(mem_buf, O_RDWR);
+	    if (*fd_mem == -1) return -1;
+    }
 
     return 0;
 }

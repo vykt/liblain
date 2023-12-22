@@ -28,6 +28,9 @@ int open_memory(pid_t pid, FILE ** fd_maps, int * fd_mem);
 .PP
 \f[V]open_memory()\f[R] opens \f[V]/proc/<pid>/{mem,maps}\f[R] for use
 by other functions.
+\f[V]fd_maps\f[R] or \f[V]fd_mem\f[R] may be NULL, in which case the
+function will not attempt to open the corresponding stream/file
+descriptor.
 .SS parameters
 .IP \[bu] 2
 \f[V]pid\f[R] : PID of the target process.

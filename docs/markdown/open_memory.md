@@ -5,7 +5,9 @@ int open_memory(pid_t pid, FILE ** fd_maps, int * fd_mem);
 ```
 
 ### description
-`open_memory()` opens `/proc/<pid>/{mem,maps}` for use by other functions.
+`open_memory()` opens `/proc/<pid>/{mem,maps}` for use by other functions. `fd_maps`
+or `fd_mem` may be NULL, in which case the function will not attempt to open the 
+corresponding stream/file descriptor.
 
 ### parameters
 - `pid`       : PID of the target process.
