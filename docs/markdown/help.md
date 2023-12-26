@@ -93,7 +93,7 @@ close_lib          : close shared object in own process
 get_symbol_addr    : get address of symbol
 
 get_region_by_addr : find which memory region an address resides in
-
+get_region_by_meta : find memory region that matches a pathname and index
 ```
 
 
