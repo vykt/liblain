@@ -33,6 +33,7 @@ typedef struct {
 
         //read_maps()
         char pathname[PATH_MAX];
+        char * basename;
         byte perms;
         void * start_addr;
         void * end_addr;
@@ -49,6 +50,7 @@ typedef struct {
 
 ### elements
 - `pathname`            : name of the backing file for this segment. refer to `proc(5)`.
+- `basename`            : pointer to the start of the basename in `maps_entry.pathname`.
 - `perms`               : permissions for the region, see `mprotect(2)` for format.
 - `start_addr`          : address of the start of this segment in `/proc/<pid>/mem`.
 - `end_addr`            : address of the end of this segment in `/proc\<pid\>/mem`.
@@ -66,6 +68,7 @@ typedef struct {
 typedef struct {
 
         char name[PATH_MAX];
+        char * basename;
         vector entry_vector; //*maps_entry
 
 } maps_obj;
@@ -76,6 +79,7 @@ typedef struct {
 
 ### elements
 - `name`         : name of the backing file.
+- `basename`     : basename of backing file.
 - `entry_vector` : vector of pointers to `maps_entry` structures belonging to this backing file.
 
 ### functions

@@ -20,7 +20,7 @@ int del_maps_data(maps_data * m_data);
 int build_obj_vector(maps_data * m_data);
 int entry_path_match(maps_entry temp_m_entry, maps_data m_data);
 int get_maps_line(char line[LINE_LEN], FILE * maps_stream);
-int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX]);
+int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX], char * basename);
 int del_maps_obj(maps_obj * m_obj);
 int new_maps_entry(maps_entry * m_entry);
 int del_maps_entry(maps_entry * m_entry);

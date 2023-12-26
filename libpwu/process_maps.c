@@ -40,7 +40,8 @@ int build_obj_vector(maps_data * m_data) {
 		if (pos == -1) {
 
 			//create new maps object
-			ret = new_maps_obj(&temp_m_obj, temp_m_entry->pathname);
+			ret = new_maps_obj(&temp_m_obj, temp_m_entry->pathname, 
+                               temp_m_entry->basename);
 			if (ret == -1) return -1;
 
 			//add entry to this map object
@@ -100,6 +101,12 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 		
 		//if there is no pathname for a given entry, set it to tag
 		if (ret == -1) strcpy(temp_m_entry.pathname, "<NO_PATHNAME>");
+
+        //set the basename
+        temp_m_entry.basename = strrchr(temp_m_entry.pathname, (int) '/') + 1;
+        if (temp_m_entry.basename == (char *) 1) {
+            temp_m_entry.basename = temp_m_entry.pathname;
+        }
 
 		//add temporary entry to entry vector
 		ret = vector_add(&m_data->entry_vector, 0, (byte *) &temp_m_entry,
@@ -188,15 +195,22 @@ int get_maps_line(char line[LINE_LEN], FILE * maps_stream) {
 
 
 //initialise new maps_obj
-int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX]) {
+int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX], char * basename) {
 
 	int ret;
+    off_t new_basename_offset;
 
 	//first, zero out the name field
 	memset(m_obj->name, '\0', PATH_MAX);
 
 	//now copy name in
 	strcpy(m_obj->name, name);
+
+    //calculate basename offset
+    new_basename_offset = (off_t) (basename - name);
+
+    //set new basename pointer
+    m_obj->basename = m_obj->name + new_basename_offset;
 
 	//now, initialise vector member
 	ret = new_vector(&m_obj->entry_vector, sizeof(maps_entry *));

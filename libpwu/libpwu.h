@@ -47,6 +47,7 @@ typedef struct {
 
         //read_maps()
         char pathname[PATH_MAX];
+        char * basename;                //points to basename in maps_entry.pathname
         byte perms;                     //4 (read) + 2 (write) + 1 (exec)
         void * start_addr;
         void * end_addr;
@@ -61,6 +62,7 @@ typedef struct {
 typedef struct {
 
         char name[PATH_MAX];
+        char * basename;
         vector entry_vector; //*maps_entry
 
 } maps_obj;
