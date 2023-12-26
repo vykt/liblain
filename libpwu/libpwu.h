@@ -47,9 +47,10 @@ typedef struct {
 
         //read_maps()
         char pathname[PATH_MAX];
-        byte perms; //4 (read) + 2 (write) + 1 (exec)
+        byte perms;                     //4 (read) + 2 (write) + 1 (exec)
         void * start_addr;
         void * end_addr;
+        unsigned long obj_vector_index; //index into maps_data.obj_vector
 
         //get_caves()
         vector cave_vector; //cave
