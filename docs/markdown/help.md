@@ -87,13 +87,14 @@ write_mem : write process memory
 
 ### symbol resolution
 ```
-open_lib           : open shared object in own process
-close_lib          : close shared object in own process
+open_lib               : open shared object in own process
+close_lib              : close shared object in own process
 
-get_symbol_addr    : get address of symbol
+get_symbol_addr        : get address of symbol
 
-get_region_by_addr : find which memory region an address resides in
-get_region_by_meta : find memory region that matches a pathname and index
+get_region_by_addr     : find which memory region an address resides in
+get_region_by_path     : find memory object that matches a pathname
+get_region_by_basename : find memory object that matches a basename
 ```
 
 

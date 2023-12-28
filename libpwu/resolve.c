@@ -72,9 +72,9 @@ int get_region_by_addr(void * addr, maps_entry ** matched_region,
 }
 
 
-//get memory region that matches the pathname and index
-int get_region_by_meta(char * pathname, int index, maps_entry ** matched_region, 
-                       maps_data * m_data) {
+//get memory region that matches a pathname and index
+int get_region_by_path(char * pathname, int index, maps_data * m_data,
+                       maps_entry ** matched_region, maps_obj ** matched_obj) {
 
     int ret;
     maps_obj * temp_obj;
@@ -94,6 +94,39 @@ int get_region_by_meta(char * pathname, int index, maps_entry ** matched_region,
             ret = vector_get(&temp_obj->entry_vector, index, (byte *) &temp_entry);
             if (ret == -2) return -1;
 
+            *matched_obj = temp_obj;
+            *matched_region = temp_entry;
+            return 0;
+        } //end if names match
+    } //end for every backing object
+
+    return -1;
+}
+
+
+//get memory region that matches a pathname and index
+int get_region_by_basename(char * basename, int index, maps_data * m_data,
+                           maps_entry ** matched_region, maps_obj ** matched_obj) {
+
+    int ret;
+    maps_obj * temp_obj;
+    maps_entry * temp_entry;
+
+    //for every backing object
+    for (int i = 0; i < m_data->obj_vector.length; ++i) {
+        
+        //get the object
+        ret = vector_get_ref(&m_data->obj_vector, i, (byte **) &temp_obj);
+        if (ret == -2) return -1;
+
+        //if names match
+        ret = strcmp(basename, temp_obj->basename);
+        if (ret == 0) {
+
+            ret = vector_get(&temp_obj->entry_vector, index, (byte *) &temp_entry);
+            if (ret == -2) return -1;
+
+            *matched_obj = temp_obj;
             *matched_region = temp_entry;
             return 0;
         } //end if names match
@@ -112,6 +145,7 @@ int resolve_symbol(char * symbol, sym_resolve s_resolve,
     int obj_index;
     maps_entry * host_matched_region;
     maps_entry * temp_entry;
+    maps_obj * temp_obj;
 
     //get address of symbol in own process
     temp_addr = get_symbol_addr(symbol, s_resolve);
@@ -123,8 +157,8 @@ int resolve_symbol(char * symbol, sym_resolve s_resolve,
     if (ret != 0) return ret;
 
     //find the corresponding backing file in target process
-    ret = get_region_by_meta(host_matched_region->pathname, obj_index, &temp_entry,
-                             s_resolve.target_m_data);
+    ret = get_region_by_path(host_matched_region->pathname, obj_index,
+                             s_resolve.target_m_data, &temp_entry, &temp_obj);
     if (ret != 0) return ret;
 
     *matched_region = temp_entry;

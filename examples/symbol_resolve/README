@@ -1,3 +1,9 @@
+!!!!
+!!!! THIS EXAMPLE IS CURRENTLY BROKEN DUE TO THE CHANGE IN THE SIGNATURE
+!!!! OF get_region_by_path() (previously get_region_by_meta()) IN libpwu v1.0.2
+!!!!
+
+
 In this example, libpwu is used to determine the address of the puts() function which gets dynamically linked to the target. If you would like to make use of libc in your payloads, make your injector resolve the addresses of all functions you're interested in as is done here, and then mutate your payload to call the correct addresses before injecting.
 
 
