@@ -49,6 +49,12 @@ int build_obj_vector(maps_data * m_data) {
 					         APPEND_TRUE);
 			if (ret == -1) return -1;
 
+            //set the obj_index value for this maps_entry
+            temp_m_entry->obj_index = temp_m_obj.next_entry_index;
+
+            //increment next_entry_index for this maps_obj
+            temp_m_obj.next_entry_index += 1;
+
 			//add map object to map data passed by caller
 			ret = vector_add(&m_data->obj_vector, 0, (byte *) &temp_m_obj,
 					         APPEND_TRUE);
@@ -64,6 +70,13 @@ int build_obj_vector(maps_data * m_data) {
 			ret = vector_get_ref(&m_data->obj_vector, pos, (byte **) &temp_m_obj_ref);
 			if (ret == -1) return -1;
 
+            //set the obj_index value for this maps_entry
+            temp_m_entry->obj_index = temp_m_obj_ref->next_entry_index;
+
+            //increment next_entry_index for this maps_obj
+            temp_m_obj_ref->next_entry_index += 1;
+
+            //associate this maps_entry with this maps_obj
 			ret = vector_add(&temp_m_obj_ref->entry_vector, 0, (byte *) &temp_m_entry, 
 					         APPEND_TRUE);
 			if (ret == -1) return -1;
@@ -136,7 +149,7 @@ int entry_path_match(maps_entry temp_m_entry, maps_data m_data) {
 		ret = vector_get(&m_data.obj_vector, i, (byte *) &m_obj);
 		if (ret == -1) return -1; //unable to fetch vector entry
 
-		ret = strcmp(temp_m_entry.pathname, m_obj.name);
+		ret = strcmp(temp_m_entry.pathname, m_obj.pathname);
 		if (ret == 0) {
 			return (int) i; //return index into obj_vector in case of match
 		}
@@ -201,16 +214,19 @@ int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX], char * basename) {
     off_t new_basename_offset;
 
 	//first, zero out the name field
-	memset(m_obj->name, '\0', PATH_MAX);
+	memset(m_obj->pathname, '\0', PATH_MAX);
 
 	//now copy name in
-	strcpy(m_obj->name, name);
+	strcpy(m_obj->pathname, name);
 
     //calculate basename offset
     new_basename_offset = (off_t) (basename - name);
 
     //set new basename pointer
-    m_obj->basename = m_obj->name + new_basename_offset;
+    m_obj->basename = m_obj->pathname + new_basename_offset;
+
+    //initialise next entry index
+    m_obj->next_entry_index = 0;
 
 	//now, initialise vector member
 	ret = new_vector(&m_obj->entry_vector, sizeof(maps_entry *));

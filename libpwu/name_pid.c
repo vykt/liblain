@@ -21,12 +21,12 @@ int new_name_pid(name_pid * n_pid, char * name) {
 	size_t size_ret;
 
     //zero out the buffer
-    memset(n_pid->name, 0, NAME_MAX);
+    memset(n_pid->basename, 0, NAME_MAX);
 
 	//copy name string into fixed size buffer, don't allow invalid names
 	size_ret = strlen(name);
 	if (size_ret >= NAME_MAX) return -1;
-	strncpy(n_pid->name, name, size_ret);
+	strncpy(n_pid->basename, name, size_ret);
 
 	ret = new_vector(&n_pid->pid_vector, sizeof(pid_t));
 	return ret; //0 on success, -1 on fail
@@ -92,7 +92,7 @@ int pid_by_name(name_pid * n_pid, pid_t * first_pid) {
 
 			//if found process with matching name
 			comm_buf[strcspn(comm_buf, "\n")] = '\0'; //replace trailing newline
-			ret = strcmp(comm_buf, n_pid->name);
+			ret = strcmp(comm_buf, n_pid->basename);
 			if (!ret) {
 
 				//convert dir name to pid_t

@@ -67,6 +67,6 @@ The <i>-l</i> option takes the name of the library minus the 'lib' prefix and th
 
 ### GETTING STARTED:
 
-To get started, take a look at <i>docs/markdown/intro.md</i> for quick introduction to commonly used components of Libpwu. Example implementations of payload injection, function hooking, symbol resolution and more can be found in <i>examples</i>.
+To get started, take a look at <i>docs/markdown/intro.md</i> for quick introduction to commonly used components of Libpwu. All libpwu structures can be found in <i>docs/markdown/structs.md</i>. All functions provided by libpwu can be found in <i>docs/markdown/functions.md</i>. Documentation is available in markdown and roff (manpage) formats. The default installation installs only the manpages. To install markdown docs, run <i>make install_docs</i>.
 
-For documentation, see <i>docs</i>. Documentation is available in markdown and roff (manpage) formats. I recommend starting with a read of <i>structs.md</i>. The default installation will install manpages only; to install markdown docs run <i>make install_docs</i>
+Example implementations of payload injection, function hooking, symbol resolution and more can be found in <i>examples</i>.

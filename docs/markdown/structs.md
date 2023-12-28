@@ -67,7 +67,7 @@ typedef struct {
 ```c
 typedef struct {
 
-        char name[PATH_MAX];
+        char pathname[PATH_MAX];
         char * basename;
         vector entry_vector; //*maps_entry
 
