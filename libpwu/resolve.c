@@ -75,7 +75,7 @@ int get_obj_by_pathname(char * pathname, maps_data * m_data,
         if (ret == -2) return -2;
 
         //if names match
-        ret = strcmp(pathname, temp_obj->basename);
+        ret = strcmp(pathname, temp_obj->pathname);
         if (ret == 0) {
 
             *matched_obj = temp_obj;
@@ -121,11 +121,8 @@ int resolve_symbol(char * symbol, sym_resolve s_resolve,
 
     int ret;
     void * temp_addr;
-    unsigned int offset;
-    int obj_index;
-    maps_entry * host_matched_region;
+    maps_entry * host_matched_entry;
     maps_obj * host_matched_obj;
-    maps_entry * target_entry;
     maps_obj * target_obj;
 
     //get address of symbol in own process
@@ -133,30 +130,26 @@ int resolve_symbol(char * symbol, sym_resolve s_resolve,
     if (temp_addr == NULL) return -1;
 
     //using the address, get: region and offset into region
-    ret = get_region_by_addr(temp_addr, &host_matched_region, &offset,
+    ret = get_region_by_addr(temp_addr, &host_matched_entry, matched_offset,
                              s_resolve.host_m_data);
     if (ret != 0) return ret;
 
     //get backing object for this region
     ret = vector_get_ref(&s_resolve.host_m_data->obj_vector, 
-                         host_matched_region->obj_vector_index,
+                         host_matched_entry->obj_vector_index,
                          (byte **) &host_matched_obj);
     if (ret != 0) return -2; //convert from vector_get_ref fail to resolve_symbol fail
 
     //find the corresponding backing object in target process
-    ret = get_obj_by_pathname(host_matched_obj->basename, s_resolve.target_m_data, 
+    ret = get_obj_by_pathname(host_matched_obj->pathname, s_resolve.target_m_data, 
                               &target_obj);
     if (ret != 0) return ret;
 
-    //get the corresponding region in the target process
-    ret = vector_get_ref(&s_resolve.target_m_data->obj_vector,
-                         target_entry->obj_index,
-                         (byte **) & target_entry);
-    if (ret != 0) return -2; //convert from vector_get_ref fail to resolve_symbol fail
-
-    //offset in our process and target should be identical
-    *matched_region = target_entry;
-    *matched_offset = offset;
+    //get the corresponding region in the target object
+    ret = vector_get(&target_obj->entry_vector,
+                     host_matched_entry->obj_index,
+                     (byte *) matched_region);
+    if (ret != 0) return ret;
 
     return 0;
 }

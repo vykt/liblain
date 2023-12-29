@@ -55,7 +55,7 @@ typedef struct {
 
         //read_maps()
         char pathname[PATH_MAX];
-        char * basename;
+        char basename[NAME_MAX];
         byte perms;
         void * start_addr;
         void * end_addr;
@@ -79,8 +79,8 @@ Created automatically.
 \f[V]pathname\f[R] : name of the backing file for this segment.
 refer to \f[V]proc(5)\f[R].
 .IP \[bu] 2
-\f[V]basename\f[R] : pointer to the start of the basename in
-\f[V]maps_entry.pathname\f[R].
+\f[V]basename\f[R] : basename of backing file for this segment.
+refer to \f[V]proc(5)\f[R].
 .IP \[bu] 2
 \f[V]perms\f[R] : permissions for the region, see \f[V]mprotect(2)\f[R]
 for format.
@@ -106,7 +106,7 @@ for format.
 typedef struct {
 
         char pathname[PATH_MAX];
-        char * basename;
+        char basename[NAME_MAX];
         vector entry_vector; //*maps_entry
 
 } maps_obj;
@@ -121,9 +121,9 @@ See \f[V]proc(5)\f[R].
 Created automatically.
 .SS elements
 .IP \[bu] 2
-\f[V]name\f[R] : name of the backing file.
+\f[V]name\f[R] : name of the backing file for this object.
 .IP \[bu] 2
-\f[V]basename\f[R] : basename of backing file.
+\f[V]basename\f[R] : basename of backing file for this object.
 .IP \[bu] 2
 \f[V]entry_vector\f[R] : vector of pointers to \f[V]maps_entry\f[R]
 structures belonging to this backing file.

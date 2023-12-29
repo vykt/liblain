@@ -96,6 +96,7 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 
 	int ret;
 	char line[LINE_LEN];
+    char * basename_ptr;
 	maps_entry temp_m_entry;
 
 	//while there are entries in /proc/<pid>/maps left to process
@@ -116,9 +117,11 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 		if (ret == -1) strcpy(temp_m_entry.pathname, "<NO_PATHNAME>");
 
         //set the basename
-        temp_m_entry.basename = strrchr(temp_m_entry.pathname, (int) '/') + 1;
-        if (temp_m_entry.basename == (char *) 1) {
-            temp_m_entry.basename = temp_m_entry.pathname;
+        basename_ptr = strrchr(temp_m_entry.pathname, (int) '/') + 1;
+        if (basename_ptr == (char *) 1) {
+            strcpy(temp_m_entry.basename, temp_m_entry.pathname);
+        } else {
+            strcpy(temp_m_entry.basename, basename_ptr);
         }
 
 		//add temporary entry to entry vector
@@ -208,22 +211,17 @@ int get_maps_line(char line[LINE_LEN], FILE * maps_stream) {
 
 
 //initialise new maps_obj
-int new_maps_obj(maps_obj * m_obj, char name[PATH_MAX], char * basename) {
+int new_maps_obj(maps_obj * m_obj, char pathname[PATH_MAX], char basename[NAME_MAX]) {
 
 	int ret;
-    off_t new_basename_offset;
 
-	//first, zero out the name field
+	//first, zero out the name fields
 	memset(m_obj->pathname, '\0', PATH_MAX);
+    memset(m_obj->basename, '\0', NAME_MAX);
 
-	//now copy name in
-	strcpy(m_obj->pathname, name);
-
-    //calculate basename offset
-    new_basename_offset = (off_t) (basename - name);
-
-    //set new basename pointer
-    m_obj->basename = m_obj->pathname + new_basename_offset;
+	//now copy names in
+	strcpy(m_obj->pathname, pathname);
+    strcpy(m_obj->basename, basename);
 
     //initialise next entry index
     m_obj->next_entry_index = 0;
@@ -262,7 +260,8 @@ int new_maps_entry(maps_entry * m_entry) {
 	int ret;
 
 	memset(m_entry->pathname, 0, PATH_MAX);
-	m_entry->perms = 0;
+	memset(m_entry->basename, 0, NAME_MAX);
+    m_entry->perms = 0;
 	m_entry->start_addr = NULL;
 	m_entry->end_addr = NULL;
 
