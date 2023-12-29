@@ -22,18 +22,16 @@
 .nf
 \f[C]
 int get_region_by_addr(void * addr, maps_entry ** matched_region,
-                       unsigned * int offset, int * obj_index, maps_data * m_data);
+                       unsigned * int offset, maps_data * m_data);
 \f[R]
 .fi
 .SS description
 .PP
 \f[V]get_region_by_addr()\f[R] takes an address and returns the segment
-and offset into the segment at which this address resides in the callee.
-It also takes an optional pointer \f[V]obj_index\f[R], which if not NULL
-contains on return the `index' into the corresponding backing file.
-For example, libc may contain 4 segments.
-If the address is found in the second segment of libc,
-\f[V]obj_index\f[R] will be set to 1 on return.
+and offset into the segment at which this address occurs in
+\f[V]m_data\f[R].
+Acquiring the underlying backing object can be done using
+\f[V](*matched_region)->obj_vector_index\f[R].
 .SS parameters
 .IP \[bu] 2
 \f[V]*addr\f[R] : address to query.
@@ -43,8 +41,6 @@ If the address is found in the second segment of libc,
 .IP \[bu] 2
 \f[V]*offset\f[R] : offset into the \f[V]matched_region\f[R] segment
 where \f[V]addr\f[R] occurs.
-.IP \[bu] 2
-\f[V]*obj_index\f[R] : `index' into the backing file.
 .IP \[bu] 2
 \f[V]*m_data\f[R] : pointer to a \f[V]maps_data\f[R] structure for the
 target process.

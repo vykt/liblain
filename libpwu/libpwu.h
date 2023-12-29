@@ -47,9 +47,17 @@ typedef struct {
 
         //read_maps()
         char pathname[PATH_MAX];
-        byte perms; //4 (read) + 2 (write) + 1 (exec)
+        char basename[NAME_MAX];        //points to basename in maps_entry.pathname
+        byte perms;                     //4 (read) + 2 (write) + 1 (exec)
+        
         void * start_addr;
         void * end_addr;
+        
+        //allow traversal from maps_entry to parent maps_obj
+        unsigned long obj_vector_index; //index into maps_data.obj_vector
+
+        //used to resolve symbols in target process in O(1)
+        unsigned long obj_index;        //index into maps_obj.entry_vector
 
         //get_caves()
         vector cave_vector; //cave
@@ -59,8 +67,13 @@ typedef struct {
 //regions grouped by backing file/type
 typedef struct {
 
-        char name[PATH_MAX];
+        char pathname[PATH_MAX];
+        char basename[NAME_MAX];
+
         vector entry_vector; //*maps_entry
+
+        //INTERNAL - index for next maps_entry to associate with this backing object
+        unsigned long next_entry_index;
 
 } maps_obj;
 
@@ -116,7 +129,7 @@ typedef struct {
 //name to find matching PIDs for
 typedef struct {
 
-    char name[NAME_MAX];
+    char basename[NAME_MAX];
     vector pid_vector; //pid_t
 
 } name_pid;
@@ -271,11 +284,13 @@ extern void close_lib(sym_resolve * s_resolve);
 extern void * get_symbol_addr(char * symbol, sym_resolve s_resolve);
 //returns: 0 - success, -1 - no match found, -2 - fail
 extern int get_region_by_addr(void * addr, maps_entry ** matched_region,
-                              unsigned int * offset, int * obj_index, 
-                              maps_data * m_data);
+                              unsigned int * offset, maps_data * m_data);
 //returns: 0 - success, -1 - no match found, -2 - fail
-extern int get_region_by_meta(char * pathname, int index, maps_entry ** matched_region,
-                              maps_data * m_data);
+extern int get_obj_by_pathname(char * pathname, maps_data * m_data,
+                               maps_obj ** matched_obj);
+//returns: 0 - success, -1 - no match found, -2 - fail
+extern int get_obj_by_basename(char * basename, maps_data * m_data,
+                               maps_obj ** matched_obj);
 //returns: 0 - success, -1 - no match found, -2 - fail
 extern int resolve_symbol(char * symbol, sym_resolve s_resolve,
                           maps_entry ** matched_region, unsigned int * matched_offset);

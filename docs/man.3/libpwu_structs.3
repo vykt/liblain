@@ -55,10 +55,12 @@ typedef struct {
 
         //read_maps()
         char pathname[PATH_MAX];
+        char basename[NAME_MAX];
         byte perms;
         void * start_addr;
         void * end_addr;
-                
+        unsigned long obj_vector_index;
+
         //get_caves()
         vector cave_vector; //cave
 
@@ -77,14 +79,20 @@ Created automatically.
 \f[V]pathname\f[R] : name of the backing file for this segment.
 refer to \f[V]proc(5)\f[R].
 .IP \[bu] 2
-\f[V]perms\f[R] : permissions for the region in the format taken by
-\f[V]mprotect(2)\f[R].
+\f[V]basename\f[R] : basename of backing file for this segment.
+refer to \f[V]proc(5)\f[R].
+.IP \[bu] 2
+\f[V]perms\f[R] : permissions for the region, see \f[V]mprotect(2)\f[R]
+for format.
 .IP \[bu] 2
 \f[V]start_addr\f[R] : address of the start of this segment in
 \f[V]/proc/<pid>/mem\f[R].
 .IP \[bu] 2
 \f[V]end_addr\f[R] : address of the end of this segment in
 \f[V]/proc\[rs]<pid\[rs]>/mem\f[R].
+.IP \[bu] 2
+\f[V]object_vector_index\f[R] : index into
+\f[V]maps_data.obj_vector\f[R] for this entry.
 .IP \[bu] 2
 \f[V]cave_vector\f[R] : vector of \f[V]cave\f[R] struct.
 .SS functions
@@ -97,7 +105,8 @@ refer to \f[V]proc(5)\f[R].
 \f[C]
 typedef struct {
 
-        char name[PATH_MAX];
+        char pathname[PATH_MAX];
+        char basename[NAME_MAX];
         vector entry_vector; //*maps_entry
 
 } maps_obj;
@@ -112,7 +121,9 @@ See \f[V]proc(5)\f[R].
 Created automatically.
 .SS elements
 .IP \[bu] 2
-\f[V]name\f[R] : name of the backing file.
+\f[V]name\f[R] : name of the backing file for this object.
+.IP \[bu] 2
+\f[V]basename\f[R] : basename of backing file for this object.
 .IP \[bu] 2
 \f[V]entry_vector\f[R] : vector of pointers to \f[V]maps_entry\f[R]
 structures belonging to this backing file.

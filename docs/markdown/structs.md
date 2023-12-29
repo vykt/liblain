@@ -33,10 +33,12 @@ typedef struct {
 
         //read_maps()
         char pathname[PATH_MAX];
+        char basename[NAME_MAX];
         byte perms;
         void * start_addr;
         void * end_addr;
-                
+        unsigned long obj_vector_index;
+
         //get_caves()
         vector cave_vector; //cave
 
@@ -47,11 +49,13 @@ typedef struct {
 `maps_entry` represents a single line in a `/proc/<pid>/maps` file for a single process, sorted into the desired components. Data specific to each segment is also stored here. Created automatically.
 
 ### elements
-- `pathname`    : name of the backing file for this segment. refer to `proc(5)`.
-- `perms`       : permissions for the region in the format taken by `mprotect(2)`.
-- `start_addr`  : address of the start of this segment in `/proc/<pid>/mem`.
-- `end_addr`    : address of the end of this segment in `/proc\<pid\>/mem`.
-- `cave_vector` : vector of `cave` struct.
+- `pathname`            : name of the backing file for this segment. refer to `proc(5)`.
+- `basename`            : basename of backing file for this segment. refer to `proc(5)`.
+- `perms`               : permissions for the region, see `mprotect(2)` for format.
+- `start_addr`          : address of the start of this segment in `/proc/<pid>/mem`.
+- `end_addr`            : address of the end of this segment in `/proc\<pid\>/mem`.
+- `object_vector_index` : index into `maps_data.obj_vector` for this entry.
+- `cave_vector`         : vector of `cave` struct.
 
 ### functions
 - `get_caves()`
@@ -63,7 +67,8 @@ typedef struct {
 ```c
 typedef struct {
 
-        char name[PATH_MAX];
+        char pathname[PATH_MAX];
+        char basename[NAME_MAX];
         vector entry_vector; //*maps_entry
 
 } maps_obj;
@@ -73,7 +78,8 @@ typedef struct {
 `maps_obj` is a 'backing file'/pathname based view of `map_entry` structures. It holds the backing file and every segment that belongs to it. See `proc(5)`. Created automatically.
 
 ### elements
-- `name`         : name of the backing file.
+- `name`         : name of the backing file for this object.
+- `basename`     : basename of backing file for this object.
 - `entry_vector` : vector of pointers to `maps_entry` structures belonging to this backing file.
 
 ### functions

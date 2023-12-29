@@ -86,7 +86,6 @@ install:
 	mkdir -p ${MAN_PAGES_INSTALL}
 	cp -R ${MAN_PAGES}/* ${MAN_PAGES_INSTALL}
 	ldconfig
-	mandb
 
 install_docs:
 	mkdir -p ${DOC_INSTALL}
