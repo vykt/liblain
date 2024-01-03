@@ -61,7 +61,7 @@ int build_obj_vector(maps_data * m_data) {
 			if (ret == -1) return -1;
 
             //set the maps_data.obj_vector index for this maps_entry
-            temp_m_entry->obj_vector_index = pos;
+            temp_m_entry->obj_vector_index = m_data->obj_vector.length - 1;
 
 		//if the name matches an object entry already present
 		} else {
@@ -70,8 +70,9 @@ int build_obj_vector(maps_data * m_data) {
 			ret = vector_get_ref(&m_data->obj_vector, pos, (byte **) &temp_m_obj_ref);
 			if (ret == -1) return -1;
 
-            //set the obj_index value for this maps_entry
+            //set the obj_index and maps_data.obj_vector values for this maps_entry
             temp_m_entry->obj_index = temp_m_obj_ref->next_entry_index;
+            temp_m_entry->obj_vector_index = pos;
 
             //increment next_entry_index for this maps_obj
             temp_m_obj_ref->next_entry_index += 1;
@@ -81,8 +82,6 @@ int build_obj_vector(maps_data * m_data) {
 					         APPEND_TRUE);
 			if (ret == -1) return -1;
 
-            //set the maps_data.obj_vector index for this maps_entry
-            temp_m_entry->obj_vector_index = m_data->obj_vector.length - 1;
 		}
 
 	}// for every maps entry
