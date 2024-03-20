@@ -61,7 +61,7 @@ int build_obj_vector(maps_data * m_data) {
 			if (ret == -1) return -1;
 
             //set the maps_data.obj_vector index for this maps_entry
-            temp_m_entry->obj_vector_index = pos;
+            temp_m_entry->obj_vector_index = temp_m_obj.next_entry_index;
 
 		//if the name matches an object entry already present
 		} else {
