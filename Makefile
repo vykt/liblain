@@ -4,6 +4,7 @@ ASM=nasm
 
 #installation directories
 LIB_INSTALL=/usr/local/lib
+GLOBAL_LIB_INSTALL=/lib
 LIB_HEADERS_INSTALL=/usr/local/include
 MAN_PAGES_INSTALL=/usr/local/share/man/man3
 DOC_INSTALL=/usr/local/share/doc/libpwu
@@ -79,6 +80,7 @@ ${PAYLOAD}: debug/payload.asm
 install:
 	mkdir -p ${LIB_INSTALL}
 	cp ${LIBPWU} ${LIB_INSTALL}
+	cp ${LIBPWU} ${GLOBAL_LIB_INSTALL}
 	mkdir -p ${LIB_HEADERS_INSTALL}
 	cp libpwu/libpwu.h ${LIB_HEADERS_INSTALL}
 	mkdir -p /usr/local/share/libpwu/auto_payloads
