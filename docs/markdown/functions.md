@@ -34,10 +34,11 @@ apply_mutations : apply mutations to an in-memory payload
 ```
 
 
-### name to pid:
+### name to PID:
 ```
-pid_by_name  : fill a vector with every name match of pid
-new_name_pid : initialise new name_pid object for matching name to pid
+name_by_pid  : get process name from PID
+pid_by_name  : fill a vector with every name match of PID
+new_name_pid : initialise new name_pid object for matching name to PID
 del_name_pid : delete name_pid object
 ```
 

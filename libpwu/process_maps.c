@@ -70,7 +70,7 @@ int build_obj_vector(maps_data * m_data) {
 			ret = vector_get_ref(&m_data->obj_vector, pos, (byte **) &temp_m_obj_ref);
 			if (ret == -1) return -1;
 
-            //set the obj_index value for this maps_entry
+            //set the obj_index and maps_data.obj_vector values for this maps_entry
             temp_m_entry->obj_index = temp_m_obj_ref->next_entry_index;
             temp_m_entry->obj_vector_index = pos;
 

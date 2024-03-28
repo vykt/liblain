@@ -46,7 +46,7 @@ for file in "$dest_dir"/*; do
   FILENAME=$(echo $namefile | tr [a-z] [A-Z])
 
   # add the filename to the beginning of the file in all uppercase
-  echo ".TH ${FILENAME} 3 \"June 2023\" \"libpwu 1.0\" \"${filename}\"" | cat - $file > temp && mv temp $file
+  echo ".TH ${FILENAME} 3 \"June 2023\" \"libpwu 1.4\" \"${filename}\"" | cat - $file > temp && mv temp $file
 
   # add the filename to the beginning of the file in all lowercase
   echo ".IX Title \"${FILENAME} 3"  | cat - $file > temp && mv temp $file

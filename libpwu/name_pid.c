@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
@@ -127,4 +128,42 @@ int pid_by_name(name_pid * n_pid, pid_t * first_pid) {
 	if (ret == -1) return -1;
 
 	return n_pid->pid_vector.length;
+}
+
+
+//return the process name for a pid
+int name_by_pid(pid_t pid, char * name) {
+
+    int ret;
+    int fd;
+
+    size_t rd_wr;
+
+    char comm_buf[PATH_MAX];
+    char pid_int_buf[NAME_MAX];
+
+    //build path
+    memset(comm_buf, 0, PATH_MAX);    //zero out to make strcat behave
+    memset(pid_int_buf, 0, NAME_MAX); //zero out to make strcat behave
+    strcat(comm_buf, "/proc/");
+    sprintf(pid_int_buf, "%d", pid);
+    strcat(comm_buf, pid_int_buf);
+    strcat(comm_buf, "/comm");
+
+    //get name
+    fd = open(comm_buf, O_RDONLY);
+    if (fd == -1) {
+        return -1;
+    }
+
+    rd_wr = read(fd, name, NAME_MAX);
+    if (rd_wr == -1) {
+        close(fd);
+        return -1;
+    }
+
+    ret = close(fd);
+    if (ret == -1) return -1;
+
+    return 0;
 }
