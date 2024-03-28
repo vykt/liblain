@@ -126,7 +126,7 @@ typedef struct {
 
 } rel_jump_hook;
 
-//name to find matching PIDs for
+//process name to find matching PIDs for
 typedef struct {
 
     char basename[NAME_MAX];
@@ -254,7 +254,8 @@ extern int new_name_pid(name_pid * n_pid, char * name);
 extern int del_name_pid(name_pid * n_pid);
 //returns: number of PIDs with matching name found, -1 on error
 extern int pid_by_name(name_pid * n_pid, pid_t * first_pid);
-
+//returns: 0 - success, -1 - failed to read process name
+extern int name_by_pid(pid_t pid, char * name);
 
 // --- MISCELLANEOUS UTILITIES ---
 //convert bytes to hex string
