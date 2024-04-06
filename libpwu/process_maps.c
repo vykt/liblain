@@ -95,6 +95,7 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 	int ret;
 	char line[LINE_LEN];
     char * basename_ptr;
+    char hex_addr_str[ADDR_LEN_MAX];
 	maps_entry temp_m_entry;
 
 	//while there are entries in /proc/<pid>/maps left to process
@@ -111,8 +112,12 @@ int read_maps(maps_data * m_data, FILE * maps_stream) {
 		//store permissions and name of backing file in temporary entry
 		ret = get_perms_name(line, &temp_m_entry.perms, temp_m_entry.pathname);
 		
-		//if there is no pathname for a given entry, set it to tag
-		if (ret == -1) strcpy(temp_m_entry.pathname, "<NO_PATHNAME>");
+		//if there is no pathname for a given entry, set it to the region's base address
+		if (ret == -1) {
+            memset(hex_addr_str, 0, ADDR_LEN_MAX);
+            snprintf(hex_addr_str, ADDR_LEN_MAX, "0x%lx", (unsigned long) temp_m_entry.start_addr);
+        strcpy(temp_m_entry.pathname, hex_addr_str);
+        }
 
         //set the basename
         basename_ptr = strrchr(temp_m_entry.pathname, (int) '/') + 1;

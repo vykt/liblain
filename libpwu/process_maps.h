@@ -9,6 +9,7 @@
 #include "vector.h"
 
 #define LINE_LEN PATH_MAX + 128
+#define ADDR_LEN_MAX 18 
 
 
 //external
