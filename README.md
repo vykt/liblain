@@ -1,8 +1,4 @@
-<p align="center">
-	<img src="logo.png">
-</p>
-
-# libpwu
+# liblain
 
 ![liblain](liblain.gif)
 
@@ -65,4 +61,4 @@ $ gcc -o test test.c -llain
 
 ### DOCUMENTATION:
 
-See <i>doc/md/</i> for documentation. If you have installed <i>liblain</i>, you can view the manpages with <i>man 3 {liblain_error,liblain_iface,liblain_map,liblain_util}</i>. For examples, take a look at <i>src/test/</i>.
+See <i>/doc/md</i> for documentation. If you have installed <i>liblain</i>, you can view the manpages with <i>man 3 {liblain_error,liblain_iface,liblain_map,liblain_util}</i>. For examples, take a look at <i>/src/test</i>.
