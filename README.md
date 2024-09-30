@@ -4,7 +4,7 @@
 
 ### ABOUT:
 
-The Lain library (<i>liblain</i>) provides a programmatic interface to the memory and memory maps of processes on Linux. <i>Liblain</i> offers both a <i>procfs</i> and a <i>lainko</i> kernel driver backend. Both interfaces provide identical functionality. The kernel driver backend is not provided by this repository, please see https://github.com/vykt/lainko.
+The Lain library (<i>liblain</i>) provides a programmatic interface to the memory and memory maps of processes on Linux. <i>Liblain</i> offers both a <i>procfs</i> and a [lainko](https://github.com/vykt/lainko) kernel driver backend. Both interfaces provide identical functionality. The kernel driver backend is not provided by this repository.
 
 <i>Liblain</i> stores both VM areas and VM backing objects in lists, which means a memory map can be updated without invalidating pointers to the map. This allows liblain to be easily used for prolonged analysis where a target's memory allocations change. Despite being lists, traversal between relevant areas/objects is still possible in <i>O(1)</i> in many cases.
 
