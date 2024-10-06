@@ -305,18 +305,17 @@ static inline int _unlink_unmapped_area(cm_list_node * node, _traverse_state * s
     } //end if
 
 
-    //set node's values to be unmapped
-    temp_area->mapped = false;
-    node->next = NULL;
-    node->prev = NULL;
-
-    //finally unlink this node from the list of mapped vm areas
+    //unlink this node from the list of mapped vm areas
     ret = cm_list_unlink(&vm_map->vm_areas, state->next_area_index);
     if (ret) {
         ln_errno = LN_ERR_LIBCMORE;
         return -1;
     }
 
+    //now safe to set node's values to be unmapped
+    temp_area->mapped = false;
+    node->next = NULL;
+    node->prev = NULL;
 
     //add a pointer to this node to the list containing nodes to dealloc later
     temp_node = cm_list_append(&vm_map->vm_areas_unmapped, (cm_byte *) &node);

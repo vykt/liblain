@@ -48,7 +48,7 @@ static inline void _build_entry(struct vm_entry * entry, char * line_buf) {
         switch (mode) {
 
             case 0: //look for end addr
-                if (line_buf[i] == '-') {
+                if (line_buf[i] == '-' || line_buf[i] == 'p') {
                     ++i;
                     ++mode;
                     end_str = line_buf + i;

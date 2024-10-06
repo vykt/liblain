@@ -150,7 +150,7 @@ int _lainko_update_map(ln_session * session, ln_vm_map * vm_map) {
     //update the map with each received segment
     _map_init_traverse_state(vm_map, &state);
 
-    for (int i = 0; i < count; ++ret) {
+    for (int i = 0; i < count; ++i) {
         
         ret = _map_send_entry(vm_map, &state, 
                               (struct vm_entry *) 
@@ -204,7 +204,7 @@ int _lainko_write(ln_session * session, uintptr_t addr,
         return -1;
     }
 
-    write_bytes = read(session->fd_dev_memu, buf, buf_sz);
+    write_bytes = write(session->fd_dev_memu, buf, buf_sz);
     if (write_bytes != buf_sz) {
         ln_errno = LN_ERR_READ_WRITE;
         return -1;
