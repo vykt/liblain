@@ -6,15 +6,20 @@
 
 ### ABOUT:
 
-The Lain library (<b>liblain</b>) provides a programmatic interface to the memory and memory maps of processes on Linux. <b>Liblain</b> offers both a <b>procfs</b> and a [lainko](https://github.com/vykt/lainko) kernel driver backend. Both interfaces provide identical functionality. The kernel driver backend is not provided by this repository.
+The Lain library (<b>liblain</b>) provides a programmatic interface to the memory and memory maps of processes on Linux. Liblain can be used for:
 
-<b>Liblain</b> stores both VM areas and VM backing objects in lists, which means a memory map can be updated without invalidating pointers to the map. This allows liblain to be easily used for prolonged analysis where a target's memory allocations change. Despite being lists, traversal between relevant areas/objects is still possible in <b>O(1)</b> in many cases.
+- Code injection
+- Memory analysis
+- Anti-cheat bypass (see [lainko](https://github.com/vykt/lainko))
 
-In addition to memory maps, <b>liblain</b> also provides the following:
+<b>liblain</b> offers both a procfs and a [lainko](https://github.com/vykt/lainko) LKM backend. Both interfaces provide identical functionality and are interchangable.
 
-- Read / write process memory.
-- Resolve a process name to PID(s) the same way utilities like ps/top/htop do.
-- Various utils to streamline the development process.
+<b>liblain</b> stores both virtual memory areas and backing objects in nodes traversable as lists or trees. The use of <b>nodes</b> for storage means the internal memory map can be updated without invalidating any pointers. This makes development of complex tools much easier.
+
+In addition to a memory interface <b>liblain</b> also provides several utilities including:
+
+- Same method for resolving PID as ps/top.
+- Fast address -> VM area search.
 
 ---
 
@@ -49,7 +54,7 @@ Ensure your linker searches for liblain in the install directory (adjust as requ
 # echo "/usr/local/lib" > /etc/ld.so.conf.d/liblain.conf
 ```
 
-Include <b>\<libpwu.h\></b> in your sources:
+Include `<liblain.h\>` in your sources:
 ```
 #include <liblain.h>
 ```
@@ -63,4 +68,9 @@ $ gcc -o test test.c -llain
 
 ### DOCUMENTATION:
 
-See <b>/doc/md</b> for documentation. If you have installed <b>liblain</b>, you can view the manpages with <b>man 3 {liblain_error,liblain_iface,liblain_map,liblain_util}</b>. For examples, take a look at <b>/src/test</b>.
+See `./doc/md` for markdown documentation. After installing <b>liblain</b> the following manpages are available:
+
+- `liblain_error` : Error handling.
+- `liblain_map`   : Memory map data structure.
+- `liblain_iface` : Using the procfs / <b>lainko</b> interface.
+- `liblain_util`  : Utilities.
