@@ -70,7 +70,9 @@ $ gcc -o test test.c -llain
 
 See `./doc/md` for markdown documentation. After installing <b>liblain</b> the following manpages are available:
 
-- `liblain_error` : Error handling.
-- `liblain_map`   : Memory map data structure.
-- `liblain_iface` : Using the procfs / <b>lainko</b> interface.
-- `liblain_util`  : Utilities.
+| Manpage         | Description                 |
+| --------------- | --------------------------- |
+| `liblain_error` | Error handling              |
+| `liblain_map`   | Memory map data structure   |
+| `liblain_iface` | Using interfaces            |
+| `liblain_util`  | Utilities                   |
