@@ -10,9 +10,9 @@ The Lain library (<b>liblain</b>) provides a programmatic interface to the memor
 
 - Code injection
 - Memory analysis
-- Anti-cheat bypass (see [lainko](https://github.com/vykt/lainko))
+- Anti-cheat bypass (see [lain.ko](https://github.com/vykt/lain.ko))
 
-<b>liblain</b> offers both a procfs and a [lainko](https://github.com/vykt/lainko) LKM backend. Both interfaces provide identical functionality and are interchangable.
+<b>liblain</b> offers both a procfs and a [lain.ko](https://github.com/vykt/lain.ko) LKM backend. Both interfaces provide identical functionality and are interchangable.
 
 <b>liblain</b> stores both virtual memory areas and backing objects in nodes traversable as lists or trees. The use of <b>nodes</b> for storage means the internal memory map can be updated without invalidating any pointers. This makes development of complex tools much easier.
 
