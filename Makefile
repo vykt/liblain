@@ -40,7 +40,7 @@ install_doc:
 > cp ${DOC_DIR}/md/* ${INSTALL_DIR}/share/doc/liblain
 
 uninstall:
-> rm ${INSTALL_DIR}/lib/liblain.so ${INSTALL_DIR}/include/liblain.h \
+> rm -vf ${INSTALL_DIR}/lib/liblain.so ${INSTALL_DIR}/include/liblain.h \
 	${INSTALL_DIR}/share/man/man3/liblain_* ${INSTALL_DIR}/share/doc/liblain/*
 > rmdir ${INSTALL_DIR}/share/doc/liblain
 
