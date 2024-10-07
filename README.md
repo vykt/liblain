@@ -42,7 +42,12 @@ Install:
 
 Install additional markdown documentation:
 ```
-# make install_docs
+# make install_doc
+```
+
+To uninstall:
+```
+# make uninstall
 ```
 
 ---

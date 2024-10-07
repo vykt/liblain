@@ -10,6 +10,8 @@ TEST_DIR="./src/test"
 TGT_DIR="./src/tgt"
 
 BUILD_DIR=$(shell pwd)/build
+INSTALL_DIR=/usr/local
+DOC_DIR=$(shell pwd)/doc
 
 
 #[set build options]
@@ -22,6 +24,19 @@ endif
 
 #[process targets]
 all: lib test tgt
+
+install:
+> cp ${BUILD_DIR}/lib/liblain.so ${INSTALL_DIR}/lib
+> mkdir -pv ${INSTALL_DIR}/share/man
+> cp -R ${DOC_DIR}/roff/* ${INSTALL_DIR}/share/man
+
+install_doc:
+> mkdir -pv ${INSTALL_DIR}/share/doc/liblain
+> cp ${DOC_DIR}/md/* ${INSTALL_DIR}/share/doc/liblain
+
+uninstall:
+> rm ${INSTALL_DIR}/lib/liblain.so ${INSTALL_DIR}/share/man/man3/liblain_* ${INSTALL_DIR}/share/doc/liblain/*
+> rmdir ${INSTALL_DIR}/share/doc/liblain
 
 tgt:
 > $(MAKE) -C ${TGT_DIR} tgt CC='${CC}' BUILD_DIR='${BUILD_DIR}'
