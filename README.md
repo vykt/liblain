@@ -1,7 +1,7 @@
 # liblain
 
 <p align="center">
-    <img src="liblain.png">
+    <img src="liblain.png" width="150" height="150">
 </p>
 
 ### ABOUT:
