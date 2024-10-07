@@ -9,9 +9,12 @@ LIB_DIR="./src/lib"
 TEST_DIR="./src/test"
 TGT_DIR="./src/tgt"
 
+SRC_DIR=$(shell pwd)/src
 BUILD_DIR=$(shell pwd)/build
-INSTALL_DIR=/usr/local
 DOC_DIR=$(shell pwd)/doc
+
+INSTALL_DIR=/usr/local
+
 
 
 #[set build options]
@@ -27,6 +30,8 @@ all: lib test tgt
 
 install:
 > cp ${BUILD_DIR}/lib/liblain.so ${INSTALL_DIR}/lib
+> mkdir -pv ${INSTALL_DIR}/include
+> cp ${SRC_DIR}/lib/liblain.h ${INSTALL_DIR}/include
 > mkdir -pv ${INSTALL_DIR}/share/man
 > cp -R ${DOC_DIR}/roff/* ${INSTALL_DIR}/share/man
 
@@ -35,7 +40,8 @@ install_doc:
 > cp ${DOC_DIR}/md/* ${INSTALL_DIR}/share/doc/liblain
 
 uninstall:
-> rm ${INSTALL_DIR}/lib/liblain.so ${INSTALL_DIR}/share/man/man3/liblain_* ${INSTALL_DIR}/share/doc/liblain/*
+> rm ${INSTALL_DIR}/lib/liblain.so ${INSTALL_DIR}/include/liblain.h \
+	${INSTALL_DIR}/share/man/man3/liblain_* ${INSTALL_DIR}/share/doc/liblain/*
 > rmdir ${INSTALL_DIR}/share/doc/liblain
 
 tgt:
