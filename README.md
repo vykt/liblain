@@ -14,7 +14,7 @@ The Lain library (<b>liblain</b>) provides a programmatic interface to the memor
 
 <b>liblain</b> offers both a procfs and a [lain.ko](https://github.com/vykt/lain.ko) LKM backend. Both interfaces provide identical functionality and are interchangable.
 
-<b>liblain</b> stores both virtual memory areas and backing objects in nodes traversable as lists or trees. The use of <b>nodes</b> for storage means the internal memory map can be updated without invalidating any pointers. This makes development of complex tools much easier.
+<b>liblain</b> stores both virtual memory areas and backing objects in nodes traversable as lists or trees. The use of nodes for storage means the internal memory map can be updated without invalidating any pointers. This makes development of complex tools much easier.
 
 In addition to a memory interface <b>liblain</b> also provides several utilities including:
 
@@ -22,6 +22,11 @@ In addition to a memory interface <b>liblain</b> also provides several utilities
 - Fast address -> VM area search.
 
 ---
+
+### DEPENDENCIES:
+
+<b>liblain</b> requires [libcmore](https://github.com/vykt/libcmore).
+
 
 ### INSTALLATION:
 
