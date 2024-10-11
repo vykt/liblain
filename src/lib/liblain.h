@@ -120,6 +120,7 @@ struct _ln_session {
         }; //lainko_data
     };
 
+    long page_size;
     ln_iface iface;
 
 }; 
@@ -134,7 +135,7 @@ typedef struct _ln_session ln_session;
 //return: basename = success, NULL = fail/error
 extern char * ln_pathname_to_basename(char * pathname);
 //must destroy 'pid_vector' manually on success | pid = success, -1 = fail/error
-extern pid_t ln_pid_by_name(const char * basename, cm_vector * pid_vector);
+extern pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector);
 //return: 0 = success, -1 = fail/error
 extern int ln_name_by_pid(pid_t pid, char * name_buf);
 //'out' must have space for double the length of 'inp' + 1

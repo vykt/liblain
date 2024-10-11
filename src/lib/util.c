@@ -102,7 +102,7 @@ char * ln_pathname_to_basename(char * pathname) {
 
 
 //get vector of pids matching name, return first match
-pid_t ln_pid_by_name(const char * basename, cm_vector * pid_vector) {
+pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
 
 	int ret;
 	int first_recorded = 0;
@@ -155,7 +155,7 @@ pid_t ln_pid_by_name(const char * basename, cm_vector * pid_vector) {
         }
 
         //if found a match
-        ret = strcmp(name_buf, basename);
+        ret = strcmp(name_buf, comm);
         if (!ret) {
             
             //add pid_t to list of potential PIDs

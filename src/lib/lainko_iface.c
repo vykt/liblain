@@ -62,6 +62,13 @@ int _lainko_open(ln_session * session, pid_t pid) {
     uint32_t ioctl_call;
     struct ioctl_arg arg;
 
+    //get page size
+    session->page_size = sysconf(_SC_PAGESIZE);
+    if (session->page_size < 0) {
+        ln_errno = LN_ERR_PAGESIZE;
+        return -1;
+    }
+
     //get major of the module, -1 if unloaded
     session->major = _get_major();
     if (session->major == -1) return -1;
@@ -79,7 +86,8 @@ int _lainko_open(ln_session * session, pid_t pid) {
 
     //call ioctl to set target
     arg.target_pid = pid;
-    ioctl_call = LAINKO_APPLY_TEMPLATE((char) session->major, LAINMEMU_TEMPLATE_OPEN_TGT);
+    ioctl_call = LAINKO_APPLY_TEMPLATE((char) session->major, 
+                                       LAINMEMU_TEMPLATE_OPEN_TGT);
     ret = ioctl(session->fd_dev_memu, ioctl_call, &arg);
     if (ret) {
         close(session->fd_dev_memu);
@@ -99,7 +107,8 @@ int _lainko_close(ln_session * session) {
     struct ioctl_arg arg; //not used
 
     //call ioctl to release target
-    ioctl_call = LAINKO_APPLY_TEMPLATE((char) session->major, LAINMEMU_TEMPLATE_RELEASE_TGT);
+    ioctl_call = LAINKO_APPLY_TEMPLATE((char) session->major, 
+                                       LAINMEMU_TEMPLATE_RELEASE_TGT);
     ret = ioctl(session->fd_dev_memu, ioctl_call, &arg);
 
     //close device
@@ -121,7 +130,8 @@ int _lainko_update_map(ln_session * session, ln_vm_map * vm_map) {
 
 
     //call ioctl to get the map size
-    ioctl_call = LAINKO_APPLY_TEMPLATE((char) session->major, LAINMEMU_TEMPLATE_GET_MAP_SZ);
+    ioctl_call = LAINKO_APPLY_TEMPLATE((char) session->major, 
+                                       LAINMEMU_TEMPLATE_GET_MAP_SZ);
     count = ioctl(session->fd_dev_memu, ioctl_call, &arg);
     if (count <= 0) {
         ln_errno = LN_ERR_MEMU_MAP_SZ;
@@ -138,7 +148,9 @@ int _lainko_update_map(ln_session * session, ln_vm_map * vm_map) {
     }
 
     //get the map
-    ioctl_call = LAINKO_APPLY_TEMPLATE((char) session->major, LAINMEMU_TEMPLATE_GET_MAP);
+    ioctl_call = LAINKO_APPLY_TEMPLATE((char) session->major, 
+                                       LAINMEMU_TEMPLATE_GET_MAP);
+
     count = ioctl(session->fd_dev_memu, ioctl_call, &arg);
     if (count <= 0) {
         munmap(arg.u_buf, u_buf_sz);
@@ -172,22 +184,38 @@ int _lainko_update_map(ln_session * session, ln_vm_map * vm_map) {
 int _lainko_read(ln_session * session, uintptr_t addr, 
                 cm_byte * buf, size_t buf_sz) {
 
-    off_t ret;
-    size_t read_bytes;
+	off_t off_ret;
+	ssize_t read_bytes, read_done, read_left;
+	
+    read_done = read_left = 0;
 
-    ret = lseek(session->fd_dev_memu, (off_t) addr, SEEK_SET);
-    if (ret == -1) {
+	//seek to address
+	off_ret = lseek(session->fd_dev_memu, (off_t) addr, SEEK_SET);
+	if (off_ret == -1) {
         ln_errno = LN_ERR_SEEK_ADDR;
         return -1;
     }
 
-    read_bytes = read(session->fd_dev_memu, buf, buf_sz);
-    if (read_bytes != buf_sz) {
-        ln_errno = LN_ERR_READ_WRITE;
-        return -1;
-    }
+	//read page_size bytes repeatedly until done
+	do {
 
-    return 0;
+        //calc how many bytes left to read
+        read_left = buf_sz - read_done;
+
+		//read into buffer
+		read_bytes = read(session->fd_dev_memu, buf + read_done, 
+                          read_left > session->page_size 
+                          ? session->page_size : read_left);
+		//if error or EOF before reading len bytes
+		if (read_bytes == -1 || (read_bytes == 0 && read_done < buf_sz)) {
+            ln_errno = LN_ERR_READ_WRITE;
+            return -1;
+        }
+		read_done += read_bytes;
+
+	} while (read_done < buf_sz);
+
+	return 0;
 }
 
 
@@ -195,20 +223,36 @@ int _lainko_read(ln_session * session, uintptr_t addr,
 int _lainko_write(ln_session * session, uintptr_t addr, 
                  cm_byte * buf, size_t buf_sz) {
 
-    off_t ret;
-    size_t write_bytes;
+	off_t off_ret;
+	ssize_t write_bytes, write_done, write_left;
+	
+    write_done = write_left = 0;
 
-    ret = lseek(session->fd_dev_memu, (off_t) addr, SEEK_SET);
-    if (ret == -1) {
+	//seek to address
+	off_ret = lseek(session->fd_dev_memu, (off_t) addr, SEEK_SET);
+	if (off_ret == -1) {
         ln_errno = LN_ERR_SEEK_ADDR;
         return -1;
     }
 
-    write_bytes = write(session->fd_dev_memu, buf, buf_sz);
-    if (write_bytes != buf_sz) {
-        ln_errno = LN_ERR_READ_WRITE;
-        return -1;
-    }
+	//write page_size bytes repeatedly until done
+	do {
 
-    return 0;
+        //calc how many bytes left to write
+        write_left = buf_sz - write_done;
+
+		//write into buffer
+		write_bytes = write(session->fd_dev_memu, buf + write_done, 
+                            write_left > session->page_size 
+                            ? session->page_size : write_left);
+		//if error or EOF before writing len bytes
+		if (write_bytes == -1 || (write_bytes == 0 && write_done < buf_sz)) {
+            ln_errno = LN_ERR_READ_WRITE;
+            return -1;
+        }
+		write_done += write_bytes;
+
+	} while (write_done < buf_sz);
+
+	return 0;
 }

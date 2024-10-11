@@ -114,6 +114,13 @@ int _procfs_open(ln_session * session,  int pid) {
 
     session->pid = pid;
 
+    //get page size
+    session->page_size = sysconf(_SC_PAGESIZE);
+    if (session->page_size < 0) {
+        ln_errno = LN_ERR_PAGESIZE;
+        return -1;
+    }
+
     //open memory
     snprintf(mem_buf, PATH_MAX, "/proc/%d/mem", pid);
     fd = open(mem_buf, O_RDWR);
@@ -188,19 +195,10 @@ int _procfs_update_map(ln_session * session, ln_vm_map * vm_map) {
 int _procfs_read(ln_session * session, uintptr_t addr, 
                 cm_byte * buf, size_t buf_sz) {
 
-	long page_size;
-
 	off_t off_ret;
 	ssize_t read_bytes, read_done, read_left;
 	
     read_done = read_left = 0;
-
-	//get page size
-	page_size = sysconf(_SC_PAGESIZE);
-	if (page_size < 0) {
-        ln_errno = LN_ERR_PAGESIZE;
-        return -1;
-    }
 
 	//seek to address
 	off_ret = lseek(session->fd_mem, (off_t) addr, SEEK_SET);
@@ -217,7 +215,8 @@ int _procfs_read(ln_session * session, uintptr_t addr,
 
 		//read into buffer
 		read_bytes = read(session->fd_mem, buf + read_done, 
-                          read_left > page_size ? page_size : read_left);
+                          read_left > session->page_size 
+                          ? session->page_size : read_left);
 		//if error or EOF before reading len bytes
 		if (read_bytes == -1 || (read_bytes == 0 && read_done < buf_sz)) {
             ln_errno = LN_ERR_READ_WRITE;
@@ -235,16 +234,10 @@ int _procfs_read(ln_session * session, uintptr_t addr,
 int _procfs_write(ln_session * session, uintptr_t addr, 
                   cm_byte * buf, size_t buf_sz) {
 
-    long page_size;
-
 	off_t off_ret;
 	ssize_t write_bytes, write_done, write_left;
 	
     write_done = write_left = 0;
-
-	//get page size
-	page_size = sysconf(_SC_PAGESIZE);
-	if (page_size < 0) return -1;
 
 	//seek to address
 	off_ret = lseek(session->fd_mem, (off_t) addr, SEEK_SET);
@@ -261,7 +254,8 @@ int _procfs_write(ln_session * session, uintptr_t addr,
 
 		//write into buffer
 		write_bytes = write(session->fd_mem, buf + write_done, 
-                          write_left > page_size ? page_size : write_left);
+                            write_left > session->page_size 
+                            ? session->page_size : write_left);
 		//if error or EOF before writing len bytes
 		if (write_bytes == -1 || (write_bytes == 0 && write_done < buf_sz)) {
             ln_errno = LN_ERR_READ_WRITE;
