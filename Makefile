@@ -14,7 +14,7 @@ BUILD_DIR=$(shell pwd)/build
 DOC_DIR=$(shell pwd)/doc
 
 INSTALL_DIR=/usr/local
-
+LD_DIR=/etc/ld.so.conf.d
 
 
 #[set build options]
@@ -34,6 +34,8 @@ install:
 > cp ${SRC_DIR}/lib/liblain.h ${INSTALL_DIR}/include
 > mkdir -pv ${INSTALL_DIR}/share/man
 > cp -R ${DOC_DIR}/roff/* ${INSTALL_DIR}/share/man
+> echo "${INSTALL_DIR}/lib" > ${LD_DIR}/90lain.conf
+> ldconfig
 
 install_doc:
 > mkdir -pv ${INSTALL_DIR}/share/doc/liblain
@@ -43,6 +45,8 @@ uninstall:
 > rm -vf ${INSTALL_DIR}/lib/liblain.so ${INSTALL_DIR}/include/liblain.h \
 	${INSTALL_DIR}/share/man/man3/liblain_* ${INSTALL_DIR}/share/doc/liblain/*
 > rmdir ${INSTALL_DIR}/share/doc/liblain
+> rm ${LD_DIR}/90lain.conf
+> ldconfig
 
 tgt:
 > $(MAKE) -C ${TGT_DIR} tgt CC='${CC}' BUILD_DIR='${BUILD_DIR}'
