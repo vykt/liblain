@@ -77,15 +77,17 @@ void ln_new_vm_map(ln_vm_map * vm_map);
 int ln_del_vm_map(ln_vm_map * vm_map);
 int ln_map_clean_unmapped(ln_vm_map * vm_map);
 
-off_t ln_get_area_offset(cm_list_node * area_node, uintptr_t addr);
-off_t ln_get_obj_offset(cm_list_node * obj_node, uintptr_t addr);
-cm_list_node * ln_get_vm_area_by_addr(ln_vm_map * vm_map, 
-                                      uintptr_t addr, off_t * offset);
+off_t ln_get_area_offset(const cm_list_node * area_node, const uintptr_t addr);
+off_t ln_get_obj_offset(const cm_list_node * obj_node, const uintptr_t addr);
+cm_list_node * ln_get_vm_area_by_addr(const ln_vm_map * vm_map, 
+                                      const uintptr_t addr, const off_t * offset);
 
-cm_list_node * ln_get_vm_obj_by_addr(ln_vm_map * vm_map, 
-                                     uintptr_t addr, off_t * offset);
-cm_list_node * ln_get_vm_obj_by_pathname(ln_vm_map * vm_map, char * pathname);
-cm_list_node * ln_get_vm_obj_by_basename(ln_vm_map * vm_map, char * basename);
+cm_list_node * ln_get_vm_obj_by_addr(const ln_vm_map * vm_map, 
+                                     const uintptr_t addr, off_t * offset);
+cm_list_node * ln_get_vm_obj_by_pathname(const ln_vm_map * vm_map, 
+                                         const char * pathname);
+cm_list_node * ln_get_vm_obj_by_basename(const ln_vm_map * vm_map, 
+                                         const char * basename);
 ```
 
 
@@ -114,9 +116,13 @@ The **ln_del_vm_map()** function deallocates all contents of a map *vm_map*.
 
 The **ln_map_clean_unmapped()** function deallocates all unmapped areas and objects of a map *vm_map*.
 
-The **ln_get_area_offset()** function returns the offset of *addr* from the start of the area *area_node*, or -1 if the address is not in the area.
+The **ln_get_area_offset()** function returns the offset of *addr* from the start of the area *area_node*.
 
-The **ln_get_obj_offset()** function returns the offset of *addr* from the start of the obj *obj_node*, or -1 if the address is not in the area.
+The **ln_get_obj_offset()** function returns the offset of *addr* from the start of the obj *obj_node*.
+
+The **ln_get_area_offset_bnd()** function returns the offset of *addr* from the start of the area *area_node*, or -1 if the address is not in the area.
+
+The **ln_get_obj_offset_bnd()** function returns the offset of *addr* from the start of the obj *obj_node*, or -1 if the address is not in the area.
 
 The **ln_get_vm_area_by_addr()** functions returns a pointer to the area node that *addr* falls into. If *offset* is not NULL, it is set to the offset of *addr* from the beginning of the area.
 

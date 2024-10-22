@@ -7,7 +7,7 @@ Lain memory manipulation library (liblain, -llain)
 _Thread_local int ln_errno;
 
 void ln_perror();
-const char * ln_strerror(int ln_errnum);
+const char * ln_strerror(const int ln_errnum);
 ```
 
 
