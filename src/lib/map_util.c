@@ -4,7 +4,6 @@
 
 #include "liblain.h"
 #include "map_util.h"
-#include "map.h"
 
 
 #define MAP_UTIL_GET_AREA 0
@@ -17,7 +16,7 @@
 // --- INTERNAL
 
 //check map is initialised
-static inline bool _is_map_empty(ln_vm_map * vm_map) {
+static inline bool _is_map_empty(const ln_vm_map * vm_map) {
 
     if (vm_map->vm_areas.len == 0) return true;
     if (vm_map->vm_objs.len == 0) return true;
@@ -27,7 +26,7 @@ static inline bool _is_map_empty(ln_vm_map * vm_map) {
 
 
 //get object's last area
-static inline cm_list_node * _get_obj_last_area(ln_vm_obj * vm_obj) {
+static inline cm_list_node * _get_obj_last_area(const ln_vm_obj * vm_obj) {
 
     cm_list_node * last_node;
 
@@ -45,7 +44,8 @@ static inline cm_list_node * _get_obj_last_area(ln_vm_obj * vm_obj) {
 
 
 //iterate through objects, then areas for a fast search
-static cm_list_node * _fast_addr_find(ln_vm_map * vm_map, uintptr_t addr, int mode) {
+static cm_list_node * _fast_addr_find(const ln_vm_map * vm_map, 
+                                      const uintptr_t addr, const int mode) {
 
     cm_list_node * iter_obj_node;
     cm_list_node * iter_area_node;
@@ -125,7 +125,8 @@ static cm_list_node * _fast_addr_find(ln_vm_map * vm_map, uintptr_t addr, int mo
 
 
 //find object with a given basename/pathname
-static cm_list_node * _obj_name_find(ln_vm_map * vm_map, char * name, int mode) {
+static cm_list_node * _obj_name_find(const ln_vm_map * vm_map, 
+                                     const char * name, const int mode) {
 
     int ret;
 
@@ -168,7 +169,25 @@ static cm_list_node * _obj_name_find(ln_vm_map * vm_map, char * name, int mode) 
 // --- EXTERNAL
 
 //get area offset
-off_t ln_get_area_offset(cm_list_node * area_node, uintptr_t addr) {
+off_t ln_get_area_offset(const cm_list_node * area_node, const uintptr_t addr) {
+
+    ln_vm_area * vm_area = LN_GET_NODE_AREA(area_node);
+
+    return (addr - vm_area->start_addr);
+}
+
+
+//get obj offset
+off_t ln_get_obj_offset(const cm_list_node * obj_node, const uintptr_t addr) {
+
+    ln_vm_obj * vm_obj = LN_GET_NODE_OBJ(obj_node);
+
+    return (addr - vm_obj->start_addr);
+}
+
+
+//get area offset
+off_t ln_get_area_offset_bnd(const cm_list_node * area_node, const uintptr_t addr) {
 
     ln_vm_area * vm_area = LN_GET_NODE_AREA(area_node);
 
@@ -178,7 +197,7 @@ off_t ln_get_area_offset(cm_list_node * area_node, uintptr_t addr) {
 
 
 //get obj offset
-off_t ln_get_obj_offset(cm_list_node * obj_node, uintptr_t addr) {
+off_t ln_get_obj_offset_bnd(const cm_list_node * obj_node, const uintptr_t addr) {
 
     ln_vm_obj * vm_obj = LN_GET_NODE_OBJ(obj_node);
 
@@ -187,9 +206,10 @@ off_t ln_get_obj_offset(cm_list_node * obj_node, uintptr_t addr) {
 }
 
 
+
 //return the area node at a given address, optionally include offset into the area
-cm_list_node * ln_get_vm_area_by_addr(ln_vm_map * vm_map, 
-                                   uintptr_t addr, off_t * offset) {
+cm_list_node * ln_get_vm_area_by_addr(const ln_vm_map * vm_map, 
+                                      const uintptr_t addr, off_t * offset) {
 
     cm_list_node * area_node;
 
@@ -203,8 +223,8 @@ cm_list_node * ln_get_vm_area_by_addr(ln_vm_map * vm_map,
 
 
 //return the obj node at a given address, optionally include offset into the obj
-cm_list_node * ln_get_vm_obj_by_addr(ln_vm_map * vm_map, 
-                                   uintptr_t addr, off_t * offset) {
+cm_list_node * ln_get_vm_obj_by_addr(const ln_vm_map * vm_map, 
+                                     const uintptr_t addr, off_t * offset) {
 
     cm_list_node * obj_node;
 
@@ -218,7 +238,8 @@ cm_list_node * ln_get_vm_obj_by_addr(ln_vm_map * vm_map,
 
 
 //return object matching pathname
-cm_list_node * ln_get_vm_obj_by_pathname(ln_vm_map * vm_map, char * pathname) {
+cm_list_node * ln_get_vm_obj_by_pathname(const ln_vm_map * vm_map, 
+                                         const char * pathname) {
 
     cm_list_node * obj_node;
 
@@ -230,7 +251,8 @@ cm_list_node * ln_get_vm_obj_by_pathname(ln_vm_map * vm_map, char * pathname) {
 
 
 //return object matching basename
-cm_list_node * ln_get_vm_obj_by_basename(ln_vm_map * vm_map, char * basename) {
+cm_list_node * ln_get_vm_obj_by_basename(const ln_vm_map * vm_map, 
+                                         const char * basename) {
 
     cm_list_node * obj_node;
 

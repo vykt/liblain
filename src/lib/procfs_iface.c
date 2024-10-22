@@ -23,7 +23,7 @@
 // --- PROCFS INTERFACE INTERNALS
 
 //build vm_entry from a line in procfs maps
-static inline void _build_entry(struct vm_entry * entry, char * line_buf) {
+static inline void _build_entry(struct vm_entry * entry, const char * line_buf) {
 
     int mode = 0;
     int done = 0;
@@ -38,7 +38,7 @@ static inline void _build_entry(struct vm_entry * entry, char * line_buf) {
     cm_byte perm_vals[] = {VM_READ, VM_WRITE, VM_EXEC, VM_SHARED};
 
     //save str for start addr
-    start_str = line_buf;
+    start_str = (char *) line_buf;
 
     //for every character on the line
     for (int i = 0; i < LINE_LEN; ++i) {
@@ -51,7 +51,7 @@ static inline void _build_entry(struct vm_entry * entry, char * line_buf) {
                 if (line_buf[i] == '-' || line_buf[i] == 'p') {
                     ++i;
                     ++mode;
-                    end_str = line_buf + i;
+                    end_str = (char *) line_buf + i;
                 } else {
                     continue;
                 }
@@ -72,7 +72,7 @@ static inline void _build_entry(struct vm_entry * entry, char * line_buf) {
 
                     //get offset
                     i += 5;
-                    offset_str = line_buf + i;
+                    offset_str = (char *) line_buf + i;
 
                 } else {
                     continue;
@@ -85,7 +85,7 @@ static inline void _build_entry(struct vm_entry * entry, char * line_buf) {
                     continue;
                 }
                 if (column_count <= 2) continue;
-                file_path_str = line_buf + i;
+                file_path_str = (char *) line_buf + i;
                 done = 1;
 
         } //end switch
@@ -107,7 +107,7 @@ static inline void _build_entry(struct vm_entry * entry, char * line_buf) {
 // --- CALLED BY VIRTUAL INTERFACE
 
 //open handles on /proc/pid/mem and /proc/pid/maps
-int _procfs_open(ln_session * session,  int pid) {
+int _procfs_open(ln_session * session,  const int pid) {
 
     int fd;
 	char mem_buf[PATH_MAX] = {0};
@@ -144,7 +144,7 @@ int _procfs_close(ln_session * session) {
 
 
 //update or build a map
-int _procfs_update_map(ln_session * session, ln_vm_map * vm_map) {
+int _procfs_update_map(const ln_session * session, ln_vm_map * vm_map) {
 
     int ret;
     FILE * fs; 
@@ -192,8 +192,8 @@ int _procfs_update_map(ln_session * session, ln_vm_map * vm_map) {
  */ 
 
 //read memory
-int _procfs_read(ln_session * session, uintptr_t addr, 
-                cm_byte * buf, size_t buf_sz) {
+int _procfs_read(const ln_session * session, const uintptr_t addr, 
+                 cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;
 	ssize_t read_bytes, read_done, read_left;
@@ -231,8 +231,8 @@ int _procfs_read(ln_session * session, uintptr_t addr,
 
 
 //write memory
-int _procfs_write(ln_session * session, uintptr_t addr, 
-                  cm_byte * buf, size_t buf_sz) {
+int _procfs_write(const ln_session * session, const uintptr_t addr, 
+                  const cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;
 	ssize_t write_bytes, write_done, write_left;

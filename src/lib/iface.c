@@ -35,7 +35,7 @@ static inline void set_lainko_session(ln_session * session) {
 
 
 //open session
-int ln_open(ln_session * session, int iface, int pid) {
+int ln_open(ln_session * session, const int iface, const pid_t pid) {
 
     int ret;
 
@@ -66,7 +66,7 @@ int ln_close(ln_session * session) {
 
 
 //update a map
-int ln_update_map(ln_session * session, ln_vm_map * vm_map) {
+int ln_update_map(const ln_session * session, ln_vm_map * vm_map) {
 
     int ret;
 
@@ -78,7 +78,8 @@ int ln_update_map(ln_session * session, ln_vm_map * vm_map) {
 
 
 //read memory
-int ln_read(ln_session * session, uintptr_t addr, cm_byte * buf, size_t buf_sz) {
+int ln_read(const ln_session * session, const uintptr_t addr, 
+            cm_byte * buf, const size_t buf_sz) {
 
     int ret;
 
@@ -90,7 +91,8 @@ int ln_read(ln_session * session, uintptr_t addr, cm_byte * buf, size_t buf_sz) 
 
 
 //write memory
-int ln_write(ln_session * session, uintptr_t addr, cm_byte * buf, size_t buf_sz) {
+int ln_write(const ln_session * session, uintptr_t addr, 
+             const cm_byte * buf, const size_t buf_sz) {
 
     int ret;
 

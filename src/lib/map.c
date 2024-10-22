@@ -16,9 +16,9 @@
 
 //ln_vm_area constructor
 static void _new_vm_area(ln_vm_area * vm_area, ln_vm_map * vm_map, 
-                         cm_list_node * obj_node, 
-                         cm_list_node * last_obj_node,
-                         struct vm_entry * entry) {
+                         const cm_list_node * obj_node, 
+                         const cm_list_node * last_obj_node,
+                         const struct vm_entry * entry) {
 
     ln_vm_obj * vm_obj;
 
@@ -36,8 +36,8 @@ static void _new_vm_area(ln_vm_area * vm_area, ln_vm_map * vm_map,
         
     } //end if
 
-    vm_area->obj_node_ptr      = obj_node;
-    vm_area->last_obj_node_ptr = last_obj_node;
+    vm_area->obj_node_ptr      = (cm_list_node *) obj_node;
+    vm_area->last_obj_node_ptr = (cm_list_node *) last_obj_node;
 
     vm_area->start_addr = entry->vm_start;
     vm_area->end_addr   = entry->vm_end;
@@ -55,9 +55,10 @@ static void _new_vm_area(ln_vm_area * vm_area, ln_vm_map * vm_map,
 
 
 //ln_vm_obj constructor
-static void _new_vm_obj(ln_vm_obj * vm_obj, ln_vm_map * vm_map, char * pathname) {
+static void _new_vm_obj(ln_vm_obj * vm_obj, ln_vm_map * vm_map, 
+                        const char * pathname) {
 
-    char * basename = ln_pathname_to_basename(pathname);
+    const char * basename = ln_pathname_to_basename(pathname);
 
     strncpy(vm_obj->pathname, pathname, PATH_MAX);
     strncpy(vm_obj->basename, basename, NAME_MAX);
@@ -91,7 +92,7 @@ static void _del_vm_obj(ln_vm_obj * vm_obj) {
 // --- MAP GENERATION INTERNALS
 
 //add an area to an obj (is not called 
-static inline int _obj_add_area(ln_vm_obj * obj, cm_list_node * area_node) {
+static inline int _obj_add_area(ln_vm_obj * obj, const cm_list_node * area_node) {
 
     cm_list_node * ret_node;
     ln_vm_area * area = LN_GET_NODE_AREA(area_node);
@@ -113,7 +114,7 @@ static inline int _obj_add_area(ln_vm_obj * obj, cm_list_node * area_node) {
     
     //simply appending preserves chronological order; out of order vm_areas 
     //are guaranteed(?) to be removed
-    ret_node = cm_list_append(&obj->vm_area_node_ptrs, (cm_byte *) &area_node);
+    ret_node = cm_list_append(&obj->vm_area_node_ptrs, (const cm_byte *) &area_node);
     if (ret_node == NULL) {
         ln_errno = LN_ERR_LIBCMORE;
         return -1;
@@ -124,7 +125,7 @@ static inline int _obj_add_area(ln_vm_obj * obj, cm_list_node * area_node) {
 
 
 //find if vm area's pathname belongs in object
-static bool _is_pathname_in_obj(char * pathname, ln_vm_obj * obj) {
+static bool _is_pathname_in_obj(const char * pathname, const ln_vm_obj * obj) {
 
     if (obj == NULL) return false;
 
@@ -137,7 +138,8 @@ static bool _is_pathname_in_obj(char * pathname, ln_vm_obj * obj) {
 #define _MAP_OBJ_PREV 0
 #define _MAP_OBJ_NEW  1
 #define _MAP_OBJ_NEXT 2
-static inline int _find_obj_for_area(_traverse_state * state, struct vm_entry * entry) {
+static inline int _find_obj_for_area(const _traverse_state * state, 
+                                     const struct vm_entry * entry) {
 
     cm_list_node * prev_node, * next_node;
     ln_vm_obj * prev_obj, * next_obj;
@@ -165,7 +167,7 @@ static inline int _find_obj_for_area(_traverse_state * state, struct vm_entry * 
 
 
 //find index of vm area in its corresponding object
-static inline int _get_area_index(ln_vm_area * area, ln_vm_obj * obj) {
+static inline int _get_area_index(const ln_vm_area * area, const ln_vm_obj * obj) {
 
     int ret;
 
@@ -227,7 +229,8 @@ static inline int _update_obj_addr_range(ln_vm_obj * obj) {
 
 //correctly remove unmapped obj node
 static inline int _unlink_unmapped_obj(cm_list_node * node, 
-                                       _traverse_state * state, ln_vm_map * vm_map) {
+                                       const _traverse_state * state, 
+                                       ln_vm_map * vm_map) {
 
     int ret;
     cm_list_node * ret_node;
@@ -256,7 +259,8 @@ static inline int _unlink_unmapped_obj(cm_list_node * node,
 
 
 //correctly remove unmapped area node
-static inline int _unlink_unmapped_area(cm_list_node * node, _traverse_state * state, 
+static inline int _unlink_unmapped_area(cm_list_node * node, 
+                                        const _traverse_state * state, 
                                         ln_vm_map * vm_map) {
 
     int ret, index;
@@ -329,7 +333,8 @@ static inline int _unlink_unmapped_area(cm_list_node * node, _traverse_state * s
 
 
 //check if the new vm_area is the same as the old vm_area
-static inline int _check_area_eql(struct vm_entry * entry, cm_list_node * area_node) {
+static inline int _check_area_eql(const struct vm_entry * entry, 
+                                  const cm_list_node * area_node) {
 
     ln_vm_area * area = LN_GET_NODE_AREA(area_node);
 
@@ -350,7 +355,7 @@ static inline int _check_area_eql(struct vm_entry * entry, cm_list_node * area_n
 
 //remove old entries and get in sync again
 static inline int _resync_area(ln_vm_map * vm_map,
-                              _traverse_state * state, struct vm_entry * entry) {
+                              _traverse_state * state, const struct vm_entry * entry) {
 
     int ret;
 
@@ -391,7 +396,7 @@ static inline int _resync_area(ln_vm_map * vm_map,
 #define _STATE_AREA_NODE_REASSIGN 2
 //move area state forward
 static void _state_inc_area(ln_vm_map * vm_map, _traverse_state * state, 
-                            cm_list_node * assign_node, int inc_type) {
+                            const cm_list_node * assign_node, const int inc_type) {
 
     switch (inc_type) {
 
@@ -411,7 +416,7 @@ static void _state_inc_area(ln_vm_map * vm_map, _traverse_state * state,
             break;
 
         case _STATE_AREA_NODE_REASSIGN:
-            state->next_area = assign_node;
+            state->next_area = (cm_list_node *) assign_node;
             break;
 
     } //end switch
@@ -448,8 +453,8 @@ static void _state_inc_obj(ln_vm_map * vm_map, _traverse_state * state) {
 
 
 //add a new obj to the map
-static cm_list_node * _map_add_obj(ln_vm_map * vm_map, 
-                                  _traverse_state * state, struct vm_entry * entry) {
+static cm_list_node * _map_add_obj(ln_vm_map * vm_map, _traverse_state * state, 
+                                   const struct vm_entry * entry) {
 
     int index;
 
@@ -479,7 +484,7 @@ static cm_list_node * _map_add_obj(ln_vm_map * vm_map,
 
 //add a new area to the map
 static int _map_add_area(ln_vm_map * vm_map, _traverse_state * state, 
-                        struct vm_entry * entry, int inc_type) {
+                         const struct vm_entry * entry, const int inc_type) {
 
     int ret;
     bool use_obj = false;
@@ -555,7 +560,7 @@ static int _map_add_area(ln_vm_map * vm_map, _traverse_state * state,
 
 //send information about a vm area from an interface to a map
 int _map_send_entry(ln_vm_map * vm_map, 
-                    _traverse_state * state, struct vm_entry * entry) {
+                    _traverse_state * state, const struct vm_entry * entry) {
 
     int ret;
 
@@ -597,7 +602,7 @@ int _map_send_entry(ln_vm_map * vm_map,
 
 
 //initialise traverse state for a map
-void _map_init_traverse_state(ln_vm_map * vm_map, _traverse_state * state) {
+void _map_init_traverse_state(const ln_vm_map * vm_map, _traverse_state * state) {
 
     state->next_area_index = 0;
     state->prev_obj_index = 0;

@@ -4,7 +4,7 @@
 #include "error.h"
 
 
-_Thread_local int ln_errno;
+__thread int ln_errno;
 
 
 void ln_perror() {
@@ -88,7 +88,7 @@ void ln_perror() {
 }
 
 
-const char * ln_strerror(int ln_errnum) {
+const char * ln_strerror(const int ln_errnum) {
 
     switch (ln_errnum) {
 

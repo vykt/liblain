@@ -58,6 +58,7 @@ typedef struct {
 
 } ln_vm_area;
 
+
 // --- ['backing' object]
 struct _ln_vm_obj {
 
@@ -100,9 +101,11 @@ typedef struct {
 
     int (*open)(struct _ln_session *, int);
     int (*close)(struct _ln_session *);
-    int (*update_map)(struct _ln_session *, ln_vm_map *);
-    int (*read)(struct _ln_session *, uintptr_t, cm_byte *, size_t);
-    int (*write)(struct _ln_session *, uintptr_t, cm_byte *, size_t);
+    int (*update_map)(const struct _ln_session *, ln_vm_map *);
+    int (*read)(const struct _ln_session *, const uintptr_t, 
+                cm_byte *, const size_t);
+    int (*write)(const struct _ln_session *, const uintptr_t, 
+                 const cm_byte *, const size_t);
 
 } ln_iface;
 
@@ -112,7 +115,7 @@ struct _ln_session {
     union {
         struct {
             int fd_mem;
-            int pid;
+            pid_t pid;
         }; //procfs_data
         struct {
             char major;
@@ -133,24 +136,24 @@ typedef struct _ln_session ln_session;
 
 // --- [utils]
 //return: basename = success, NULL = fail/error
-extern char * ln_pathname_to_basename(char * pathname);
+extern const char * ln_pathname_to_basename(const char * pathname);
 //must destroy 'pid_vector' manually on success | pid = success, -1 = fail/error
 extern pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector);
 //return: 0 = success, -1 = fail/error
-extern int ln_name_by_pid(pid_t pid, char * name_buf);
+extern int ln_name_by_pid(const pid_t pid, char * name_buf);
 //'out' must have space for double the length of 'inp' + 1
-extern void ln_bytes_to_hex(cm_byte * inp, int inp_len, char * out);
+extern void ln_bytes_to_hex(const cm_byte * inp, const int inp_len, char * out);
 
 
 // --- [virtual interface (session)]
 //all return 0 = success, -1 = fail/error
-extern int ln_open(ln_session * session, int iface, int pid);
+extern int ln_open(ln_session * session, const int iface, const pid_t pid);
 extern int ln_close(ln_session * session);
-extern int ln_update_map(ln_session * session, ln_vm_map * vm_map);
-extern int ln_read(ln_session * session, uintptr_t addr, 
-                     cm_byte * buf, size_t buf_sz);
-extern int ln_write(ln_session * session, uintptr_t addr,
-                      cm_byte * buf, size_t buf_sz);
+extern int ln_update_map(const ln_session * session, ln_vm_map * vm_map);
+extern int ln_read(const ln_session * session, const uintptr_t addr, 
+                   cm_byte * buf, const size_t buf_sz);
+extern int ln_write(const ln_session * session, const uintptr_t addr,
+                    const cm_byte * buf, const size_t buf_sz);
 
 // --- [map operations]
 //all return 0 = success, -1 = fail/error
@@ -160,30 +163,37 @@ extern int ln_map_clean_unmapped(ln_vm_map * vm_map);
 
 
 // --- [map utils]
-//return: offset from area/object = success, -1 = not in area/object
-extern off_t ln_get_area_offset(cm_list_node * area_node, uintptr_t addr);
-extern off_t ln_get_obj_offset(cm_list_node * obj_node, uintptr_t addr);
+//return: offset from start of area/object
+extern off_t ln_get_area_offset(const cm_list_node * area_node, const uintptr_t addr);
+extern off_t ln_get_obj_offset(const cm_list_node * obj_node, const uintptr_t addr);
+//return: offset from start of area/object = success, -1 = not in area/object
+extern off_t ln_get_area_offset_bnd(const cm_list_node * area_node, 
+                                    const uintptr_t addr);
+extern off_t ln_get_obj_offset_bnd(const cm_list_node * obj_node, 
+                                   const uintptr_t addr);
 //return area node * = success, NULL = fail/error
-extern cm_list_node * ln_get_vm_area_by_addr(ln_vm_map * vm_map, 
-                                   uintptr_t addr, off_t * offset);
+extern cm_list_node * ln_get_vm_area_by_addr(const ln_vm_map * vm_map, 
+                                             const uintptr_t addr, off_t * offset);
 //return obj node * = success, NULL = fail/error
-extern cm_list_node * ln_get_vm_obj_by_addr(ln_vm_map * vm_map, 
-                                   uintptr_t addr, off_t * offset);
-extern cm_list_node * ln_get_vm_obj_by_pathname(ln_vm_map * vm_map, char * pathname);
-extern cm_list_node * ln_get_vm_obj_by_basename(ln_vm_map * vm_map, char * basename);
+extern cm_list_node * ln_get_vm_obj_by_addr(const ln_vm_map * vm_map, 
+                                            const uintptr_t addr, off_t * offset);
+extern cm_list_node * ln_get_vm_obj_by_pathname(const ln_vm_map * vm_map, 
+                                                const char * pathname);
+extern cm_list_node * ln_get_vm_obj_by_basename(const ln_vm_map * vm_map, 
+                                                const char * basename);
 
 
 // --- [error handling]
 //void return
 extern void ln_perror();
-extern const char * ln_strerror(int ln_errnum);
+extern const char * ln_strerror(const int ln_errnum);
 
 
 /*
  *  --- [ERROR HANDLING] ---
  */
 
-extern _Thread_local int ln_errno;
+extern __thread int ln_errno;
 
 // [error codes]
 

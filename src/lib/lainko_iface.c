@@ -55,7 +55,7 @@ static inline char _get_major() {
 // --- CALLED BY VIRTUAL INTERFACE
 
 //locate and open the lainmemu device, and then open the target
-int _lainko_open(ln_session * session, pid_t pid) {
+int _lainko_open(ln_session * session, const pid_t pid) {
 
     int ret;
     char memu_path[PATH_MAX];
@@ -119,7 +119,7 @@ int _lainko_close(ln_session * session) {
 
 
 //update the map
-int _lainko_update_map(ln_session * session, ln_vm_map * vm_map) {
+int _lainko_update_map(const ln_session * session, ln_vm_map * vm_map) {
 
     int ret, count;
     uint32_t ioctl_call;
@@ -181,8 +181,8 @@ int _lainko_update_map(ln_session * session, ln_vm_map * vm_map) {
 
 
 //read memory
-int _lainko_read(ln_session * session, uintptr_t addr, 
-                cm_byte * buf, size_t buf_sz) {
+int _lainko_read(const ln_session * session, const uintptr_t addr, 
+                cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;
 	ssize_t read_bytes, read_done, read_left;
@@ -220,8 +220,8 @@ int _lainko_read(ln_session * session, uintptr_t addr,
 
 
 //write memory
-int _lainko_write(ln_session * session, uintptr_t addr, 
-                 cm_byte * buf, size_t buf_sz) {
+int _lainko_write(const ln_session * session, const uintptr_t addr, 
+                  const cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;
 	ssize_t write_bytes, write_done, write_left;

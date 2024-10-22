@@ -4,7 +4,7 @@
 
 //external
 void ln_perror();
-const char * ln_strerror(int ln_errnum);
+const char * ln_strerror(const int ln_errnum);
 
 
 #endif

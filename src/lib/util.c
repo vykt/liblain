@@ -21,7 +21,7 @@
 // --- INTERNAL
 
 //convert the first line of /proc/pid/status to a name (comm)
-static inline void _line_to_name(char * line_buf, char * name_buf) {
+static inline void _line_to_name(const char * line_buf, char * name_buf) {
 
     line_buf += 5;
     char * name_str;
@@ -30,7 +30,7 @@ static inline void _line_to_name(char * line_buf, char * name_buf) {
     for (int i = 0; i < LINE_LEN; ++i) {
 
         if (line_buf[i] == ' ' || line_buf[i] == '\t') continue;
-        name_str = line_buf + 1;
+        name_str = (char *) line_buf + 1;
         name_str[strcspn(name_str, "\n")] = '\0';
         break;
     }
@@ -42,7 +42,7 @@ static inline void _line_to_name(char * line_buf, char * name_buf) {
 
 
 //use /proc/pid/status to get the name of a process (mimic utils like 'ps')
-static int _get_status_name(char * name_buf, pid_t pid) {
+static int _get_status_name(char * name_buf, const pid_t pid) {
 
     int ret;
     char * fret;
@@ -92,7 +92,7 @@ static int _get_status_name(char * name_buf, pid_t pid) {
 // --- EXTERNAL 
 
 //returns basename
-char * ln_pathname_to_basename(char * pathname) {
+const char * ln_pathname_to_basename(const char * pathname) {
 
     char * basename = strrchr(pathname, (int) '/');
     
@@ -189,7 +189,7 @@ pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
 
 
 //get name of a pid
-int ln_name_by_pid(pid_t pid, char * name_buf) {
+int ln_name_by_pid(const pid_t pid, char * name_buf) {
 
     int ret;
 
@@ -202,7 +202,7 @@ int ln_name_by_pid(pid_t pid, char * name_buf) {
 
 
 //give byte string, return char hex string, double the size
-void ln_bytes_to_hex(cm_byte * inp, int inp_len, char * out) {
+void ln_bytes_to_hex(const cm_byte * inp, const int inp_len, char * out) {
 
     cm_byte nibble;
     int count;

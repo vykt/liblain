@@ -25,8 +25,8 @@ typedef struct {
 
 //internal
 int _map_send_entry(ln_vm_map * vm_map, 
-                   _traverse_state * state, struct vm_entry * entry);
-void _map_init_traverse_state(ln_vm_map * vm_map, _traverse_state * state);
+                   _traverse_state * state, const struct vm_entry * entry);
+void _map_init_traverse_state(const ln_vm_map * vm_map, _traverse_state * state);
 
 
 //external
