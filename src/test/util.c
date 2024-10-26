@@ -45,7 +45,7 @@ pid_t test_utils(char * comm) {
     //test bytes to hex string
 
     ln_bytes_to_hex(hex_buf, 4, hexstr_buf);
-    printf("should see '0xdeadcode': %s\n", hexstr_buf);
+    printf("should see 'deadcode': %s\n", hexstr_buf);
 
     return pid;
 }

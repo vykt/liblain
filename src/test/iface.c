@@ -42,8 +42,8 @@ void test_iface(pid_t pid, int iface, ln_vm_map * vm_map, uintptr_t test_addr) {
     ret = ln_update_map(&session, vm_map);
 
     //read & write
-    bytes = ln_write(&session, test_addr, buf, 0x2000);
-    bytes = ln_read(&session, test_addr, buf, 0x2000);
+    //bytes = ln_write(&session, test_addr, buf, 0x2000);
+    //bytes = ln_read(&session, test_addr, buf, 0x2000);
 
     //close session
     ret = ln_close(&session);

@@ -173,7 +173,7 @@ void test_map(ln_vm_map * vm_map) {
     ln_vm_obj * obj;
 
     //test obj by name
-    node = cm_list_get_node(&vm_map->vm_areas, 0);
+    node = cm_list_get_node(&vm_map->vm_areas, 1);
     area = LN_GET_NODE_AREA(node);
     name = area->pathname;
 

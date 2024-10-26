@@ -8,6 +8,13 @@
 #define FILESIZE 4096 // 4 KB
 
 int main() {
+
+    // Create a mapping before main executable
+    void * zero_mapping = mmap((void *) 0x100000, 0x2000, 
+                               PROT_READ | PROT_WRITE, 
+                               MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, 
+                               -1, 0x0);
+
     // Open "/etc/fstab" file
     int fd = open("/etc/fstab", O_RDONLY);
     if (fd == -1) {
@@ -45,6 +52,12 @@ int main() {
     char cont;
     scanf("%c", &cont);
 
+
+    // Unmap the file
+    if (munmap(zero_mapping, FILESIZE) == -1) {
+        perror("Error un-mmapping the file");
+        exit(EXIT_FAILURE);
+    } 
 
     // Unmap the file
     if (munmap(dataPtr, FILESIZE) == -1) {

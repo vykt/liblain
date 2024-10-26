@@ -25,6 +25,24 @@ static inline bool _is_map_empty(const ln_vm_map * vm_map) {
 }
 
 
+//skip pseudo object if it is empty
+static inline cm_list_node * _get_starting_obj(const ln_vm_map * vm_map) {
+
+    cm_list_node * obj_node;
+    ln_vm_obj * vm_obj;
+
+    obj_node = vm_map->vm_objs.head;
+    vm_obj = LN_GET_NODE_OBJ(obj_node);
+
+    //if pseudo object has no areas
+    if (vm_obj->start_addr == -1 || vm_obj->start_addr == 0x0) {
+        obj_node = obj_node->next;
+    }
+
+    return obj_node;
+}
+
+
 //get object's last area
 static inline cm_list_node * _get_obj_last_area(const ln_vm_obj * vm_obj) {
 
@@ -60,7 +78,7 @@ static cm_list_node * _fast_addr_find(const ln_vm_map * vm_map,
     if (_is_map_empty(vm_map)) return NULL;
 
     //init object iteration
-    iter_obj_node = vm_map->vm_objs.head;
+    iter_obj_node = _get_starting_obj(vm_map);
     iter_vm_obj = LN_GET_NODE_OBJ(iter_obj_node);
 
     iter_area_node = LN_GET_NODE_PTR(iter_vm_obj->vm_area_node_ptrs.head);

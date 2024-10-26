@@ -29,12 +29,18 @@ extern "C"{
 #define LN_ACCESS_SHARED  0x08
 
 
+//interface types
+#define LN_IFACE_LAINKO 0
+#define LN_IFACE_PROCFS 1
+
+
+//
+#define ZERO_OBJ_ID -1
+
+
 /*
  *  --- [DATA TYPES] ---
  */
-
-#define LN_IFACE_LAINKO 0
-#define LN_IFACE_PROCFS 1
 
 
 struct _ln_vm_obj;
@@ -223,8 +229,8 @@ extern __thread int ln_errno;
 // [error code messages]
 
 // 1XX - user errors
-#define LN_ERR_PROC_MEM_MSG         "Can't open /proc/<pid>/mem for specified pid.\n"
-#define LN_ERR_PROC_MAP_MSG         "Can't open /proc/<pid>/maps for specified pid.\n"
+#define LN_ERR_PROC_MEM_MSG         "Could not open /proc/<pid>/mem for specified pid.\n"
+#define LN_ERR_PROC_MAP_MSG         "Could not open /proc/<pid>/maps for specified pid.\n"
 #define LN_ERR_SEEK_ADDR_MSG        "Could not seek to specified address.\n"
 
 // 2XX - internal errors

@@ -63,8 +63,8 @@ static void _new_vm_obj(ln_vm_obj * vm_obj, ln_vm_map * vm_map,
     strncpy(vm_obj->pathname, pathname, PATH_MAX);
     strncpy(vm_obj->basename, basename, NAME_MAX);
 
-    vm_obj->start_addr = -1;
-    vm_obj->end_addr = -1;
+    vm_obj->start_addr = 0x0;
+    vm_obj->end_addr = 0x0;
 
     //initialise area list
     cm_new_list(&vm_obj->vm_area_node_ptrs, sizeof(cm_list_node *));
@@ -91,6 +91,15 @@ static void _del_vm_obj(ln_vm_obj * vm_obj) {
 
 // --- MAP GENERATION INTERNALS
 
+//modify object to act as pseudo object
+static inline void _make_zero_obj(ln_vm_obj * vm_obj) {
+    
+    vm_obj->id = ZERO_OBJ_ID;
+
+    return;
+}
+
+
 //add an area to an obj (is not called 
 static inline int _obj_add_area(ln_vm_obj * obj, const cm_list_node * area_node) {
 
@@ -98,7 +107,7 @@ static inline int _obj_add_area(ln_vm_obj * obj, const cm_list_node * area_node)
     ln_vm_area * area = LN_GET_NODE_AREA(area_node);
 
     //if this object has no areas yet
-    if (obj->start_addr == -1) {
+    if (obj->start_addr == -1 || obj->start_addr == 0x0) {
 
         //set new addr bounds
         obj->start_addr = area->start_addr;
@@ -234,6 +243,16 @@ static inline int _unlink_unmapped_obj(cm_list_node * node,
 
     int ret;
     cm_list_node * ret_node;
+    ln_vm_obj * temp_obj;
+
+
+    //if this is the pseudo object, just reset it
+    temp_obj = LN_GET_NODE_OBJ(node);
+    if (temp_obj->id == ZERO_OBJ_ID) {
+        temp_obj->start_addr = 0x0;
+        temp_obj->end_addr = 0x0;
+        return 0;
+    }
 
     //unlink this node from the list of mapped vm areas
     ret = cm_list_unlink(&vm_map->vm_objs, state->prev_obj_index + 1);
@@ -621,12 +640,23 @@ void _map_init_traverse_state(const ln_vm_map * vm_map, _traverse_state * state)
 //ln_vm_map constructor
 void ln_new_vm_map(ln_vm_map * vm_map) {
 
+    //pseudo object, will adopt leading parentless vm_areas
+    ln_vm_obj zero_obj;
+
+    //initialise lists
     cm_new_list(&vm_map->vm_areas, sizeof(ln_vm_area));
     cm_new_list(&vm_map->vm_objs, sizeof(ln_vm_obj));
 
     cm_new_list(&vm_map->vm_areas_unmapped, sizeof(cm_list_node *));
     cm_new_list(&vm_map->vm_objs_unmapped, sizeof(cm_list_node *));
 
+    //setup pseudo object at start of map
+    _new_vm_obj(&zero_obj, vm_map, "0x0");
+    _make_zero_obj(&zero_obj);
+
+    cm_list_append(&vm_map->vm_objs, (cm_byte *) &zero_obj);
+
+    //reset id
     vm_map->next_id_area = vm_map->next_id_obj = 0;
 
     return;
