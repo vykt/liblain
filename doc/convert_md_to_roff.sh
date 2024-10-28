@@ -1,7 +1,7 @@
 #!/bin/bash
 
 PROJECT="liblain"
-VERSION="v1.0.2"
+VERSION="v1.0.3"
 DATE="Oct 2024"
 
 SRC_DIR="md"
