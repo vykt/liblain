@@ -1,8 +1,8 @@
 #!/bin/bash
 
 PROJECT="liblain"
-VERSION="v1.0.2"
-DATE="Oct 2024"
+VERSION="v1.0.3"
+DATE="Nov 2024"
 
 SRC_DIR="md"
 DST_DIR="roff/man3"

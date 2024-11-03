@@ -68,6 +68,7 @@ static void _new_vm_obj(ln_vm_obj * vm_obj, ln_vm_map * vm_map,
 
     //initialise area list
     cm_new_list(&vm_obj->vm_area_node_ptrs, sizeof(cm_list_node *));
+    cm_new_list(&vm_obj->last_vm_area_node_ptrs, sizeof(cm_list_node *));
 
     vm_obj->mapped = true;
 
@@ -83,7 +84,8 @@ static void _new_vm_obj(ln_vm_obj * vm_obj, ln_vm_map * vm_map,
 static void _del_vm_obj(ln_vm_obj * vm_obj) {
 
     cm_del_list(&vm_obj->vm_area_node_ptrs);
-    
+    cm_del_list(&vm_obj->last_vm_area_node_ptrs);
+
     return;
 }
 
@@ -100,7 +102,7 @@ static inline void _make_zero_obj(ln_vm_obj * vm_obj) {
 }
 
 
-//add an area to an obj (is not called 
+//add an area to an obj
 static inline int _obj_add_area(ln_vm_obj * obj, const cm_list_node * area_node) {
 
     cm_list_node * ret_node;
@@ -124,6 +126,24 @@ static inline int _obj_add_area(ln_vm_obj * obj, const cm_list_node * area_node)
     //simply appending preserves chronological order; out of order vm_areas 
     //are guaranteed(?) to be removed
     ret_node = cm_list_append(&obj->vm_area_node_ptrs, (const cm_byte *) &area_node);
+    if (ret_node == NULL) {
+        ln_errno = LN_ERR_LIBCMORE;
+        return -1;
+    }
+
+    return 0;
+}
+
+
+static inline int _obj_add_last_area(ln_vm_obj * obj, 
+                                     const cm_list_node * last_area_node) {
+    
+    cm_list_node * ret_node;
+
+    //simply appending preserves chronological order; out of order vm_areas 
+    //are guaranteed(?) to be removed
+    ret_node = cm_list_append(&obj->last_vm_area_node_ptrs,
+                              (const cm_byte *) &last_area_node);
     if (ret_node == NULL) {
         ln_errno = LN_ERR_LIBCMORE;
         return -1;
@@ -236,6 +256,118 @@ static inline int _update_obj_addr_range(ln_vm_obj * obj) {
 }
 
 
+//called when deleting an object to move last_obj_node_ptr refernces an object back
+static inline int _backtrack_unmapped_obj_last_vm_areas(cm_list_node * node) {
+
+    int ret;
+    int iterations;
+
+    ln_vm_obj * temp_obj;
+
+    cm_list_node * last_area_node;
+    ln_vm_area * last_area;
+
+
+    //setup iteration
+    temp_obj = LN_GET_NODE_OBJ(node);
+    last_area_node = temp_obj->last_vm_area_node_ptrs.head;
+    if (last_area_node == NULL) return 0;
+
+    last_area = LN_GET_NODE_AREA(last_area_node);
+
+
+    //for every area, backtrack last object pointer
+    iterations = temp_obj->last_vm_area_node_ptrs.len;
+    for (int i = 0; i < iterations; ++i) {
+
+        //update ptr
+        last_area->last_obj_node_ptr = node->prev;
+        
+        //advance iteration (part 1)
+        last_area_node = last_area_node->next;
+
+        //remove this area from the object's last_vm_area_node_ptrs list
+        ret = cm_list_remove(&temp_obj->last_vm_area_node_ptrs, 0);
+        if (ret == -1) {
+            ln_errno = LN_ERR_LIBCMORE;
+            return -1;
+        }
+
+        //advance iteration (part 2)
+        last_area = LN_GET_NODE_AREA(last_area_node);
+    }
+
+    return 0;
+}
+
+
+//called when adding a new object to move last_obj_node_ptr references forward 
+//if necessary
+static inline int _forward_unmapped_obj_last_vm_areas(cm_list_node * node) {
+
+    int ret;
+
+    //declarations
+    cm_list_node * prev_node;
+    ln_vm_obj * temp_obj;
+    ln_vm_obj * temp_prev_obj;
+
+    cm_list_node * last_area_node;
+    ln_vm_area * last_area;
+
+
+    /*
+     *  This is not that complicated, C syntax for generics is just awful
+     */
+
+    //setup iteration
+    prev_node = node->prev;
+    
+    temp_obj = LN_GET_NODE_OBJ(node);
+    temp_prev_obj = LN_GET_NODE_OBJ(prev_node);
+
+    last_area_node = temp_prev_obj->last_vm_area_node_ptrs.head;
+    if (last_area_node == NULL) return 0;
+    
+    last_area = LN_GET_NODE_AREA(last_area_node);
+
+
+    //for every area, move last object pointer forward if necessary
+    for (int i = 0; i < temp_prev_obj->last_vm_area_node_ptrs.len; ++i) {
+
+        //advance iteration (part 1)
+        last_area_node = last_area_node->next;
+
+        //if this area's address range comes completely after this object
+        if (last_area->start_addr >= temp_obj->end_addr) {
+            
+            //set this object as the new last object pointer
+            last_area->last_obj_node_ptr = node;
+
+            //add this area to this object's last_vm_area_node_ptrs list
+            cm_list_append(&temp_obj->last_vm_area_node_ptrs,
+                           (const cm_byte *) &last_area_node);
+
+            //remove this area from the previous last object's last_vm_area_node_ptrs
+            ret = cm_list_remove(&temp_prev_obj->last_vm_area_node_ptrs, i);
+            if (ret == -1) {
+                ln_errno = LN_ERR_LIBCMORE;
+                return -1;
+            }
+
+            i -= 1;
+
+        } //end if
+
+        //advance iteration (part 2)
+        last_area = LN_GET_NODE_AREA(last_area_node);
+
+    } //end for
+
+    return 0;
+}
+
+
 //correctly remove unmapped obj node
 static inline int _unlink_unmapped_obj(cm_list_node * node, 
                                        const _traverse_state * state, 
@@ -253,6 +385,10 @@ static inline int _unlink_unmapped_obj(cm_list_node * node,
         temp_obj->end_addr = 0x0;
         return 0;
     }
+
+    //correct last_obj_node_ptr of every vm_area using this object as its last object
+    ret = _backtrack_unmapped_obj_last_vm_areas(node);
+    if (ret == -1) return -1;
 
     //unlink this node from the list of mapped vm areas
     ret = cm_list_unlink(&vm_map->vm_objs, state->prev_obj_index + 1);
@@ -494,6 +630,14 @@ static cm_list_node * _map_add_obj(ln_vm_map * vm_map, _traverse_state * state,
         return NULL;
     }
 
+    /*
+     *  with the insertion of this object, the vm_areas in the previous object's 
+     *  last_vm_area_node_ptrs list may now incorrectly treat the previous object
+     *  as the last object, when in fact this newly inserted object should be 
+     *  their new last object. this needs to be corrected now.
+     */
+    _forward_unmapped_obj_last_vm_areas(obj_node);
+
     //advance state
     _state_inc_obj(vm_map, state);
 
@@ -561,9 +705,12 @@ static int _map_add_area(ln_vm_map * vm_map, _traverse_state * state,
     }
 
     //add area to the obj ptr list
+    vm_obj = LN_GET_NODE_OBJ(state->prev_obj); 
     if (use_obj) {
-        vm_obj = LN_GET_NODE_OBJ(state->prev_obj);
         ret = _obj_add_area(vm_obj, area_node);
+        if (ret == -1) return -1;
+    } else {
+        ret = _obj_add_last_area(vm_obj, area_node);
         if (ret == -1) return -1;
     }
 

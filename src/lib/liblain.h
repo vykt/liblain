@@ -34,7 +34,7 @@ extern "C"{
 #define LN_IFACE_PROCFS 1
 
 
-//
+//pseudo object id
 #define ZERO_OBJ_ID -1
 
 
@@ -74,7 +74,8 @@ struct _ln_vm_obj {
     uintptr_t start_addr;
     uintptr_t end_addr;
 
-    cm_list vm_area_node_ptrs; //STORES: cm_list_node * of ln_vm_area
+    cm_list vm_area_node_ptrs;      //STORES: cm_list_node * of ln_vm_area
+    cm_list last_vm_area_node_ptrs; //STORES: cm_list_node * of ln_vm_area
 
     int id;
     bool mapped; //can be set to false with map update
