@@ -1,19 +1,31 @@
 #ifndef PROC_IFACE_H
 #define PROC_IFACE_H
 
-#include <libcmore.h>
+//external libraries
+#include <cmore.h>
 
-#include "liblain.h"
+//local headers
+#include "memcry.h"
+#include "krncry.h"
+#include "debug.h"
 
 
+#define LINE_LEN PATH_MAX + 128
+
+
+#ifdef DEBUG
 //internal
-int _procfs_open(ln_session * session,  const int pid);
-int _procfs_close(ln_session * session);
-int _procfs_update_map(const ln_session * session, ln_vm_map * vm_map);
-int _procfs_read(const ln_session * session, const uintptr_t addr, 
-                 cm_byte * buf, const size_t buf_sz);
-int _procfs_write(const ln_session * session, const uintptr_t addr, 
-                  const cm_byte * buf, const size_t buf_sz);
+void _build_entry(struct vm_entry * entry, const char * line_buf);
+#endif
 
+
+//interface
+int procfs_open(mc_session * session,  const int pid);
+int procfs_close(mc_session * session);
+int procfs_update_map(const mc_session * session, mc_vm_map * vm_map);
+int procfs_read(const mc_session * session, const uintptr_t addr, 
+                cm_byte * buf, const size_t buf_sz);
+int procfs_write(const mc_session * session, const uintptr_t addr, 
+                 const cm_byte * buf, const size_t buf_sz);
 
 #endif

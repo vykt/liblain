@@ -1,4 +1,6 @@
 [bugs]:
+-make mc_vm_area link to mc_vm_obj list nodes, instead of objects directly
+
 - when the map is updated, vm_area's last_obj pointers need to be intelligently
   updated. this is quite difficult. implement tests to check this is handled
   correctly.

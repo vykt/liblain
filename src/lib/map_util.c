@@ -1,22 +1,29 @@
+//standard library
 #include <string.h>
 
-#include <libcmore.h>
+//external libraries
+#include <cmore.h>
 
-#include "liblain.h"
+//local headers
+#include "memcry.h"
 #include "map_util.h"
+#include "debug.h"
 
 
-#define MAP_UTIL_GET_AREA 0
-#define MAP_UTIL_GET_OBJ 1
+#define _MAP_UTIL_GET_AREA 0
+#define _MAP_UTIL_GET_OBJ 1
 
-#define MAP_UTIL_USE_PATHNAME 0
-#define MAP_UTIL_USE_BASENAME 1
+#define _MAP_UTIL_USE_PATHNAME 0
+#define _MAP_UTIL_USE_BASENAME 1
 
 
-// --- INTERNAL
 
-//check map is initialised
-static inline bool _is_map_empty(const ln_vm_map * vm_map) {
+/*
+ *  --- [INTERNAL] ---
+ */
+
+DBG_STATIC DBG_INLINE
+bool _is_map_empty(const mc_vm_map * vm_map) {
 
     if (vm_map->vm_areas.len == 0) return true;
     if (vm_map->vm_objs.len == 0) return true;
@@ -25,14 +32,20 @@ static inline bool _is_map_empty(const ln_vm_map * vm_map) {
 }
 
 
-//skip pseudo object if it is empty
-static inline cm_list_node * _get_starting_obj(const ln_vm_map * vm_map) {
 
-    cm_list_node * obj_node;
-    ln_vm_obj * vm_obj;
+/*
+ *  Determines starting object for iteration. 
+ *  Will skip the pseudo-object if it is empty.
+ */
+
+DBG_STATIC DBG_INLINE
+cm_lst_node * _get_starting_obj(const mc_vm_map * vm_map) {
+
+    cm_lst_node * obj_node;
+    mc_vm_obj * vm_obj;
 
     obj_node = vm_map->vm_objs.head;
-    vm_obj = LN_GET_NODE_OBJ(obj_node);
+    vm_obj = MC_GET_NODE_OBJ(obj_node);
 
     //if pseudo object has no areas
     if (vm_obj->start_addr == -1 || vm_obj->start_addr == 0x0) {
@@ -43,35 +56,37 @@ static inline cm_list_node * _get_starting_obj(const ln_vm_map * vm_map) {
 }
 
 
-//get object's last area
-static inline cm_list_node * _get_obj_last_area(const ln_vm_obj * vm_obj) {
 
-    cm_list_node * last_node;
+DBG_STATIC DBG_INLINE
+cm_lst_node * _get_obj_last_area(const mc_vm_obj * vm_obj) {
+
+    cm_lst_node * last_node;
 
     //if this object has multiple areas
     if (vm_obj->vm_area_node_ptrs.len > 1) {
-        last_node = LN_GET_NODE_PTR(vm_obj->vm_area_node_ptrs.head->prev);
+        last_node = MC_GET_NODE_PTR(vm_obj->vm_area_node_ptrs.head->prev);
     
     //else this object only has one area
     } else { 
-        last_node = LN_GET_NODE_PTR(vm_obj->vm_area_node_ptrs.head);
+        last_node = MC_GET_NODE_PTR(vm_obj->vm_area_node_ptrs.head);
     }
 
     return last_node;
 }
 
 
-//iterate through objects, then areas for a fast search
-static cm_list_node * _fast_addr_find(const ln_vm_map * vm_map, 
-                                      const uintptr_t addr, const int mode) {
 
-    cm_list_node * iter_obj_node;
-    cm_list_node * iter_area_node;
+DBG_STATIC
+cm_lst_node * _fast_addr_find(const mc_vm_map * vm_map, 
+                               const uintptr_t addr, const int mode) {
 
-    ln_vm_obj * iter_vm_obj;
-    ln_vm_area * iter_vm_area;
+    cm_lst_node * iter_obj_node;
+    cm_lst_node * iter_area_node;
 
-    ln_vm_area * prev_area;
+    mc_vm_obj * iter_vm_obj;
+    mc_vm_area * iter_vm_area;
+
+    mc_vm_area * prev_area;
 
 
     //check map is not empty
@@ -79,10 +94,10 @@ static cm_list_node * _fast_addr_find(const ln_vm_map * vm_map,
 
     //init object iteration
     iter_obj_node = _get_starting_obj(vm_map);
-    iter_vm_obj = LN_GET_NODE_OBJ(iter_obj_node);
+    iter_vm_obj = MC_GET_NODE_OBJ(iter_obj_node);
 
-    iter_area_node = LN_GET_NODE_PTR(iter_vm_obj->vm_area_node_ptrs.head);
-    iter_vm_area = LN_GET_NODE_AREA(iter_area_node);
+    iter_area_node = MC_GET_NODE_PTR(iter_vm_obj->vm_area_node_ptrs.head);
+    iter_vm_area = MC_GET_NODE_AREA(iter_area_node);
 
 
     //if the address is in the very first object
@@ -95,17 +110,17 @@ static cm_list_node * _fast_addr_find(const ln_vm_map * vm_map,
             if (iter_vm_obj->end_addr > addr) break;
 
             iter_area_node = _get_obj_last_area(iter_vm_obj);
-            iter_vm_area = LN_GET_NODE_AREA(iter_area_node);
+            iter_vm_area = MC_GET_NODE_AREA(iter_area_node);
 
             iter_obj_node = iter_obj_node->next;
-            iter_vm_obj = LN_GET_NODE_OBJ(iter_obj_node);
+            iter_vm_obj = MC_GET_NODE_OBJ(iter_obj_node);
 
         } //end object search   
     
     }//end if
 
     //if an obj was requested
-    if (mode == MAP_UTIL_GET_OBJ) {
+    if (mode == _MAP_UTIL_GET_OBJ) {
         
         //if the address is in range of the obj
         if (iter_vm_obj->start_addr <= addr && iter_vm_obj->end_addr > addr) {
@@ -116,18 +131,19 @@ static cm_list_node * _fast_addr_find(const ln_vm_map * vm_map,
     } //end if an obj was requested
 
 
-    //switch to area search and continue the search from last object's final area
+    //switch to area search and continue the search from last object's end area
     while (1) {
 
         //if found a matching area
-        if (iter_vm_area->start_addr <= addr && iter_vm_area->end_addr > addr) {
+        if (iter_vm_area->start_addr <= addr 
+            && iter_vm_area->end_addr > addr) {
             return iter_area_node;
         }
 
         //move to next object
         prev_area = iter_vm_area;
         iter_area_node = iter_area_node->next;
-        iter_vm_area = LN_GET_NODE_AREA(iter_area_node);
+        iter_vm_area = MC_GET_NODE_AREA(iter_area_node);
 
         //check if back to start of dl-list, and backtrack if true
         if (prev_area->start_addr > iter_vm_area->end_addr) {
@@ -142,14 +158,15 @@ static cm_list_node * _fast_addr_find(const ln_vm_map * vm_map,
 }
 
 
-//find object with a given basename/pathname
-static cm_list_node * _obj_name_find(const ln_vm_map * vm_map, 
-                                     const char * name, const int mode) {
+
+DBG_STATIC
+cm_lst_node * _obj_name_find(const mc_vm_map * vm_map, 
+                              const char * name, const int mode) {
 
     int ret;
 
-    cm_list_node * iter_obj_node;
-    ln_vm_obj * iter_vm_obj;
+    cm_lst_node * iter_obj_node;
+    mc_vm_obj * iter_vm_obj;
 
     //check map is not empty
     if (_is_map_empty(vm_map)) return NULL;
@@ -157,13 +174,13 @@ static cm_list_node * _obj_name_find(const ln_vm_map * vm_map,
 
     //init search
     iter_obj_node = vm_map->vm_objs.head;
-    iter_vm_obj = LN_GET_NODE_OBJ(iter_obj_node);
+    iter_vm_obj = MC_GET_NODE_OBJ(iter_obj_node);
 
     //while can still iterate through objects
     for (int i = 0; i < vm_map->vm_objs.len; ++i) {
 
         //carry out comparison
-        if (mode == MAP_UTIL_USE_PATHNAME) {
+        if (mode == _MAP_UTIL_USE_PATHNAME) {
             ret = strncmp(name, iter_vm_obj->pathname, PATH_MAX);
         } else {
             ret = strncmp(name, iter_vm_obj->basename, NAME_MAX);
@@ -175,7 +192,7 @@ static cm_list_node * _obj_name_find(const ln_vm_map * vm_map,
         }
 
         iter_obj_node = iter_obj_node->next;
-        iter_vm_obj = LN_GET_NODE_OBJ(iter_obj_node);
+        iter_vm_obj = MC_GET_NODE_OBJ(iter_obj_node);
 
     } //end object search
 
@@ -184,40 +201,43 @@ static cm_list_node * _obj_name_find(const ln_vm_map * vm_map,
 
 
 
-// --- EXTERNAL
+/*
+ *  --- [EXTERNAL] ---
+ */
 
-//get area offset
-off_t ln_get_area_offset(const cm_list_node * area_node, const uintptr_t addr) {
+off_t mc_get_area_offset(const cm_lst_node * area_node, const uintptr_t addr) {
 
-    ln_vm_area * vm_area = LN_GET_NODE_AREA(area_node);
+    mc_vm_area * vm_area = MC_GET_NODE_AREA(area_node);
 
     return (addr - vm_area->start_addr);
 }
 
 
-//get obj offset
-off_t ln_get_obj_offset(const cm_list_node * obj_node, const uintptr_t addr) {
 
-    ln_vm_obj * vm_obj = LN_GET_NODE_OBJ(obj_node);
+off_t mc_get_obj_offset(const cm_lst_node * obj_node, const uintptr_t addr) {
+
+    mc_vm_obj * vm_obj = MC_GET_NODE_OBJ(obj_node);
 
     return (addr - vm_obj->start_addr);
 }
 
 
-//get area offset
-off_t ln_get_area_offset_bnd(const cm_list_node * area_node, const uintptr_t addr) {
 
-    ln_vm_area * vm_area = LN_GET_NODE_AREA(area_node);
+off_t mc_get_area_offset_bnd(const cm_lst_node * area_node, 
+                             const uintptr_t addr) {
+
+    mc_vm_area * vm_area = MC_GET_NODE_AREA(area_node);
 
     if ((addr >= vm_area->end_addr) || (addr < vm_area->start_addr)) return -1;
     return (addr - vm_area->start_addr);
 }
 
 
-//get obj offset
-off_t ln_get_obj_offset_bnd(const cm_list_node * obj_node, const uintptr_t addr) {
 
-    ln_vm_obj * vm_obj = LN_GET_NODE_OBJ(obj_node);
+off_t mc_get_obj_offset_bnd(const cm_lst_node * obj_node, 
+                            const uintptr_t addr) {
+
+    mc_vm_obj * vm_obj = MC_GET_NODE_OBJ(obj_node);
 
     if ((addr >= vm_obj->end_addr) || (addr < vm_obj->start_addr)) return -1;
     return (addr - vm_obj->start_addr);
@@ -225,56 +245,55 @@ off_t ln_get_obj_offset_bnd(const cm_list_node * obj_node, const uintptr_t addr)
 
 
 
-//return the area node at a given address, optionally include offset into the area
-cm_list_node * ln_get_vm_area_by_addr(const ln_vm_map * vm_map, 
+cm_lst_node * mc_get_vm_area_by_addr(const mc_vm_map * vm_map, 
                                       const uintptr_t addr, off_t * offset) {
 
-    cm_list_node * area_node;
+    cm_lst_node * area_node;
 
-    area_node = _fast_addr_find(vm_map, addr, MAP_UTIL_GET_AREA);
+    area_node = _fast_addr_find(vm_map, addr, _MAP_UTIL_GET_AREA);
     if (!area_node) return NULL;
 
-    if (offset != NULL) *offset = ln_get_area_offset(area_node, addr);
+    if (offset != NULL) *offset = mc_get_area_offset(area_node, addr);
 
     return area_node;
 }
 
 
-//return the obj node at a given address, optionally include offset into the obj
-cm_list_node * ln_get_vm_obj_by_addr(const ln_vm_map * vm_map, 
+
+cm_lst_node * mc_get_vm_obj_by_addr(const mc_vm_map * vm_map, 
                                      const uintptr_t addr, off_t * offset) {
 
-    cm_list_node * obj_node;
+    cm_lst_node * obj_node;
 
-    obj_node = _fast_addr_find(vm_map, addr, MAP_UTIL_GET_OBJ);
+    obj_node = _fast_addr_find(vm_map, addr, _MAP_UTIL_GET_OBJ);
     if (!obj_node) return NULL;
 
-    if (offset != NULL) *offset = ln_get_obj_offset(obj_node, addr);
+    if (offset != NULL) *offset = mc_get_obj_offset(obj_node, addr);
 
     return obj_node;
 }
 
 
-//return object matching pathname
-cm_list_node * ln_get_vm_obj_by_pathname(const ln_vm_map * vm_map, 
+
+cm_lst_node * mc_get_vm_obj_by_pathname(const mc_vm_map * vm_map, 
                                          const char * pathname) {
 
-    cm_list_node * obj_node;
+    cm_lst_node * obj_node;
 
-    obj_node = _obj_name_find(vm_map, pathname, MAP_UTIL_USE_PATHNAME);
+    obj_node = _obj_name_find(vm_map, pathname, _MAP_UTIL_USE_PATHNAME);
     if (!obj_node) return NULL;
 
     return obj_node;
 }
 
 
-//return object matching basename
-cm_list_node * ln_get_vm_obj_by_basename(const ln_vm_map * vm_map, 
+
+cm_lst_node * mc_get_vm_obj_by_basename(const mc_vm_map * vm_map, 
                                          const char * basename) {
 
-    cm_list_node * obj_node;
+    cm_lst_node * obj_node;
 
-    obj_node = _obj_name_find(vm_map, basename, MAP_UTIL_USE_BASENAME);
+    obj_node = _obj_name_find(vm_map, basename, _MAP_UTIL_USE_BASENAME);
     if (!obj_node) return NULL;
 
     return obj_node;

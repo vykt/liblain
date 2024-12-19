@@ -1,29 +1,32 @@
+//standard library
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
 #include <stdint.h>
 
+//system headers
 #include <unistd.h>
-
 #include <linux/limits.h>
 
-#include <libcmore.h>
+//external libraries
+#include <cmore.h>
 
+//local headers
 #include "procfs_iface.h"
-#include "liblain.h"
+#include "memcry.h"
 #include "map.h"
-#include "lainko.h"
+#include "krncry.h"
 
 
 
-#define LINE_LEN PATH_MAX + 128
-
-
-// --- PROCFS INTERFACE INTERNALS
-
+/*
+ *  --- [INTERNAL] ---
+ */
+ 
 //build vm_entry from a line in procfs maps
-static inline void _build_entry(struct vm_entry * entry, const char * line_buf) {
+DBG_STATIC DBG_INLINE
+void _build_entry(struct vm_entry * entry, const char * line_buf) {
 
     int mode = 0;
     int done = 0;
@@ -36,6 +39,7 @@ static inline void _build_entry(struct vm_entry * entry, const char * line_buf) 
 
     char perm_chars[] = {'r', 'w', 'x', 's'};
     cm_byte perm_vals[] = {VM_READ, VM_WRITE, VM_EXEC, VM_SHARED};
+
 
     //save str for start addr
     start_str = (char *) line_buf;
@@ -66,7 +70,7 @@ static inline void _build_entry(struct vm_entry * entry, const char * line_buf) 
                     //for every char in perms field
                     for (int j = 0; j < 4; ++j) {
                         if (*(line_buf + i + j) == perm_chars[j]) {
-                            entry->prot += (lainko_pgprot_t) perm_vals[j];
+                            entry->prot += (krncry_pgprot_t) perm_vals[j];
                         }
                     } //end for
 
@@ -104,28 +108,31 @@ static inline void _build_entry(struct vm_entry * entry, const char * line_buf) 
 }
 
 
-// --- CALLED BY VIRTUAL INTERFACE
 
-//open handles on /proc/pid/mem and /proc/pid/maps
-int _procfs_open(ln_session * session,  const int pid) {
+/*
+ *  --- [INTERFACE] ---
+ */
+ 
+int procfs_open(mc_session * session,  const int pid) {
 
     int fd;
 	char mem_buf[PATH_MAX] = {0};
 
+
     session->pid = pid;
 
-    //get page size
+    //get page size to determine maximum read/write size
     session->page_size = sysconf(_SC_PAGESIZE);
     if (session->page_size < 0) {
-        ln_errno = LN_ERR_PAGESIZE;
+        mc_errno = MC_ERR_PAGESIZE;
         return -1;
     }
 
-    //open memory
+    //open procfs mem file
     snprintf(mem_buf, PATH_MAX, "/proc/%d/mem", pid);
     fd = open(mem_buf, O_RDWR);
     if (fd == -1) {
-        ln_errno = LN_ERR_PROC_MEM;
+        mc_errno = MC_ERR_PROC_MEM;
         return -1;
     }
     session->fd_mem = fd;
@@ -134,17 +141,18 @@ int _procfs_open(ln_session * session,  const int pid) {
 }
 
 
-//close handles on /proc/pid/mem and /proc/pid/maps
-int _procfs_close(ln_session * session) {
 
+int procfs_close(mc_session * session) {
+
+    //close procfs mem file
     close(session->fd_mem);
 
     return 0;
 }
 
 
-//update or build a map
-int _procfs_update_map(const ln_session * session, ln_vm_map * vm_map) {
+
+int procfs_update_map(const mc_session * session, mc_vm_map * vm_map) {
 
     int ret;
     FILE * fs; 
@@ -155,16 +163,17 @@ int _procfs_update_map(const ln_session * session, ln_vm_map * vm_map) {
     struct vm_entry new_entry;
     _traverse_state state;
 
+
     //open memory map
     snprintf(map_buf, PATH_MAX, "/proc/%d/maps", session->pid);
     fs = fopen(map_buf, "r");
     if (fs == NULL) {
-        ln_errno = LN_ERR_PROC_MAP;
+        mc_errno = MC_ERR_PROC_MAP;
         return -1;
     }
 
     //init traverse state for this map
-    _map_init_traverse_state(vm_map, &state);
+    map_init_traverse_state(vm_map, &state);
 
     //while there are entries left
     while (fgets(line_buf, LINE_LEN, fs) != NULL) {
@@ -172,7 +181,7 @@ int _procfs_update_map(const ln_session * session, ln_vm_map * vm_map) {
         memset(&new_entry, 0, sizeof(new_entry));
         _build_entry(&new_entry, line_buf);        
 
-        ret = _map_send_entry(vm_map, &state, &new_entry);
+        ret = map_send_entry(vm_map, &state, &new_entry);
         if (ret != 0) return -1;
 
     } //end while
@@ -185,14 +194,8 @@ int _procfs_update_map(const ln_session * session, ln_vm_map * vm_map) {
 }
 
 
-/*
- *  Just calling read/write of buf_sz returns success, but the actual read/write
- *  fails on sizes above PAGESIZE. So all of the below is necessary.
- *
- */ 
 
-//read memory
-int _procfs_read(const ln_session * session, const uintptr_t addr, 
+int procfs_read(const mc_session * session, const uintptr_t addr, 
                  cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;
@@ -203,7 +206,7 @@ int _procfs_read(const ln_session * session, const uintptr_t addr,
 	//seek to address
 	off_ret = lseek(session->fd_mem, (off_t) addr, SEEK_SET);
 	if (off_ret == -1) {
-        ln_errno = LN_ERR_SEEK_ADDR;
+        mc_errno = MC_ERR_SEEK_ADDR;
         return -1;
     }
 
@@ -219,7 +222,7 @@ int _procfs_read(const ln_session * session, const uintptr_t addr,
                           ? session->page_size : read_left);
 		//if error or EOF before reading len bytes
 		if (read_bytes == -1 || (read_bytes == 0 && read_done < buf_sz)) {
-            ln_errno = LN_ERR_READ_WRITE;
+            mc_errno = MC_ERR_READ_WRITE;
             return -1;
         }
 		read_done += read_bytes;
@@ -230,8 +233,8 @@ int _procfs_read(const ln_session * session, const uintptr_t addr,
 }
 
 
-//write memory
-int _procfs_write(const ln_session * session, const uintptr_t addr, 
+
+int procfs_write(const mc_session * session, const uintptr_t addr, 
                   const cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;
@@ -242,7 +245,7 @@ int _procfs_write(const ln_session * session, const uintptr_t addr,
 	//seek to address
 	off_ret = lseek(session->fd_mem, (off_t) addr, SEEK_SET);
 	if (off_ret == -1) {
-        ln_errno = LN_ERR_SEEK_ADDR;
+        mc_errno = MC_ERR_SEEK_ADDR;
         return -1;
     }
 
@@ -258,7 +261,7 @@ int _procfs_write(const ln_session * session, const uintptr_t addr,
                             ? session->page_size : write_left);
 		//if error or EOF before writing len bytes
 		if (write_bytes == -1 || (write_bytes == 0 && write_done < buf_sz)) {
-            ln_errno = LN_ERR_READ_WRITE;
+            mc_errno = MC_ERR_READ_WRITE;
             return -1;
         }
 		write_done += write_bytes;

@@ -1,33 +1,38 @@
+//standard libraries
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
+//system headers
 #include <dirent.h>
 #include <errno.h>
-
 #include <sys/types.h>
-
 #include <linux/limits.h>
 
-
-#include "liblain.h"
+//local headers
+#include "memcry.h"
 #include "util.h"
+#include "debug.h"
 
 
-#define LINE_LEN PATH_MAX + 128
+#define _LINE_LEN PATH_MAX + 128
 
 
-// --- INTERNAL
+
+/*
+ *  --- [INTERNAL] ---
+ */
 
 //convert the first line of /proc/pid/status to a name (comm)
-static inline void _line_to_name(const char * line_buf, char * name_buf) {
+DBG_STATIC DBG_INLINE
+void _line_to_name(const char * line_buf, char * name_buf) {
 
     line_buf += 5;
     char * name_str;
 
     //for every character in the line
-    for (int i = 0; i < LINE_LEN; ++i) {
+    for (int i = 0; i < _LINE_LEN; ++i) {
 
         if (line_buf[i] == ' ' || line_buf[i] == '\t') continue;
         name_str = (char *) line_buf + 1;
@@ -41,8 +46,14 @@ static inline void _line_to_name(const char * line_buf, char * name_buf) {
 }
 
 
-//use /proc/pid/status to get the name of a process (mimic utils like 'ps')
-static int _get_status_name(char * name_buf, const pid_t pid) {
+
+/*
+ *  Use `/proc/pid/status` to get the name of a process. This is
+ *  how utilities like `ps` and `top` fetch process names.
+ */
+ 
+DBG_STATIC
+int _get_status_name(char * name_buf, const pid_t pid) {
 
     int ret;
     char * fret;
@@ -50,7 +61,7 @@ static int _get_status_name(char * name_buf, const pid_t pid) {
     FILE * fs;
 
 	char path_buf[PATH_MAX];
-    char line_buf[LINE_LEN];
+    char line_buf[_LINE_LEN];
     
 
     //build path
@@ -59,22 +70,22 @@ static int _get_status_name(char * name_buf, const pid_t pid) {
     //get name
     fs = fopen(path_buf, "r");
     if (fs == NULL) {
-        ln_errno = LN_ERR_PROC_STATUS;
+        mc_errno = MC_ERR_PROC_STATUS;
         return -1;
     }
 
     //read top line containing name (comm) of process
-    fret = fgets(line_buf, LINE_LEN, fs);
+    fret = fgets(line_buf, _LINE_LEN, fs);
     if (fret == NULL) {
         fclose(fs);
-        ln_errno = LN_ERR_PROC_STATUS;
+        mc_errno = MC_ERR_PROC_STATUS;
         return -1;
     }
 
     //close file stream
     ret = fclose(fs);
     if (ret == -1) {
-        ln_errno = LN_ERR_PROC_STATUS;
+        mc_errno = MC_ERR_PROC_STATUS;
         return -1;
     }
 
@@ -89,10 +100,11 @@ static int _get_status_name(char * name_buf, const pid_t pid) {
 
 
 
-// --- EXTERNAL 
+/*
+ *  --- EXTERNAL
+ */
 
-//returns basename
-const char * ln_pathname_to_basename(const char * pathname) {
+const char * mc_pathname_to_basename(const char * pathname) {
 
     char * basename = strrchr(pathname, (int) '/');
     
@@ -101,8 +113,8 @@ const char * ln_pathname_to_basename(const char * pathname) {
 }
 
 
-//get vector of pids matching name, return first match
-pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
+
+pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
 
 	int ret;
 	int first_recorded = 0;
@@ -118,16 +130,16 @@ pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
 
 
     //initialise vector
-    ret = cm_new_vector(pid_vector, sizeof(pid_t));
+    ret = cm_new_vct(pid_vector, sizeof(pid_t));
     if (ret) {
-        ln_errno = LN_ERR_LIBCMORE;
+        mc_errno = MC_ERR_LIBCMORE;
         return -1;
     }
 
     //open proc directory
 	ds = opendir("/proc");
 	if (ds == NULL) {
-        ln_errno = LN_ERR_PROC_NAV;
+        mc_errno = MC_ERR_PROC_NAV;
         return -1;
     }
 
@@ -141,8 +153,8 @@ pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
         temp_pid = (pid_t) strtoul(d_ent->d_name, NULL, 10);
         if (errno == ERANGE) {
             closedir(ds);
-            cm_del_vector(pid_vector);
-            ln_errno = LN_ERR_PROC_NAV;
+            cm_del_vct(pid_vector);
+            mc_errno = MC_ERR_PROC_NAV;
             return -1;
         }
 
@@ -150,7 +162,7 @@ pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
         ret = _get_status_name(name_buf, temp_pid);
         if (ret) {
             closedir(ds);
-            cm_del_vector(pid_vector);
+            cm_del_vct(pid_vector);
             return -1;
         }
 
@@ -159,11 +171,11 @@ pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
         if (!ret) {
             
             //add pid_t to list of potential PIDs
-            ret = cm_vector_append(pid_vector, (cm_byte *) &temp_pid);
+            ret = cm_vct_apd(pid_vector, (cm_byte *) &temp_pid);
             if (ret) {
                 closedir(ds);
-                cm_del_vector(pid_vector);
-                ln_errno = LN_ERR_LIBCMORE;
+                cm_del_vct(pid_vector);
+                mc_errno = MC_ERR_LIBCMORE;
                 return -1;
             }
 
@@ -179,8 +191,8 @@ pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
 	
 	ret = closedir(ds);
 	if (ret) {
-        cm_del_vector(pid_vector);
-        ln_errno = LN_ERR_PROC_NAV;
+        cm_del_vct(pid_vector);
+        mc_errno = MC_ERR_PROC_NAV;
         return -1;
     }
 
@@ -188,8 +200,8 @@ pid_t ln_pid_by_name(const char * comm, cm_vector * pid_vector) {
 }
 
 
-//get name of a pid
-int ln_name_by_pid(const pid_t pid, char * name_buf) {
+
+int mc_name_by_pid(const pid_t pid, char * name_buf) {
 
     int ret;
 
@@ -201,8 +213,8 @@ int ln_name_by_pid(const pid_t pid, char * name_buf) {
 }
 
 
-//give byte string, return char hex string, double the size
-void ln_bytes_to_hex(const cm_byte * inp, const int inp_len, char * out) {
+
+void mc_bytes_to_hex(const cm_byte * inp, const int inp_len, char * out) {
 
     cm_byte nibble;
     int count;

@@ -3,8 +3,7 @@
 
 
 //external
-void ln_perror();
-const char * ln_strerror(const int ln_errnum);
-
+void mc_perror(const char * prefix);
+const char * mc_strerror(const int mc_errnum);
 
 #endif

@@ -1,49 +1,64 @@
+//standard library
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <libcmore.h>
+//external libraries
+#include <cmore.h>
 
+//local headers
 #include "iface.h"
-#include "liblain.h"
-
+#include "memcry.h"
 #include "procfs_iface.h"
-#include "lainko_iface.h"
+#include "krncry_iface.h"
+#include "debug.h"
 
 
-static inline void set_procfs_session(ln_session * session) {
 
-    session->iface.open       = _procfs_open;
-    session->iface.close      = _procfs_close;
-    session->iface.update_map = _procfs_update_map;
-    session->iface.read       = _procfs_read;
-    session->iface.write      = _procfs_write;
+/*
+ *  --- [INTERNAL] ---
+ */
+
+DBG_STATIC DBG_INLINE
+void _set_procfs_session(mc_session * session) {
+
+    session->iface.open       = procfs_open;
+    session->iface.close      = procfs_close;
+    session->iface.update_map = procfs_update_map;
+    session->iface.read       = procfs_read;
+    session->iface.write      = procfs_write;
 
     return;
 }
 
 
-static inline void set_lainko_session(ln_session * session) {
 
-    session->iface.open       = _lainko_open;
-    session->iface.close      = _lainko_close;
-    session->iface.update_map = _lainko_update_map;
-    session->iface.read       = _lainko_read;
-    session->iface.write      = _lainko_write;
+DBG_STATIC DBG_INLINE
+void _set_krncry_session(mc_session * session) {
+
+    session->iface.open       = krncry_open;
+    session->iface.close      = krncry_close;
+    session->iface.update_map = krncry_update_map;
+    session->iface.read       = krncry_read;
+    session->iface.write      = krncry_write;
     
     return;
 }
 
 
-//open session
-int ln_open(ln_session * session, const int iface, const pid_t pid) {
+
+/*
+ *  --- [EXTERNAL] ---
+ */
+
+int mc_open(mc_session * session, const int iface, const pid_t pid) {
 
     int ret;
 
     //if requesting procfs interface
-    if (iface == LN_IFACE_PROCFS) {
-        set_procfs_session(session);        
+    if (iface == MC_IFACE_PROCFS) {
+        _set_procfs_session(session);        
     } else {
-        set_lainko_session(session);
+        _set_krncry_session(session);
     }
 
     ret = session->iface.open(session, pid);
@@ -53,8 +68,8 @@ int ln_open(ln_session * session, const int iface, const pid_t pid) {
 }
 
 
-//close session
-int ln_close(ln_session * session) {
+
+int mc_close(mc_session * session) {
 
     int ret;
 
@@ -65,8 +80,8 @@ int ln_close(ln_session * session) {
 }
 
 
-//update a map
-int ln_update_map(const ln_session * session, ln_vm_map * vm_map) {
+
+int mc_update_map(const mc_session * session, mc_vm_map * vm_map) {
 
     int ret;
 
@@ -77,8 +92,8 @@ int ln_update_map(const ln_session * session, ln_vm_map * vm_map) {
 }
 
 
-//read memory
-int ln_read(const ln_session * session, const uintptr_t addr, 
+
+int mc_read(const mc_session * session, const uintptr_t addr, 
             cm_byte * buf, const size_t buf_sz) {
 
     int ret;
@@ -90,8 +105,8 @@ int ln_read(const ln_session * session, const uintptr_t addr,
 }
 
 
-//write memory
-int ln_write(const ln_session * session, uintptr_t addr, 
+
+int mc_write(const mc_session * session, uintptr_t addr, 
              const cm_byte * buf, const size_t buf_sz) {
 
     int ret;

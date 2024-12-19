@@ -1,7 +1,7 @@
-# liblain
+# Lain
 
 <p align="center">
-    <img src="liblain.png" width="150" height="150">
+    <img src="lain.png" width="150" height="150">
 </p>
 
 ### ABOUT:

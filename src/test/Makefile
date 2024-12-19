@@ -2,35 +2,33 @@
 
 # This makefile takes the following variables:
 #
-#	CC        - Compiler.
-#   BUILD_DIR - Base build directory.
+# CC          - Compiler.
+# BUILD_DIR   - Unit test build directory.
+# LIB_BIN_DIR - Library artifact directory.
+#
+# _CFLAGS     - Compiler flags.
+# _WARN_OPTS  - Compiler warnings.
 
-CFLAGS=-O0 -ggdb -Wno-unused-but-set-variable
 
-INCLUDE=-L${BUILD_DIR}/lib -Wl,-rpath=${BUILD_DIR}/lib -lcmore -llain
+CFLAGS=${_CFLAGS} -fsanitize=address
+WARN_OPTS+=${_WARN_OPTS} -Wno-unused-variable -Wno-unused-but-set-variable
+LDFLAGS=-L${LIB_BIN_DIR} -Wl,-rpath=${LIB_BIN_DIR} -lcmore -lcheck -static-libasan
 
-SOURCES_TEST=iface.c map.c main.c util.c
-HEADERS_TEST=test.h
-OBJECTS_TEST=${SOURCES_TEST:.c=.o}
+SOURCES_TEST=main.c
+OBJECTS_TEST=${SOURCES_TEST:%.c=${BUILD_DIR}/%.o}
 
-TEST=run_tests
+TESTS=test
 
-test:${TEST}
-> echo ${BUILD_DIR}/lib
-> mkdir -p ${BUILD_DIR}/test
-> mv ${TEST} ${BUILD_DIR}/test
 
-${TEST}: ${OBJECTS_TEST}
-> ${CC} ${CFLAGS} ${OBJECTS_TEST} ${HEADERS_TEST} \
-  -o ${TEST} ${INCLUDE}
+tests: ${TESTS}
+> mkdir -p ${BUILD_DIR}
+> mv ${TESTS} ${BUILD_DIR}
 
-${OBJECTS_LIB}: ${SOURCES_LIB} ${HEADERS_LIB}
-> ${CC} ${CFLAGS} -c ${SOURCES_TEST} -o ${OBJECTS_TEST} ${INCLUDE}
+${TESTS}: ${OBJECTS_TEST}
+> ${CC} ${CFLAGS} ${WARN_OPTS} -o $@ $^ ${LDFLAGS}
 
-clean_all: clean_src clean_build
+${BUILD_DIR}/%.o: %.c
+> ${CC} ${CFLAGS} ${WARN_OPTS} -c $< -o $@
 
-clean_src:
-> -rm -f *.o
-
-clean_build:
-> -rm ${BUILD_DIR}/test/${TEST}
+clean:
+> -rm -v ${BUILD_DIR}/{*.o,${TESTS}}
