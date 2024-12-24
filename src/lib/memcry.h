@@ -34,7 +34,7 @@ extern "C"{
 #define MC_IFACE_PROCFS 1
 
 //pseudo object id
-#define ZERO_OBJ_ID -1
+#define MC_ZERO_OBJ_ID -1
 
 
 
@@ -213,14 +213,15 @@ extern __thread int mc_errno;
 
 // 2XX - internal errors
 #define MC_ERR_INTERNAL_INDEX   2200
-#define MC_ERR_UNEXPECTED_NULL  2201
-#define MC_ERR_LIBCMORE         2202
-#define MC_ERR_READ_WRITE       2203
-#define MC_ERR_MEMU_TARGET      2204
-#define MC_ERR_MEMU_MAP_SZ      2205
-#define MC_ERR_MEMU_MAP_GET     2206
-#define MC_ERR_PROC_STATUS      2207
-#define MC_ERR_PROC_NAV         2208
+#define MC_ERR_AREA_IN_OBJ      2201
+#define MC_ERR_UNEXPECTED_NULL  2202
+#define MC_ERR_LIBCMORE         2203
+#define MC_ERR_READ_WRITE       2204
+#define MC_ERR_MEMU_TARGET      2205
+#define MC_ERR_MEMU_MAP_SZ      2206
+#define MC_ERR_MEMU_MAP_GET     2207
+#define MC_ERR_PROC_STATUS      2208
+#define MC_ERR_PROC_NAV         2209
 
 // 3XX - environmental errors
 #define MC_ERR_MEM              2300
@@ -242,18 +243,20 @@ extern __thread int mc_errno;
 // 2XX - internal errors
 #define MC_ERR_INTERNAL_INDEX_MSG \
     "Internal: Indexing error.\n"
+#define MC_ERR_AREA_IN_OBJ_MSG \
+    "Internal: Area is not in object when it should be.\n"
 #define MC_ERR_UNEXPECTED_NULL_MSG \
     "Internal: Unexpected NULL pointer.\n"
 #define MC_ERR_LIBCMORE_MSG \
-    "Internal: Libcmore error. See cm_perror().\n"
+    "Internal: CMore error. See cm_perror().\n"
 #define MC_ERR_READ_WRITE_MSG \
     "Internal: Read/write failed.\n"
 #define MC_ERR_MEMU_TARGET_MSG \
-    "Internal: Lainko target open failed.\n"
+    "Internal: Krncry target open failed.\n"
 #define MC_ERR_MEMU_MAP_SZ_MSG \
-    "Internal: Lainko map size fetch failed..\n"
+    "Internal: Krncry map size fetch failed..\n"
 #define MC_ERR_MEMU_MAP_GET_MSG \
-    "Internal: Lainko map transfer failed.\n"
+    "Internal: Krncry map transfer failed.\n"
 #define MC_ERR_PROC_STATUS_MSG \
     "Internal: Failed to use /proc/<pid>/status.\n"
 #define MC_ERR_PROC_NAV_MSG \

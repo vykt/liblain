@@ -9,6 +9,11 @@
 __thread int mc_errno;
 
 
+/*
+ *  TODO: Find a metaprogramming way to do this.
+ */
+
+
 void mc_perror(const char * prefix) {
 
     switch(mc_errno) {
@@ -29,6 +34,10 @@ void mc_perror(const char * prefix) {
         // 2XX - internal errors
         case MC_ERR_INTERNAL_INDEX:
             fprintf(stderr, "%s: %s", prefix, MC_ERR_INTERNAL_INDEX_MSG);
+            break;
+
+        case MC_ERR_AREA_IN_OBJ:
+            fprintf(stderr, "%s: %s", prefix, MC_ERR_AREA_IN_OBJ_MSG);
             break;
         
         case MC_ERR_UNEXPECTED_NULL:
@@ -108,6 +117,9 @@ const char * mc_strerror(const int mc_errnum) {
         // 2xx - internal errors
         case MC_ERR_INTERNAL_INDEX:
             return MC_ERR_INTERNAL_INDEX_MSG;
+
+        case MC_ERR_AREA_IN_OBJ:
+            return MC_ERR_AREA_IN_OBJ_MSG;
         
         case MC_ERR_UNEXPECTED_NULL:
             return MC_ERR_UNEXPECTED_NULL_MSG;

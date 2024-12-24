@@ -45,14 +45,19 @@ void _map_make_zero_obj(mc_vm_obj * vm_obj);
 
 int _map_obj_add_area_insert(cm_lst * obj_area_lst, 
                              const cm_lst_node * area_node);
+cm_lst_node * _map_obj_find_area_outer_node(cm_lst * obj_area_lst, 
+                                            cm_lst_node * area_node);
+
 int _map_obj_add_area(mc_vm_obj * obj, const cm_lst_node * area_node);
 int _map_obj_add_last_area(mc_vm_obj * obj, const cm_lst_node * last_area_node);
+
+int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * area_node);
+int _map_obj_rmv_last_area(mc_vm_obj * obj, cm_lst_node * last_area_node);
 
 bool _map_is_pathname_in_obj(const char * pathname, const mc_vm_obj * obj);
 int _map_find_obj_for_area(const _traverse_state * state, 
                            const struct vm_entry * entry);
 
-int _map_update_obj_addr_range(mc_vm_obj * obj);
 int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node);
 int _map_forward_unmapped_obj_last_vm_areas(cm_lst_node * obj_node);
 
