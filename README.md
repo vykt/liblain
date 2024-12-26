@@ -4,6 +4,11 @@
     <img src="lain.png" width="150" height="150">
 </p>
 
+### NOTE:
+
+**liblain** is undergoing major testing and a minor refactor. Prebuilt binaries and static builds are coming. To get liblain working before the refactor is finished, install the latest release and [cmore v0.0.3](https://github.com/vykt/cmore/releases/tag/0.0.3).
+
+
 ### ABOUT:
 
 The Lain library (<b>liblain</b>) provides a programmatic interface to the memory and memory maps of processes on Linux. Liblain can be used for:
