@@ -33,15 +33,14 @@ typedef struct {
 
 #ifdef DEBUG
 //internal
-void _map_init_vm_area(mc_vm_area * vm_area, mc_vm_map * vm_map, 
+void _map_init_vm_area(mc_vm_area * area, const struct vm_entry * entry,
                        const cm_lst_node * obj_node, 
-                       const cm_lst_node * last_obj_node,
-                       const struct vm_entry * entry);
-void _map_new_vm_obj(mc_vm_obj * vm_obj, 
-                     mc_vm_map * vm_map, const char * pathname);
-void _map_del_vm_obj(mc_vm_obj * vm_obj);
+                       const cm_lst_node * last_obj_node, mc_vm_map * map);
+void _map_new_vm_obj(mc_vm_obj * obj, 
+                     mc_vm_map * map, const char * pathname);
+void _map_del_vm_obj(mc_vm_obj * obj);
 
-void _map_make_zero_obj(mc_vm_obj * vm_obj);
+void _map_make_zero_obj(mc_vm_obj * obj);
 
 int _map_obj_add_area_insert(cm_lst * obj_area_lst, 
                              const cm_lst_node * area_node);
@@ -55,23 +54,19 @@ int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * area_node);
 int _map_obj_rmv_last_area(mc_vm_obj * obj, cm_lst_node * last_area_node);
 
 bool _map_is_pathname_in_obj(const char * pathname, const mc_vm_obj * obj);
-int _map_find_obj_for_area(const _traverse_state * state, 
-                           const struct vm_entry * entry);
+int _map_find_obj_for_area(const struct vm_entry * entry,
+                           const _traverse_state * state);
 
 int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node);
 int _map_forward_unmapped_obj_last_vm_areas(cm_lst_node * obj_node);
 
-int _map_unlink_unmapped_obj(cm_lst_node * node, 
-                             const _traverse_state * state, 
-                             mc_vm_map * vm_map);
-int _map_unlink_unmapped_area(cm_lst_node * node, 
-                              const _traverse_state * state, 
-                              mc_vm_map * vm_map);
+int _map_unlink_unmapped_obj(cm_lst_node * obj_node, mc_vm_map * map);
+int _map_unlink_unmapped_area(cm_lst_node * area_node, mc_vm_map * map);
 
 int _map_check_area_eql(const struct vm_entry * entry, 
                         const cm_lst_node * area_node);
-int _map_resync_area(mc_vm_map * vm_map,
-                     _traverse_state * state, const struct vm_entry * entry);
+int _map_resync_area(const struct vm_entry * entry,
+                     _traverse_state * state, mc_vm_map * map);
 
 void _map_state_inc_area(mc_vm_map * vm_map, _traverse_state * state, 
                          const cm_lst_node * assign_node, const int inc_type);
