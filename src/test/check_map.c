@@ -22,29 +22,36 @@
 
 
 /*
+ *  [ADVANCED TEST]
+ *
+ *      The virtuam memory map management code is complicated and as such,
+ *      almost every internal function has independent tests. For these tests 
+ *      to run, the debug target must be built.
+ *
+ *      The following functions do not have unit tests:
+ *
+ *        _map_obj_add_area_insert():
+ *
+ *            > Tested through `_map_obj_add_area()` 
+ *              and `_map_obj_add_last_area()`
+ *
+ *        _map_obj_find_area_outer_node():
+ *
+ *            > Tested through `_map_obj_rmv_area()` 
+ *              and `_map_obj_rmv_last_area()`
+ *
+ *
+ */
+
+/*
  *  Functions are not tested in the same order as they appear in the map.c
  *  source file. This assists with bootstrapping many tests. The order of
  *  testing remains close.
  */
+ 
 
 
-/*
- *  -- [UNTESTED FUNCTIONS] ---
- *
- * _map_obj_add_area_insert():
- *
- *     Tested through _map_obj_add_area() and _map_obj_add_last_area()
- *
- * _map_obj_find_area_outer_node():
- *
- *     Tested through _map_obj_rmv_area() and _map_obj_rmv_last_area();
- *
- */
-
-
-
-//test structures
-
+//map test structures
 struct obj_check {
 
     char basename[NAME_MAX];
@@ -146,7 +153,7 @@ static void _create_lst_wrapper(cm_lst_node * node, void * data) {
 
 
 
-//integration test for CMore
+//assert the length of a list, also works as an integration test for CMore
 static void _assert_lst_len(cm_lst * list, int len) {
 
     ck_assert_int_eq(list->len, len);
@@ -177,6 +184,7 @@ static void _assert_lst_len(cm_lst * list, int len) {
 
 
 
+//basic assertion of state for a mc_vm_map
 static void _assert_vm_map(mc_vm_map * map, int vm_areas_len, int vm_objs_len,
                            int vm_areas_unmapped_len, int vm_objs_unmapped_len,
                            int next_id_area, int next_id_obj) {
@@ -198,15 +206,16 @@ static void _assert_vm_map(mc_vm_map * map, int vm_areas_len, int vm_objs_len,
 
 
 
+//assert the state of all [unmapped] objects inside a mc_vm_map
 static void _assert_vm_map_objs(cm_lst * obj_lst, 
                                 struct obj_check * obj_checks, 
-                                int obj_checks_len) {
+                                int start_index, int len) {
 
     mc_vm_obj * obj;
 
-    for (int i = 0; i < obj_checks_len; ++i) {
+    for (int i = 0; i < len; ++i) {
 
-        obj = cm_lst_get_p(obj_lst, i);
+        obj = cm_lst_get_p(obj_lst, start_index + i);
         ck_assert_ptr_nonnull(obj);
 
         ck_assert_str_eq(obj->basename, obj_checks[i].basename);
@@ -219,15 +228,16 @@ static void _assert_vm_map_objs(cm_lst * obj_lst,
 
 
 
+//assert the state of all [unmapped] memory areas inside a mc_vm_map
 static void _assert_vm_map_areas(cm_lst * area_lst, 
                                  struct area_check * area_checks,
-                                 int area_checks_len) {
+                                 int start_index, int len) {
 
     mc_vm_area * area;
 
-    for (int i = 0; i < area_checks_len; ++i) {
+    for (int i = 0; i < len; ++i) {
 
-        area = cm_lst_get_p(area_lst, i);
+        area = cm_lst_get_p(area_lst, start_index + i);
         ck_assert_ptr_nonnull(area);
 
         ck_assert_str_eq(area->basename, area_checks[i].basename);
@@ -522,7 +532,7 @@ static void _setup_stub_vm_obj() {
         //setup area
         _init_vm_entry(&entry, addr, addr + 0x1000, 
                        file_off, MC_ACCESS_READ, "/foo/bar");
-        _map_init_vm_area(&o_a[i], &m, &o_n, NULL, &entry);
+        _map_init_vm_area(&o_a[i], &entry, &o_n, NULL, &m);
         _map_obj_add_area(&o, &o_a_n[i]);
 
         //advance iteration
@@ -575,18 +585,16 @@ START_TEST(test_mc_new_del_vm_map) {
     mc_vm_obj * zero_obj;
 
 
-    //construct the map
+    //only test: construct the map
     mc_new_vm_map(&m);
 
-    //assert state
     _assert_vm_map(&m, 0, 1, 0, 0, 0, 0);
 
-    //check the zero is present object
+    //check the pseudo object is present
     zero_obj = MC_GET_NODE_OBJ(m.vm_objs.head);
     _assert_vm_obj(zero_obj, "0x0", "0x0", 0x0, 0x0, 
                    0, 0, MC_ZERO_OBJ_ID, true);
 
-    //delete the map
     mc_del_vm_map(&m);
 
     return;
@@ -601,10 +609,9 @@ START_TEST(test__map_new_del_vm_obj) {
 
     mc_vm_obj obj;
 
-    //construct the object
+    //only test: construct the object
     _map_new_vm_obj(&obj, &m, "/foo/bar");
 
-    //assert state    
     _assert_vm_obj(&obj, "/foo/bar", "bar", 0x0, 0x0, 0, 0, 0, true);
     _assert_vm_map(&m, 0, 1, 0, 0, 0, 1);
 
@@ -622,10 +629,9 @@ START_TEST(test__map_make_zero_obj) {
     //create new object
     _map_new_vm_obj(&zero_obj, &m, "0x0");
 
-    //convert new object to pseudo object 
+    //only test: convert new object to pseudo object 
     _map_make_zero_obj(&zero_obj);
-
-    //assert state
+    
     _assert_vm_obj(&zero_obj, 
                    "0x0", "0x0", 0x0, 0x0, 0, 0, MC_ZERO_OBJ_ID, true);
     _assert_vm_map(&m, 0, 1, 0, 0, 0, 0);
@@ -645,23 +651,21 @@ START_TEST(test__map_init_vm_area) {
     struct vm_entry entry;
 
 
-    //create a stub entry & initialise the new area
+    //first test: create a stub entry & initialise the new area
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x800, 
                    MC_ACCESS_READ, "/foo/bar");
     _map_init_vm_area(&area, &entry, &o_n, NULL, &m);
 
-    //assert state
     _assert_vm_area(&area, "/foo/bar", "bar", 0x1000, 0x2000, 
                     MC_ACCESS_READ, &o_n, NULL, 0, true);
     _assert_vm_map(&m, 0, 1, 0, 0, 1, 0);
 
 
-    //create a stub entry & initialise another new area
+    //second test: create a stub entry & initialise another new area
     _init_vm_entry(&entry, 0x2000, 0x4000, 0x800, 
                    MC_ACCESS_READ | MC_ACCESS_WRITE, "/purr/meow");
     _map_init_vm_area(&area, &entry, NULL, &o_n, &m);
 
-    //assert state
     _assert_vm_area(&area, NULL, NULL, 0x2000, 0x4000, 
                     MC_ACCESS_READ | MC_ACCESS_WRITE, NULL, &o_n, 1, true);
     _assert_vm_map(&m, 0, 1, 0, 0, 2, 0);
@@ -692,10 +696,10 @@ START_TEST(test__map_obj_add_area) {
     _map_init_vm_area(&area[0], &entry, &o_n, NULL, &m);
     _create_lst_wrapper(&area_node[0], &area[0]);
 
-    //add first area to the backing object
+
+    //first test: add first area to the backing object
     _map_obj_add_area(&o, &area_node[0]);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x2000, 0x3000, 1, 0, 0, true);
     _assert_vm_obj_list(&o.vm_area_node_ps, state_first, 1);
     area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head);
@@ -708,10 +712,9 @@ START_TEST(test__map_obj_add_area) {
     _map_init_vm_area(&area[1], &entry, &o_n, NULL, &m);
     _create_lst_wrapper(&area_node[1], &area);
 
-    //add lower area to the backing object
+    //second test: add lower area to the backing object
     _map_obj_add_area(&o, &area_node[1]);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x1000, 0x3000, 2, 0, 0, true);
     _assert_vm_obj_list(&o.vm_area_node_ps, state_lower, 2);
     area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head);
@@ -724,10 +727,9 @@ START_TEST(test__map_obj_add_area) {
     _map_init_vm_area(&area[2], &entry, &o_n, NULL, &m);
     _create_lst_wrapper(&area_node[2], &area);
 
-    //add lower area to the backing object
+    //third test: add lower area to the backing object
     _map_obj_add_area(&o, &area_node[2]);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x1000, 0x5000, 3, 0, 0, true);
     _assert_vm_obj_list(&o.vm_area_node_ps, state_higher, 3);
     area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head->prev);
@@ -740,10 +742,9 @@ START_TEST(test__map_obj_add_area) {
     _map_init_vm_area(&area[3], &entry, &o_n, NULL, &m);
     _create_lst_wrapper(&area_node[3], &area);
 
-    //add middle area to the backing object
+    //fourth test: add middle area to the backing object
     _map_obj_add_area(&o, &area_node[3]);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x1000, 0x5000, 4, 0, 0, true);
     _assert_vm_obj_list(&o.vm_area_node_ps, state_middle, 4);
     area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head->next->next);
@@ -776,10 +777,9 @@ START_TEST(test__map_obj_add_last_area) {
     _map_init_vm_area(&last_area[0], &entry, &o_n, NULL, &m);
     _create_lst_wrapper(&last_area_node[0], &last_area[0]);
 
-    //add first area to the backing object
+    //first test: add first area to the backing object
     _map_obj_add_area(&o, &last_area_node[0]);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x0, 0x0, 0, 1, 0, true);
     _assert_vm_obj_list(&o.last_vm_area_node_ps, state_first, 1);
     last_area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head);
@@ -792,10 +792,9 @@ START_TEST(test__map_obj_add_last_area) {
     _map_init_vm_area(&last_area[1], &entry, &o_n, NULL, &m);
     _create_lst_wrapper(&last_area_node[1], &last_area);
 
-    //add lower area to the backing object
+    //second test: add lower area to the backing object
     _map_obj_add_area(&o, &last_area_node[1]);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x0, 0x0, 0, 2, 0, true);
     _assert_vm_obj_list(&o.last_vm_area_node_ps, state_lower, 2);
     last_area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head);
@@ -809,10 +808,9 @@ START_TEST(test__map_obj_add_last_area) {
     _map_init_vm_area(&last_area[2], &entry, &o_n, NULL, &m);
     _create_lst_wrapper(&last_area_node[2], &last_area);
 
-    //add lower area to the backing object
+    //third test: add lower area to the backing object
     _map_obj_add_area(&o, &last_area_node[2]);
 
-    //assert state
     _assert_vm_obj(&o, "/lib/std", "std", 0x0, 0x0, 0, 3, 0, true);
     _assert_vm_obj_list(&o.last_vm_area_node_ps, state_higher, 3);
     last_area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head->prev);
@@ -825,10 +823,9 @@ START_TEST(test__map_obj_add_last_area) {
     _map_init_vm_area(&last_area[3], &entry, &o_n, NULL, &m);
     _create_lst_wrapper(&last_area_node[3], &last_area);
 
-    //add middle area to the backing object
+    //fourth test: add middle area to the backing object
     _map_obj_add_area(&o, &last_area_node[3]);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x1000, 0x5000, 4, 0, 0, true);
     _assert_vm_obj_list(&o.last_vm_area_node_ps, state_middle, 4);
     last_area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head->next->next);
@@ -851,39 +848,34 @@ START_TEST(test__map_obj_rmv_area) {
     uintptr_t state_last[1] = {0x3000};
 
 
-
-    //remove middle area
+    //first test: remove middle area
     ret = _map_obj_rmv_area(&o, &o_a_n[1]);
     ck_assert_int_eq(ret, 0);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x1000, 0x5000, 3, 2, 0, true);
     _assert_vm_obj_list(&o.vm_area_node_ps, state_middle, 3);
     
 
-    //remove first area
+    //second test: remove first area
     ret = _map_obj_rmv_area(&o, &o_a_n[0]);
     ck_assert_int_eq(ret, 0);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x3000, 0x5000, 2, 2, 0, true);
     _assert_vm_obj_list(&o.vm_area_node_ps, state_first, 2);
 
 
-    //remove last area
+    //third test: remove last area
     ret = _map_obj_rmv_area(&o, &o_a_n[3]);
     ck_assert_int_eq(ret, 0);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x3000, 0x4000, 1, 2, 0, true);
     _assert_vm_obj_list(&o.vm_area_node_ps, state_last, 1);
 
 
-    //remove only remaining area
+    //fourth test: remove only remaining area
     ret = _map_obj_rmv_area(&o, &o_a_n[2]);
     ck_assert_int_eq(ret, 0);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x0, 0x0, 0, 2, 0, true);
     _assert_vm_obj_list(&o.vm_area_node_ps, NULL, 0);
 
@@ -901,20 +893,18 @@ START_TEST(test__map_obj_rmv_last_area) {
     uintptr_t state_first[1] = {0x6000};
 
 
-    //remove first last area
+    //first test: remove first last area
     ret = _map_obj_rmv_last_area(&o, &o_a_l_n[0]);
     ck_assert_int_eq(ret, 0);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x1000, 0x5000, 4, 1, 0, true);
     _assert_vm_obj_list(&o.last_vm_area_node_ps, state_first, 1);
 
 
-    //remove only remaining last area
+    //second test: remove only remaining last area
     ret = _map_obj_rmv_last_area(&o, &o_a_l_n[1]);
     ck_assert_int_eq(ret, 0);
 
-    //assert state
     _assert_vm_obj(&o, "/foo/bar", "bar", 0x1000, 0x5000, 4, 0, 0, true);
     _assert_vm_obj_list(&o.last_vm_area_node_ps, NULL, 0);
     
@@ -928,11 +918,12 @@ START_TEST(test__map_is_pathname_in_obj) {
 
     bool ret;
 
-    //path is in the object
+
+    //first test: path is in the object
     ret = _map_is_pathname_in_obj("/foo/bar", &o);
     ck_assert(ret);    
 
-    //path is not in the object
+    //second test: path is not in the object
     ret = _map_is_pathname_in_obj("anonmap", &o);
     ck_assert(!ret);
 
@@ -955,14 +946,14 @@ START_TEST(test__map_find_obj_for_area) {
     _traverse_state state;    
 
 
-    //construct objects
+    //construct test objects
     for (int i = 0; i < 3; ++i) {
         _map_new_vm_obj(&objs[i], &m, obj_paths[i]);
         _create_lst_wrapper(&obj_nodes[i], &objs[i]);
     }
 
 
-    //new object, state empty
+    //first test: new object, state empty
     _init__traverse_state(&state, NULL, NULL);
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x500, 
                    MC_ACCESS_READ, "/lib/libpthread");
@@ -971,7 +962,7 @@ START_TEST(test__map_find_obj_for_area) {
     ck_assert_int_eq(ret, _MAP_OBJ_NEW);
 
     
-    //new object, state full
+    //second test: new object, state full
     _init__traverse_state(&state, NULL, &obj_nodes[1]);
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x500, 
                    MC_ACCESS_READ, "/lib/libpthread");
@@ -980,7 +971,7 @@ START_TEST(test__map_find_obj_for_area) {
     ck_assert_int_eq(ret, _MAP_OBJ_NEW);
 
 
-    //previous object 
+    //third test: previous object 
     _init__traverse_state(&state, NULL, &obj_nodes[1]);
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x500, 
                    MC_ACCESS_READ, "/lib/libc");
@@ -989,7 +980,7 @@ START_TEST(test__map_find_obj_for_area) {
     ck_assert_int_eq(ret, _MAP_OBJ_PREV);
 
 
-    //next object 
+    //fourth test: next object 
     _init__traverse_state(&state, NULL, &obj_nodes[1]);
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x500, 
                    MC_ACCESS_READ, "anonmap");
@@ -1022,7 +1013,7 @@ START_TEST(test__map_backtrack_unmapped_obj_last_vm_areas) {
     uintptr_t third_state[2]  = {0x6000, 0xC000};
     
 
-    //backtrack `/lib/foo`'s last area (index: 8)
+    //first test: backtrack `/lib/foo`'s last area (index: 8)
     ret = _map_backtrack_unmapped_obj_last_vm_areas(&m_o_n[2]);
     ck_assert_int_eq(ret, 0);
     
@@ -1039,8 +1030,7 @@ START_TEST(test__map_backtrack_unmapped_obj_last_vm_areas) {
                     NULL, &m_o_n[1], 8, true);
 
 
-
-    //backtrack `[heap]`'s two last areas (indeces: 4, 8)
+    //second test: backtrack `[heap]`'s two last areas (indeces: 4, 8)
     ret = _map_backtrack_unmapped_obj_last_vm_areas(&m_o_n[1]);
     ck_assert_int_eq(ret, 0);
 
@@ -1058,9 +1048,8 @@ START_TEST(test__map_backtrack_unmapped_obj_last_vm_areas) {
     _assert_vm_area(&m_a[8], NULL, NULL, 0xC000, 0xD000,
                     MC_ACCESS_READ | MC_ACCESS_WRITE, NULL, &m_o_n[0], 8, true);
 
-
     
-    //backtrack `/bin/cat`'s two lat areas (indeces: 4, 8)
+    //third test: backtrack `/bin/cat`'s two lat areas (indeces: 4, 8)
     ret = _map_backtrack_unmapped_obj_last_vm_areas(&m_o_n[0]);
     ck_assert_int_eq(ret, 0);
 
@@ -1103,10 +1092,9 @@ START_TEST(test__map_forward_unmapped_obj_last_vm_areas) {
     ck_assert_int_eq(ret, 0);
 
 
-    //pretend the `/lib/foo` object was just inserted
+    //only test: pretend the `/lib/foo` object was just inserted
     ret = _map_forward_unmapped_obj_last_vm_areas(&m_o_n[2]);
     ck_assert_int_eq(ret, 0);
-
     
     //check `[heap]` has only one last area associated with it
     _assert_vm_obj(&m_o[1], "[heap]", "[heap]", 0x4000, 0x5000, 1, 1, 1, true);
@@ -1135,18 +1123,19 @@ START_TEST(test__map_unlink_unmapped_obj) {
     int ret;
     uintptr_t heap_state[2]  = {0x6000, 0xC000};
     
-    struct obj_check obj_state[3] = { 
-                                     {"cat", 0x1000, 0x4000},
-                                     {"[heap]", 0x4000, 0x5000},
-                                     {"[stack]", 0xE000, 0xF000}
-                                    };
+    struct obj_check obj_state[4] = {          //start index: 0
+        {"0x0",     0x0,    0x0},
+        {"cat",     0x1000, 0x4000},
+        {"[heap]",  0x4000, 0x5000},
+        {"[stack]", 0xE000, 0xF000}
+    };
     
-    struct obj_check unmapped_obj_state[1] = {
-                                              {"foo", 0x8000, 0xB000}
-                                             };
+    struct obj_check unmapped_obj_state[1] = { //start index: 0
+        {"foo",     0x8000, 0xB000}
+    };
 
                                 
-    //unlink `/lib/foo`
+    //only test: unlink `/lib/foo`
     ret = _map_unlink_unmapped_obj(&m_o_n[2], &m);
     ck_assert_int_eq(ret, 0);
 
@@ -1160,10 +1149,10 @@ START_TEST(test__map_unlink_unmapped_obj) {
 
 
     //check state of mapped objects
-    _assert_vm_map_objs(&m.vm_objs, obj_state, 3);
+    _assert_vm_map_objs(&m.vm_objs, obj_state, 0, 4);
 
     //check state of unmapped objects
-    _assert_vm_map_objs(&m.vm_objs_unmapped, unmapped_obj_state, 1);
+    _assert_vm_map_objs(&m.vm_objs_unmapped, unmapped_obj_state, 0, 1);
 
     //check removed object has no links to other objects anymore
     ck_assert(m_o[2].mapped == false);
@@ -1185,88 +1174,72 @@ START_TEST(test__map_unlink_unmapped_area) {
 
 
     //remove /lib/foo:1: object state
-    struct obj_check foo_obj_state[4] = { 
-        {"cat", 0x1000, 0x4000},
-        {"[heap]", 0x4000, 0x5000},
-        {"foo", 0x9000, 0xB000},
+    struct obj_check foo_obj_state[3] = {             //start index: 2
+        {"[heap]",  0x4000, 0x5000},
+        {"foo",     0x9000, 0xB000},
         {"[stack]", 0xE000, 0xF000}
     };
 
     //remove /lib/foo:1: area state
-    struct area_check foo_area_state[9] = {
-        {"cat", 0x1000, 0x2000},
-        {"cat", 0x2000, 0x3000},
-        {"cat", 0x3000, 0x4000},
-        {"[heap]", 0x4000, 0x5000},
-        {NULL, 0x6000, 0x7000},
-        {"foo", 0x9000, 0xA000},
-        {"foo", 0xA000, 0xB000},
-        {NULL, 0xC000, 0xD000},
-        {"[stack]", 0xE000, 0xF000}
+    struct area_check foo_area_state[3] = {           //start index: 4
+        {NULL,      0x6000, 0x7000},
+        {"foo",     0x9000, 0xA000},
+        {"foo",     0xA000, 0xB000}
     };
 
-    struct area_check foo_unmapped_area_state[1] = {
-        {"foo", 0x8000, 0x9000}
+    struct area_check foo_unmapped_area_state[1] = {  //start index: 0
+        {"foo",     0x8000, 0x9000}
     };
 
 
     //remove [heap]: object state
-    struct obj_check heap_obj_state[3] = { 
-        {"cat", 0x1000, 0x4000},
-        {"foo", 0x9000, 0xB000},
-        {"[stack]", 0xE000, 0xF000}
+    struct obj_check heap_obj_state[2] = {            //start index: 1 
+        {"cat",     0x1000, 0x4000},
+        {"foo",     0x9000, 0xB000}
     };
     
-    struct obj_check heap_unmapped_obj_state[1] = {
-        {"[heap]", 0x0, 0x0}
+    struct obj_check heap_unmapped_obj_state[1] = {   //start index: 0
+        {"[heap]",  0x0,    0x0}
     };
 
     //remove [heap]: area state:
-    struct area_check heap_area_state[8] = {
-        {"cat", 0x1000, 0x2000},
-        {"cat", 0x2000, 0x3000},
-        {"cat", 0x3000, 0x4000},
-        {NULL, 0x6000, 0x7000},
-        {"foo", 0x9000, 0xA000},
-        {"foo", 0xA000, 0xB000},
-        {NULL, 0xC000, 0xD000},
-        {"[stack]", 0xE000, 0xF000}
+    struct area_check heap_area_state[2] = {          //start index: 2
+        {"cat",     0x3000, 0x4000},
+        {NULL,      0x6000, 0x7000}
     };
 
-    struct area_check heap_unmapped_area_state[2] = {
-        {"foo", 0x8000, 0x9000},
-        {"[heap]", 0x4000, 0x5000}
+    struct area_check heap_unmapped_area_state[2] = { //start index: 0
+        {"foo",     0x8000, 0x9000},
+        {"[heap]",  0x4000, 0x5000}
     };
     
 
-    //remove `/lib/foo`'s first area
+    //first test: remove first area of `/lib/foo`
     ret = _map_unlink_unmapped_area(&m_a_n[6], &m);
     ck_assert_int_eq(ret, 0);
 
-    //check state
     _assert_vm_area(&m_a[5], "/lib/foo", "foo", 
                     0x8000, 0x9000, MC_ACCESS_READ | MC_ACCESS_WRITE, 
                     NULL, NULL, 5, false);
     
-    _assert_vm_map_objs(&m.vm_objs, foo_obj_state, 4);
-    _assert_vm_map_objs(&m.vm_objs_unmapped, NULL, 0);
-    _assert_vm_map_areas(&m.vm_areas, foo_area_state, 9);
-    _assert_vm_map_areas(&m.vm_areas_unmapped, foo_unmapped_area_state, 1);
+    _assert_vm_map_objs(&m.vm_objs, foo_obj_state, 2, 3);
+    _assert_vm_map_objs(&m.vm_objs_unmapped, NULL, 0, 0);
+    _assert_vm_map_areas(&m.vm_areas, foo_area_state, 4, 3);
+    _assert_vm_map_areas(&m.vm_areas_unmapped, foo_unmapped_area_state, 0, 1);
 
 
-    //remove '[heap]''s only area
+    //second test: remove only area of '[heap]'
     ret = _map_unlink_unmapped_area(&m_a_n[3], &m);
     ck_assert_int_eq(ret, 0);
 
-    //check state
     _assert_vm_area(&m_a[3], "[heap]", "[heap]", 
                     0x4000, 0x5000, MC_ACCESS_READ | MC_ACCESS_WRITE, 
                     NULL, NULL, 5, false);
     
-    _assert_vm_map_objs(&m.vm_objs, heap_obj_state, 3);
-    _assert_vm_map_objs(&m.vm_objs_unmapped, heap_unmapped_obj_state, 1);
-    _assert_vm_map_areas(&m.vm_areas, heap_area_state, 8);
-    _assert_vm_map_areas(&m.vm_areas_unmapped, heap_unmapped_area_state, 2);
+    _assert_vm_map_objs(&m.vm_objs, heap_obj_state, 1, 2);
+    _assert_vm_map_objs(&m.vm_objs_unmapped, heap_unmapped_obj_state, 0, 1);
+    _assert_vm_map_areas(&m.vm_areas, heap_area_state, 2, 2);
+    _assert_vm_map_areas(&m.vm_areas_unmapped, heap_unmapped_area_state, 0, 2);
 
     return;
     
@@ -1297,29 +1270,33 @@ START_TEST(test__map_check_area_eql) {
     _create_lst_wrapper(&area_node, &area);
 
 
-    //entry same as vm_area
+    //first test: entry same as vm_area
     ret = _map_check_area_eql(&entry, &area_node);
     ck_assert_int_eq(ret, 0);
 
-    //entry start address is different
+
+    //second test: entry start address is different
     entry.vm_start = 0x500;
     ret = _map_check_area_eql(&entry, &area_node);
     ck_assert_int_eq(ret, -1);
     entry.vm_start = area.start_addr;
 
-    //entry end address is different
+
+    //third test: entry end address is different
     entry.vm_end = 0x2500;
     ret = _map_check_area_eql(&entry, &area_node);
     ck_assert_int_eq(ret, -1);
     entry.vm_end = area.end_addr;
 
-    //entry permissions are different
+
+    //fourth test: entry permissions are different
     entry.prot = MC_ACCESS_READ | MC_ACCESS_WRITE;
     ret = _map_check_area_eql(&entry, &area_node);
     ck_assert_int_eq(ret, -1);
     entry.prot = area.access;
 
-    //both entry and area don't have a path
+
+    //fifth test: both entry and area don't have a path
     entry.file_path[0] = '\0';
     area.pathname = NULL;
     ret = _map_check_area_eql(&entry, &area_node);
@@ -1327,13 +1304,15 @@ START_TEST(test__map_check_area_eql) {
     entry.file_path[0] = '/';
     area.pathname = obj.pathname;
 
-    //entry has a path, area does not
+
+    //sixth test: entry has a path, area does not
     area.pathname = NULL;
     ret = _map_check_area_eql(&entry, &area_node);
     ck_assert_int_eq(ret, 0);
     area.pathname = obj.pathname;
 
-    //entry does not have a path, area does
+
+    //seventh test: entry does not have a path, area does
     entry.file_path[0] = '\0';
     ret = _map_check_area_eql(&entry, &area_node);
     ck_assert_int_eq(ret, 0);
@@ -1349,95 +1328,135 @@ START_TEST(test__map_check_area_eql) {
 
 
 
+//_map_state_inc_area() [stub map fixture]
+START_TEST(test__map_state_inc_area) {
+
+    _traverse_state state;
+
+
+    //first test: keep
+    state.next_area_node = &m_a_n[0];
+    _map_state_inc_area(&state, _STATE_AREA_NODE_KEEP, NULL, &m);
+    ck_assert_int_eq(MC_GET_NODE_AREA(state.next_area_node)->id, 0);
+
+    //second test: advance - success
+    state.next_area_node = &m_a_n[0];
+    _map_state_inc_area(&state, _STATE_AREA_NODE_ADVANCE, NULL, &m);
+    ck_assert_int_eq(MC_GET_NODE_AREA(state.next_area_node)->id, 1);
+
+    //third test: advance - refuse (reached the end)
+    state.next_area_node = &m_a_n[9];
+    _map_state_inc_area(&state, _STATE_AREA_NODE_ADVANCE, NULL, &m);
+    ck_assert_int_eq(MC_GET_NODE_AREA(state.next_area_node)->id, 9);
+
+    //fourth test: reassign
+    state.next_area_node = &m_a_n[0];
+    _map_state_inc_area(&state, _STATE_AREA_NODE_REASSIGN, &m_a_n[2], &m);
+    ck_assert_int_eq(MC_GET_NODE_AREA(state.next_area_node)->id, 2);
+
+    return;
+    
+} END_TEST
+
+
+
+//_map_state_inc_obj() [stub map fixture]
+START_TEST(test__map_state_inc_obj) {
+
+    _traverse_state state;
+
+
+    //first test: advance from pseudo object
+    state.prev_obj_node = m.vm_objs.head;
+    _map_state_inc_obj(&state, &m);
+    ck_assert_int_eq(MC_GET_NODE_OBJ(state.prev_obj_node), 0);
+    
+    //second test: advance from regular object
+    state.prev_obj_node = &m_a_n[0];
+    _map_state_inc_obj(&state, &m);
+    ck_assert_int_eq(MC_GET_NODE_OBJ(state.prev_obj_node), 1);
+
+    return;
+    
+} END_TEST
+
+
+
 //_map_resync_area() [stub map fixture]
 START_TEST(test__map_resync_area) {
 
     //remove [heap]: object state
-    struct obj_check heap_obj_state[3] = { 
-        {"cat", 0x1000, 0x4000},
-        {"foo", 0x9000, 0xB000},
-        {"[stack]", 0xE000, 0xF000}
+    struct obj_check heap_obj_state[2] = {            //start index: 1
+        {"cat",     0x1000, 0x4000},
+        {"foo",     0x9000, 0xB000}
     };
 
-    struct obj_check heap_unmapped_obj_state[1] = {
-        {"[heap]", 0x4000, 0x5000}
+    struct obj_check heap_unmapped_obj_state[1] = {   //start index: 0
+        {"[heap]",  0x4000, 0x5000}
     };
     
     //remove [heap]: area state
-    struct area_check heap_area_state[9] = {
-        {"cat", 0x1000, 0x2000},
-        {"cat", 0x2000, 0x3000},
-        {"cat", 0x3000, 0x4000},
-        {NULL, 0x6000, 0x7000},
-        {"foo", 0x8000, 0x9000},
-        {"foo", 0x9000, 0xA000},
-        {"foo", 0xA000, 0xB000},
-        {NULL, 0xC000, 0xD000},
-        {"[stack]", 0xE000, 0xF000}
+    struct area_check heap_area_state[2] = {          //start index: 2
+        {"cat",     0x3000, 0x4000},
+        {NULL,      0x6000, 0x7000}
     };
 
-    struct area_check heap_unmapped_area_state[1] = {
-        {"[heap]", 0x4000, 0x5000}
+    struct area_check heap_unmapped_area_state[1] = { //start index 0
+        {"[heap]",  0x4000, 0x5000}
     };
 
 
 
     //remove /lib/foo:1,2: object state
-    struct obj_check foo_obj_state[3] = { 
-        {"cat", 0x1000, 0x4000},
-        {"foo", 0xA000, 0xB000},
+    struct obj_check foo_obj_state[3] = {             //start index: 1
+        {"cat",     0x1000, 0x4000},
+        {"foo",     0xA000, 0xB000},
         {"[stack]", 0xE000, 0xF000}
     };
 
-    struct obj_check foo_unmapped_obj_state[1] = {
-        {"[heap]", 0x4000, 0x5000}
+    struct obj_check foo_unmapped_obj_state[1] = {    //start index 0
+        {"[heap]",  0x4000, 0x5000}
     };
     
     //remove /lib/foo:1,2: area state
-    struct area_check foo_area_state[7] = {
-        {"cat", 0x1000, 0x2000},
-        {"cat", 0x2000, 0x3000},
-        {"cat", 0x3000, 0x4000},
-        {NULL, 0x6000, 0x7000},
-        {"foo", 0xA000, 0xB000},
-        {NULL, 0xC000, 0xD000},
-        {"[stack]", 0xE000, 0xF000}
+    struct area_check foo_area_state[3] = {           //start index 3
+        {NULL,      0x6000, 0x7000},
+        {"foo",     0xA000, 0xB000},
+        {NULL,      0xC000, 0xD000}
     };
 
-    struct area_check foo_unmapped_area_state[3] = {
-        {"[heap]", 0x4000, 0x5000},
-        {"foo", 0x8000, 0x9000},
-        {"foo", 0x9000, 0xA000},
+    struct area_check foo_unmapped_area_state[3] = {  //start index 0
+        {"[heap]",  0x4000, 0x5000},
+        {"foo",     0x8000, 0x9000},
+        {"foo",     0x9000, 0xA000},
     };
 
 
 
     //remove /bin/cat:1,2,3: object state
-    struct obj_check cat_obj_state[2] = { 
+    struct obj_check cat_obj_state[2] = {             //start index: 1
         {"foo", 0xA000, 0xB000},
         {"[stack]", 0xE000, 0xF000}
     };
 
-    struct obj_check cat_unmapped_obj_state[2] = {
+    struct obj_check cat_unmapped_obj_state[2] = {    //start index: 0
         {"cat", 0x0, 0x0},
         {"[heap]", 0x0, 0x0}
     };
     
     //remove /bin/cat:1,2,3: area state
-    struct area_check cat_area_state[4] = {
+    struct area_check cat_area_state[2] = {           //start index: 0
         {NULL, 0x6000, 0x7000},
-        {"foo", 0xA000, 0xB000},
-        {NULL, 0xC000, 0xD000},
-        {"[stack]", 0xE000, 0xF000}
+        {"foo", 0xA000, 0xB000}
     };
 
-    struct area_check cat_unmapped_area_state[6] = {
+    struct area_check cat_unmapped_area_state[6] = {  //start index: 0
         {"[heap]", 0x4000, 0x5000},
         {"foo", 0x8000, 0x9000},
         {"foo", 0x9000, 0xA000},
         {"cat", 0x1000, 0x2000},
         {"cat", 0x2000, 0x3000},
-        {"cat", 0x3000, 0x4000},
+        {"cat", 0x3000, 0x4000}
     };
     
     int ret;
@@ -1449,8 +1468,7 @@ START_TEST(test__map_resync_area) {
     //correct by removing `[heap]`
     _init_vm_entry(&entry, 0x6000, 0x7000, 0x0, 
                    MC_ACCESS_READ | MC_ACCESS_WRITE, NULL);
-    state.next_area_node = &m_a_n[6];
-    state.prev_obj_node = &m_o_n[0];
+    _init__traverse_state(&state, &m_a_n[6], &m_o_n[0]);
 
     ret = _map_resync_area(&entry, &state, &m);
     ck_assert_int_eq(ret, 0);
@@ -1462,18 +1480,17 @@ START_TEST(test__map_resync_area) {
     _assert_vm_obj(MC_GET_NODE_OBJ(state.prev_obj_node), 
                    "/bin/cat", "cat", 0x1000, 0x3000, 3, 1, 0, true);
     
-    _assert_vm_map_objs(&m.vm_objs, heap_obj_state, 3);
-    _assert_vm_map_objs(&m.vm_objs_unmapped, heap_unmapped_obj_state, 1);
-    _assert_vm_map_areas(&m.vm_areas, heap_area_state, 9);
-    _assert_vm_map_areas(&m.vm_areas_unmapped, heap_unmapped_area_state, 1);
+    _assert_vm_map_objs(&m.vm_objs, heap_obj_state, 1, 2);
+    _assert_vm_map_objs(&m.vm_objs_unmapped, heap_unmapped_obj_state, 0, 1);
+    _assert_vm_map_areas(&m.vm_areas, heap_area_state, 3, 3);
+    _assert_vm_map_areas(&m.vm_areas_unmapped, heap_unmapped_area_state, 0, 3);
     
 
 
     //correct by removing first 2 areas of `/lib/foo`
     _init_vm_entry(&entry, 0xA000, 0xB000, 0x0, 
                    MC_ACCESS_READ | MC_ACCESS_EXEC, "/lib/foo");
-    state.next_area_node = &m_a_n[5];
-    state.prev_obj_node = &m_o_n[2];
+    _init__traverse_state(&state, &m_a_n[5], &m_o_n[2]);
 
     ret = _map_resync_area(&entry, &state, &m);
     ck_assert_int_eq(ret, 0);
@@ -1486,19 +1503,17 @@ START_TEST(test__map_resync_area) {
     _assert_vm_obj(MC_GET_NODE_OBJ(state.prev_obj_node), "/lib/foo", "foo",
                    0xA000, 0xB000, 1, 1, 2, true);
 
-    _assert_vm_map_objs(&m.vm_objs, foo_obj_state, 3);
-    _assert_vm_map_objs(&m.vm_objs_unmapped, foo_unmapped_obj_state, 1);
-    _assert_vm_map_areas(&m.vm_areas, foo_area_state, 7);
-    _assert_vm_map_areas(&m.vm_areas_unmapped, foo_unmapped_area_state, 3);
+    _assert_vm_map_objs(&m.vm_objs, foo_obj_state, 1, 3);
+    _assert_vm_map_objs(&m.vm_objs_unmapped, foo_unmapped_obj_state, 0, 1);
+    _assert_vm_map_areas(&m.vm_areas, foo_area_state, 3, 3);
+    _assert_vm_map_areas(&m.vm_areas_unmapped, foo_unmapped_area_state, 0, 3);
 
 
 
-    //correct by removing `/bin/cat`, check last areas are correctly
-    //transferred to the pseudo object
+    //correct by removing entirety of `/bin/cat`
     _init_vm_entry(&entry, 0x6000, 0x7000, 0x0, 
                    MC_ACCESS_READ | MC_ACCESS_EXEC, NULL);
-    state.next_area_node = &m_a_n[0];
-    state.prev_obj_node = &m_o_n[0];
+    _init__traverse_state(&state, &m_a_n[0], &m_o_n[0]);
 
     ret = _map_resync_area(&entry, &state, &m);
     ck_assert_int_eq(ret, 0);
@@ -1511,10 +1526,10 @@ START_TEST(test__map_resync_area) {
     _assert_vm_obj(MC_GET_NODE_OBJ(m.vm_objs.head), "0x0", "0x0", 
                    0x0, 0x0, 0, 2, MC_ZERO_OBJ_ID, true);
 
-    _assert_vm_map_objs(&m.vm_objs, cat_obj_state, 2);
-    _assert_vm_map_objs(&m.vm_objs_unmapped, cat_unmapped_obj_state, 2);
-    _assert_vm_map_areas(&m.vm_areas, cat_area_state, 4);
-    _assert_vm_map_areas(&m.vm_areas_unmapped, cat_unmapped_area_state, 6);
+    _assert_vm_map_objs(&m.vm_objs, cat_obj_state, 1, 2);
+    _assert_vm_map_objs(&m.vm_objs_unmapped, cat_unmapped_obj_state, 0, 2);
+    _assert_vm_map_areas(&m.vm_areas, cat_area_state, 0, 2);
+    _assert_vm_map_areas(&m.vm_areas_unmapped, cat_unmapped_area_state, 0, 6);
 
     return;
     
@@ -1522,5 +1537,136 @@ START_TEST(test__map_resync_area) {
 
 
 
+//_map_add_obj() [stub map fixture]
+START_TEST(test__map_add_obj) {
 
+    //test data
+    struct obj_check first_objs[3] = {  //start index: 3
+        {"foo",     0x8000, 0xB000},
+        {"bar",     0xD000, 0xE000},
+        {"[stack]", 0xE000, 0xF000}
+    };
+
+    struct obj_check second_objs[3] = { //start index: 2
+        {"[heap]",  0x4000, 0x5000},
+        {"dog",     0x7000, 0x8000},
+        {"foo",     0x8000, 0xB000}
+    };
+
+
+    //test vars
+    cm_lst_node * ret_node;
+
+    struct vm_entry entry;
+    _traverse_state state;
+
+
+    //first test: no forwarding last memory areas
+    _init_vm_entry(&entry, 0xD000, 0xE000, 0x0, MC_ACCESS_READ, "/lib/bar");
+    _init__traverse_state(&state, NULL, &m_o_n[2]);
+
+    ret_node = _map_add_obj(&entry, &state, &m);
+    ck_assert_ptr_nonnull(ret_node);
+
+    _assert_vm_map_objs(&m.vm_objs, first_objs, 3, 3);
+    _assert_lst_len(&MC_GET_NODE_OBJ(ret_node)->last_vm_area_node_ps, 0);
+
+
+    //second test: forwarding last memory areas
+    _init_vm_entry(&entry, 0x5000, 0x6000, 0x0, MC_ACCESS_READ, "/bin/dog");
+    _init__traverse_state(&state, NULL, &m_o_n[1]);
+
+    ret_node = _map_add_obj(&entry, &state, &m);
+    ck_assert_ptr_nonnull(ret_node);
+
+    _assert_vm_map_objs(&m.vm_objs, second_objs, 3, 2);
+    _assert_lst_len(&MC_GET_NODE_OBJ(ret_node)->last_vm_area_node_ps, 1);
+    
+    return;
+    
+} END_TEST
+
+
+
+//_map_add_area() [stub map fixture]
+START_TEST(test__map_add_area) {
+    
+    //test data
+    struct area_check first_areas[3] = {  //start_index: 7
+        {"foo",     0xA000, 0xB000},
+        {"foo",     0xB000, 0xC000},
+        {NULL,      0xC000, 0xD000}
+    };
+    
+    struct obj_check first_objs[2] = {    //start index: 3
+        {"foo",     0x8000, 0xC000},
+        {"[stack]", 0xE000, 0xF000}
+    };
+
+    struct area_check second_areas[3] = { //start_index: 6
+        {NULL,      0x6000, 0x7000},
+        {NULL,      0x7000, 0x8000},
+        {"foo",     0x8000, 0x9000}
+    };
+
+    struct obj_check second_objs[2] = {   //start index: 2
+        {"[heap]",  0x4000, 0x5000},
+        {"foo",     0x8000, 0xC000},
+    };
+
+    struct area_check third_areas[3] = {  //start_index: 3
+        {"[heap]",  0x4000, 0x5000},
+        {"bar",     0x5000, 0x6000},
+        {NULL,      0x6000, 0x7000}
+    };
+    
+    struct obj_check third_objs[3] = {    //start index: 2
+        {"[heap]",  0x4000, 0x5000},
+        {"bar",     0x5000, 0x6000},
+        {"foo",     0x8000, 0xC000}
+    };
+
+
+    //test vars
+    int ret;
+
+    struct vm_entry entry;
+    _traverse_state state;
+
+
+    //first test: add additional area to the end of `/lib/foo`
+    _init_vm_entry(&entry, 0xB000, 0xC000, 0x0, MC_ACCESS_READ, "/lib/foo");
+    _init__traverse_state(&state, &m_a_n[8], &m_o_n[2]);
+
+    ret = _map_add_area(&entry, &state, &m);
+    ck_assert_int_eq(ret, 0);
+
+    _assert_vm_map_areas(&m.vm_areas, first_areas, 7, 3);
+    _assert_vm_map_objs(&m.vm_objs, first_objs, 3, 2);
+
+
+    //second test: add area without a backing object before `/lib/foo`
+    _init_vm_entry(&entry, 0x7000, 0x8000, 0x0, MC_ACCESS_READ, NULL);
+    _init__traverse_state(&state, &m_a_n[5], &m_o_n[1]);
+
+    ret = _map_add_area(&entry, &state, &m);
+    ck_assert_int_eq(ret, 0);
+
+    _assert_vm_map_areas(&m.vm_areas, first_areas, 6, 3);
+    _assert_vm_map_objs(&m.vm_objs, first_objs, 2, 2);
+
+
+    //third test: add an area that creates a new object `/lib/bar`
+    _init_vm_entry(&entry, 0x5000, 0x6000, 0x0, MC_ACCESS_READ, "/lib/bar");
+    _init__traverse_state(&state, &m_a_n[4], &m_o_n[1]);
+
+    ret = _map_add_area(&entry, &state, &m);
+    ck_assert_int_eq(ret, 0);
+
+    _assert_vm_map_areas(&m.vm_areas, first_areas, 3, 3);
+    _assert_vm_map_objs(&m.vm_objs, first_objs, 2, 3);
+    
+    return;
+    
+} END_TEST
 #endif

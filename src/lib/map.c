@@ -634,6 +634,65 @@ int _map_check_area_eql(const struct vm_entry * entry,
 
 
 
+DBG_STATIC
+void _map_state_inc_area(_traverse_state * state, const int inc_type,
+                         const cm_lst_node * assign_node, mc_vm_map * map) {
+
+    switch (inc_type) {
+
+        case _STATE_AREA_NODE_KEEP:
+            
+            break;
+
+        case _STATE_AREA_NODE_ADVANCE:    
+            
+            //advance next area if we haven't reached the end 
+            //& dont circle back to the start
+            if (state->next_area_node != NULL
+                && state->next_area_node != map->vm_areas.head) {                
+                state->next_area_node = state->next_area_node->next;
+            
+            } else {
+                state->next_area_node = NULL;
+            
+            }            
+            break;
+
+        case _STATE_AREA_NODE_REASSIGN:
+            
+            state->next_area_node = (cm_lst_node *) assign_node;
+            break;
+
+    } //end switch
+
+    return;
+}
+
+
+
+DBG_STATIC
+void _map_state_inc_obj(_traverse_state * state, mc_vm_map * map) {
+
+    //if there is no prev obj, initialise it
+    if (state->prev_obj_node == NULL) {
+
+        state->prev_obj_node = map->vm_objs.head;
+
+    //if there is a prev obj
+    } else {
+
+        //only advance next object if we won't circle back to start
+        if (state->prev_obj_node->next != map->vm_objs.head) {
+
+            state->prev_obj_node = state->prev_obj_node->next;
+        }
+    }
+
+    return;
+}
+
+
+
 DBG_STATIC DBG_INLINE
 int _map_resync_area(const struct vm_entry * entry, 
                      _traverse_state * state, mc_vm_map * map) {
@@ -651,14 +710,10 @@ int _map_resync_area(const struct vm_entry * entry,
     //while there are vm areas left to discard
     while (entry->vm_end > area->start_addr) {
 
-        //make state point to the next node, and NULL if there is no next node
-        if (state->next_area_node->next == map->vm_objs.head) {
-            state->next_area_node = NULL;
-        } else {
-            state->next_area_node = state->next_area_node->next;
-        }
+        //advance state
+        _map_state_inc_area(state, _STATE_AREA_NODE_ADVANCE, NULL, map);
 
-        //correctly handle removing this area node
+        //remove this area node
         ret = _map_unlink_unmapped_area(area_node, map);
         if (ret) return -1;
 
@@ -674,104 +729,35 @@ int _map_resync_area(const struct vm_entry * entry,
 
 
 
-#define _STATE_AREA_NODE_KEEP     0
-#define _STATE_AREA_NODE_ADVANCE  1
-#define _STATE_AREA_NODE_REASSIGN 2
-
 DBG_STATIC
-void _map_state_inc_area(mc_vm_map * vm_map, _traverse_state * state, 
-                         const cm_lst_node * assign_node, const int inc_type) {
-
-    switch (inc_type) {
-
-        case _STATE_AREA_NODE_KEEP:
-            break;
-
-        case _STATE_AREA_NODE_ADVANCE:    
-            //advance next area if we haven't reached the end 
-            //& dont circle back to the start
-            if (state->next_area != NULL 
-                && state->next_area_index < vm_map->vm_areas.len) {
-                
-                state->next_area = state->next_area->next;
-            
-            } else {
-                state->next_area = NULL;
-            }
-            break;
-
-        case _STATE_AREA_NODE_REASSIGN:
-            state->next_area = (cm_lst_node *) assign_node;
-            break;
-
-    } //end switch
-
-    //always increment state index
-    ++state->next_area_index;
-
-    return;
-}
-
-
-
-DBG_STATIC
-void _map_state_inc_obj(mc_vm_map * vm_map, _traverse_state * state) {
-
-    //if there is no prev obj, initialise it
-    if (state->prev_obj == NULL) {
-
-        state->prev_obj = vm_map->vm_objs.head;
-        state->prev_obj_index = 0;
-
-    //if there is a prev obj
-    } else {
-
-        //only advance next object if we won't circle back to start
-        if (state->prev_obj_index < vm_map->vm_objs.len) {;
-
-            state->prev_obj = state->prev_obj->next;
-            ++state->prev_obj_index;
-        }
-    }
-
-    return;
-}
-
-
-
-DBG_STATIC
-cm_lst_node * _map_add_obj(mc_vm_map * vm_map, _traverse_state * state, 
-                            const struct vm_entry * entry) {
-
-    int index;
+cm_lst_node * _map_add_obj(const struct vm_entry * entry,
+                           _traverse_state * state, mc_vm_map * map) {
 
     mc_vm_obj vm_obj;
     cm_lst_node * obj_node;
 
+
     //create new object
-    _new_vm_obj(&vm_obj, vm_map, entry->file_path);
+    _map_new_vm_obj(&vm_obj, map, entry->file_path);
 
-    //figure out which insertion index to use
-    index = (vm_map->vm_objs.len == 0) ? 0 : state->prev_obj_index + 1;
-
-    //insert obj into map at state's index
-    obj_node = cm_lst_ins(&vm_map->vm_objs, index, &vm_obj);
+    //insert obj into map
+    obj_node = cm_lst_ins_na(&map->vm_objs, state->prev_obj_node, &vm_obj);
     if (obj_node == NULL) {
         mc_errno = MC_ERR_LIBCMORE;
         return NULL;
     }
 
     /*
-     *  With the insertion of this object, vm_areas in the previous object's 
-     *  last_vm_area_node_ps list may now incorrectly treat the previous object
-     *  as the last object, when in fact this newly inserted object should be 
-     *  their new last object. This needs to now be corrected.
+     *  With the insertion of this object, it may now be closer to some 
+     *  memory areas without a backing object. For such memory areas, their 
+     *  `last_obj_node_p` pointer must be updated.
+     *
      */
 
-    _forward_unmapped_obj_last_vm_areas(obj_node);
+    _map_forward_unmapped_obj_last_vm_areas(obj_node);
 
     //advance state
-    _state_inc_obj(vm_map, state);
+    _map_state_inc_obj(state, map);
 
     return obj_node;
 }
@@ -779,76 +765,85 @@ cm_lst_node * _map_add_obj(mc_vm_map * vm_map, _traverse_state * state,
 
 
 DBG_STATIC
-int _map_add_area(mc_vm_map * vm_map, _traverse_state * state, 
-                  const struct vm_entry * entry, const int inc_type) {
+int _map_add_area(const struct vm_entry * entry,
+                  _traverse_state * state, mc_vm_map * map) {
 
     int ret;
-    bool use_obj = false;
+    bool use_obj;
 
-    mc_vm_area vm_area;
-    mc_vm_obj * vm_obj;
-
+    mc_vm_area area;
     cm_lst_node * area_node;
+    
+    mc_vm_obj * obj;
     cm_lst_node * obj_node;
 
-    //if no obj for this area
-    if (entry->file_path[0] != '\0') use_obj = true;
 
+    //determine if this area belongs to a backing object
+    use_obj = (entry->file_path[0] == '\0') ? false : true;
+
+
+    //if this area does not belong to a backing object, create a new area
     if (!use_obj) {
 
         /*
          *  It should never be possible for prev_obj 
          *  to point at/ahead of this vm_area.
          */
-        _new_vm_area(&vm_area, vm_map, NULL, state->prev_obj, entry);
+        _map_init_vm_area(&area, entry, NULL, state->prev_obj_node, map);
 
-    //else there is an obj for this area
+
+    //else there is a backing object for this area
     } else {
 
-        ret = _find_obj_for_area(state, entry);
-        
+        //determine which of the adjascent backing objects this area belongs to
+        ret = _map_find_obj_for_area(entry, state);
+
+        //dispatch case
         switch (ret) {
 
-            //area belongs to previous obj
+            //area belongs to the previous object
             case _MAP_OBJ_PREV:
-                _new_vm_area(&vm_area, vm_map, state->prev_obj, NULL, entry);
                 break;
 
-            //area is part of a new object
+            //area is the start of a new object
             case _MAP_OBJ_NEW:
-                obj_node = _map_add_obj(vm_map, state, entry);
+                obj_node = _map_add_obj(entry, state, map);
                 if (obj_node == NULL) return -1;
-                _new_vm_area(&vm_area, vm_map, state->prev_obj, NULL, entry);
                 break;
 
-            //area belongs to the next obj
+            //area belongs to the next object
             case _MAP_OBJ_NEXT:
-                _state_inc_obj(vm_map, state);
-                _new_vm_area(&vm_area, vm_map, state->prev_obj, NULL, entry);
+                _map_state_inc_obj(state, map);
                 break;
 
         } //end switch
-    }
+
+        //initialise the area
+        _map_init_vm_area(&area, entry, state->prev_obj_node, NULL, map);
+    
+    } //end if-else
+
 
     //add area to the map list
-    area_node = cm_lst_ins(&vm_map->vm_areas, state->next_area_index, &vm_area);
+    area_node = cm_lst_ins_nb(&map->vm_areas, state->next_area_node, &area);
     if (area_node == NULL) {
         mc_errno = MC_ERR_LIBCMORE;
         return -1;
     }
 
     //add area to the object pointer list
-    vm_obj = MC_GET_NODE_OBJ(state->prev_obj); 
+    obj = MC_GET_NODE_OBJ(state->prev_obj_node); 
     if (use_obj) {
-        ret = _obj_add_area(vm_obj, area_node);
+        ret = _map_obj_add_area(obj, area_node);
         if (ret == -1) return -1;
+        
     } else {
-        ret = _obj_add_last_area(vm_obj, area_node);
+        ret = _map_obj_add_last_area(obj, area_node);
         if (ret == -1) return -1;
     }
 
     //increment area state
-    _state_inc_area(vm_map, state, area_node, inc_type);
+    _map_state_inc_area(state, _STATE_AREA_NODE_REASSIGN, area_node->next, map);
 
     return 0;
 }
