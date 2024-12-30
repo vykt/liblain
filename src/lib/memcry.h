@@ -164,9 +164,9 @@ extern int mc_write(const mc_session * session, const uintptr_t addr,
 
 // --- [map]
 //all return 0 = success, -1 = fail/error
-extern void mc_new_vm_map(mc_vm_map * vm_map);
-extern int mc_del_vm_map(mc_vm_map * vm_map);
-extern int mc_map_clean_unmapped(mc_vm_map * vm_map);
+extern void mc_new_vm_map(mc_vm_map * map);
+extern int mc_del_vm_map(mc_vm_map * map);
+extern int mc_map_clean_unmapped(mc_vm_map * map);
 
 
 // --- [map util]
