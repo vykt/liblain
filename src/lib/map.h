@@ -84,16 +84,15 @@ int _map_add_area(const struct vm_entry * entry,
 
 
 //interface
-int map_send_entry(mc_vm_map * vm_map, 
-                   _traverse_state * state, const struct vm_entry * entry);
-void map_init_traverse_state(const mc_vm_map * vm_map, 
-                              _traverse_state * state);
+int map_send_entry(const struct vm_entry * entry,
+                   _traverse_state * state, mc_vm_map * map);
+void map_init_traverse_state(_traverse_state * state, const mc_vm_map * map); 
 
 
 //external
-void mc_new_vm_map(mc_vm_map * vm_map);
-int mc_del_vm_map(mc_vm_map * vm_map);
-int mc_map_clean_unmapped(mc_vm_map * vm_map);
+void mc_new_vm_map(mc_vm_map * map);
+int mc_del_vm_map(mc_vm_map * map);
+int mc_map_clean_unmapped(mc_vm_map * map);
 
 
 #endif
