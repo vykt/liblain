@@ -7,6 +7,7 @@
 
 //system headers
 #include <unistd.h>
+
 #include <linux/limits.h>
 
 //external libraries
@@ -97,7 +98,7 @@ void _build_entry(struct vm_entry * entry, const char * line_buf) {
     } //end for every char
 
 
-    //fill entry (prot already done in switch statement)
+    //fill entry (`prot` already filled inside switch statement)
     entry->vm_start = (unsigned long) strtol(start_str, NULL, 16);
     entry->vm_end = (unsigned long) strtol(end_str, NULL, 16);
     entry->file_off = (unsigned long) strtol(offset_str, NULL, 16);
@@ -173,7 +174,7 @@ int procfs_update_map(const mc_session * session, mc_vm_map * vm_map) {
     }
 
     //init traverse state for this map
-    map_init_traverse_state(vm_map, &state);
+    map_init_traverse_state(&state, vm_map);
 
     //while there are entries left
     while (fgets(line_buf, LINE_LEN, fs) != NULL) {
@@ -181,7 +182,7 @@ int procfs_update_map(const mc_session * session, mc_vm_map * vm_map) {
         memset(&new_entry, 0, sizeof(new_entry));
         _build_entry(&new_entry, line_buf);        
 
-        ret = map_send_entry(vm_map, &state, &new_entry);
+        ret = map_send_entry(&new_entry, &state, vm_map);
         if (ret != 0) return -1;
 
     } //end while
@@ -195,7 +196,7 @@ int procfs_update_map(const mc_session * session, mc_vm_map * vm_map) {
 
 
 
-int procfs_read(const mc_session * session, const uintptr_t addr, 
+ssize_t procfs_read(const mc_session * session, const uintptr_t addr, 
                  cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;

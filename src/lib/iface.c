@@ -50,12 +50,14 @@ void _set_krncry_session(mc_session * session) {
  *  --- [EXTERNAL] ---
  */
 
-int mc_open(mc_session * session, const int iface, const pid_t pid) {
+int mc_open(mc_session * session,
+            const enum mc_iface_type iface, const pid_t pid) {
+    
 
     int ret;
 
     //if requesting procfs interface
-    if (iface == MC_IFACE_PROCFS) {
+    if (iface == PROCFS) {
         _set_procfs_session(session);        
     } else {
         _set_krncry_session(session);
@@ -93,26 +95,26 @@ int mc_update_map(const mc_session * session, mc_vm_map * vm_map) {
 
 
 
-int mc_read(const mc_session * session, const uintptr_t addr, 
-            cm_byte * buf, const size_t buf_sz) {
+ssize_t mc_read(const mc_session * session, const uintptr_t addr, 
+                cm_byte * buf, const size_t buf_sz) {
 
-    int ret;
+    size_t read_bytes;
 
-    ret = session->iface.read(session, addr, buf, buf_sz);
-    if (ret) return -1;
+    read_bytes = session->iface.read(session, addr, buf, buf_sz);
+    if (read_bytes == -1) return -1;
 
     return 0;
 }
 
 
 
-int mc_write(const mc_session * session, uintptr_t addr, 
-             const cm_byte * buf, const size_t buf_sz) {
+ssize_t mc_write(const mc_session * session, const uintptr_t addr, 
+                 const cm_byte * buf, const size_t buf_sz) {
 
-    int ret;
+    size_t write_bytes;
 
-    ret = session->iface.write(session, addr, buf, buf_sz);
-    if (ret) return -1;
+    write_bytes = session->iface.write(session, addr, buf, buf_sz);
+    if (write_bytes) return -1;
 
     return 0;
 }

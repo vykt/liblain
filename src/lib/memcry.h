@@ -29,12 +29,17 @@ extern "C"{
 #define MC_ACCESS_EXEC    0x04
 #define MC_ACCESS_SHARED  0x08
 
-//interface types
-#define MC_IFACE_KRNCRY 0
-#define MC_IFACE_PROCFS 1
-
 //pseudo object id
 #define MC_ZERO_OBJ_ID -1
+
+//do not seek when reading/writing
+
+
+//interface types
+enum mc_iface_type {
+    PROCFS = 0,
+    KRNCRY = 1
+};
 
 
 
@@ -105,13 +110,13 @@ struct _mc_session;
 
 typedef struct {
 
-    int (*open)(struct _mc_session *, int);
+    int (*open)(struct _mc_session *, const int);
     int (*close)(struct _mc_session *);
     int (*update_map)(const struct _mc_session *, mc_vm_map *);
-    int (*read)(const struct _mc_session *, const uintptr_t, 
-                cm_byte *, const size_t);
-    int (*write)(const struct _mc_session *, const uintptr_t, 
-                 const cm_byte *, const size_t);
+    ssize_t (*read)(const struct _mc_session *,
+                    const uintptr_t, cm_byte *, const size_t);
+    ssize_t (*write)(const struct _mc_session *,
+                     const uintptr_t, const cm_byte *, const size_t);
 
 } mc_iface;
 
@@ -154,13 +159,14 @@ extern void mc_bytes_to_hex(const cm_byte * inp, const int inp_len, char * out);
 
 // [virtual interface]
 //all return 0 = success, -1 = fail/error
-extern int mc_open(mc_session * session, const int iface, const pid_t pid);
+extern int mc_open(mc_session * session,
+                   const enum mc_iface_type iface, const pid_t pid);
 extern int mc_close(mc_session * session);
 extern int mc_update_map(const mc_session * session, mc_vm_map * vm_map);
-extern int mc_read(const mc_session * session, const uintptr_t addr, 
-                   cm_byte * buf, const size_t buf_sz);
-extern int mc_write(const mc_session * session, const uintptr_t addr,
-                    const cm_byte * buf, const size_t buf_sz);
+extern ssize_t mc_read(const mc_session * session, const uintptr_t addr, 
+                       cm_byte * buf, const size_t buf_sz);
+extern ssize_t mc_write(const mc_session * session, const uintptr_t addr,
+                        const cm_byte * buf, const size_t buf_sz);
 
 // --- [map]
 //all return 0 = success, -1 = fail/error

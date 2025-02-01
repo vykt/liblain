@@ -1,7 +1,7 @@
 # Lain
 
 <p align="center">
-    <img src="lain.png" width="150" height="150">
+    <img src="memcry.png" width="150" height="150">
 </p>
 
 ### NOTE:
