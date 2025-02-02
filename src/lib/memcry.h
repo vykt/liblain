@@ -147,7 +147,7 @@ typedef struct _mc_session mc_session;
 
 // [util]
 //return: basename = success, NULL = fail/error
-extern const char * mc_pathname_to_basename(const char * pathname);
+extern char * mc_pathname_to_basename(const char * pathname);
 //must destroy 'pid_vector' manually on success | pid = success, -1 = fail/error
 extern pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector);
 //return: 0 = success, -1 = fail/error

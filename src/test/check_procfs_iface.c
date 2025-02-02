@@ -73,3 +73,40 @@ START_TEST(test_procfs_mc_read_write) {
     return;
     
 } END_TEST
+
+
+
+/*
+ * --- [SUITE] ---
+ */
+
+Suite * procfs_iface_suite() {
+
+    //test cases
+    TCase * tc_procfs_mc_open_close;
+    TCase * tc_procfs_mc_update_map;
+    TCase * tc_procfs_mc_read_write;
+
+    Suite * s = suite_create("procfs_iface");
+
+
+    //tc_procfs_mc_open_close
+    tc_procfs_mc_open_close = tcase_create("procfs_mc_open_close");
+    tcase_add_test(tc_procfs_mc_open_close, test_procfs_mc_open_close);
+
+    //tc_procfs_mc_update_map
+    tc_procfs_mc_update_map = tcase_create("procfs_mc_update_map");
+    tcase_add_test(tc_procfs_mc_update_map, test_procfs_mc_update_map);
+
+    //tc_procfs_mc_read_write
+    tc_procfs_mc_read_write = tcase_create("procfs_mc_read_write");
+    tcase_add_test(tc_procfs_mc_read_write, test_procfs_mc_read_write);
+
+
+    //add test cases to procfs interface test suite
+    suite_add_tcase(s, tc_procfs_mc_open_close);
+    suite_add_tcase(s, tc_procfs_mc_update_map);
+    suite_add_tcase(s, tc_procfs_mc_read_write);
+
+    return s;
+}

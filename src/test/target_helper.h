@@ -47,7 +47,7 @@ enum target_map_state {
 
 
 //target metadata
-#define TARGET_PATH "target"
+#define TARGET_NAME "unit_target"
 #define TARGET_BUF_SZ 16 /* must be even */
 
 #define IFACE_RW_BUF_STR "read & write me "

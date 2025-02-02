@@ -1697,59 +1697,59 @@ START_TEST(test_mc_map_clean_unmapped) {
     Suite * s = suite_create("map");
 
 
-    //tc_new_del_vm_map()
+    //tc_new_del_vm_map
     tc_new_del_vm_map = tcase_create("new_del_vm_map");
     tcase_add_test(tc_new_del_vm_map, test_mc_new_del_vm_map);
 
-    //tc__make_zero_obj()
+    //tc__make_zero_obj
     tc__new_del_vm_obj = tcase_create("_new_del_vm_obj");
     tcase_add_checked_fixture(tc__new_del_vm_obj, 
                               _setup_empty_vm_map, _teardown_vm_map);
     tcase_add_test(tc__new_del_vm_obj, test__map_new_del_vm_obj);
 
-    //tc__init_vm_area()
+    //tc__init_vm_area
     tc__init_vm_area = tcase_create("_init_vm_area");
     tcase_add_checked_fixture(tc__init_vm_area, 
                               _setup_empty_vm_map, _teardown_vm_map);
     tcase_add_test(tc__init_vm_area, test__map_init_vm_area);
 
-    //tc__obj_add_area()
+    //tc__obj_add_area
     tc__obj_add_area = tcase_create("_obj_add_area");
     tcase_add_checked_fixture(tc__obj_add_area, 
                               _setup_empty_vm_obj, _teardown_vm_obj);
     tcase_add_test(tc__obj_add_area, test__map_obj_add_area);
 
-    //tc__obj_add_last_area()
+    //tc__obj_add_last_area
     tc__obj_add_last_area = tcase_create("_obj_add_last_area");
     tcase_add_checked_fixture(tc__obj_add_last_area, 
                               _setup_empty_vm_obj, _teardown_vm_obj);
     tcase_add_test(tc__obj_add_last_area, test__map_obj_add_last_area);
 
-    //tc__obj_rmv_area()
+    //tc__obj_rmv_area
     tc__obj_rmv_area = tcase_create("_obj_rmv_area");
     tcase_add_checked_fixture(tc__obj_rmv_area, 
                               _setup_stub_vm_obj, _teardown_vm_obj);
     tcase_add_test(tc__obj_rmv_area, test__map_obj_rmv_area);
 
-    //tc__obj_rmv_last_area()
+    //tc__obj_rmv_last_area
     tc__obj_rmv_last_area = tcase_create("_obj_rmv_last_area");
     tcase_add_checked_fixture(tc__obj_rmv_last_area, 
                               _setup_stub_vm_obj, _teardown_vm_obj);
     tcase_add_test(tc__obj_rmv_last_area, test__map_obj_rmv_area);
 
-    //tc__is_pathname_in_obj()
+    //tc__is_pathname_in_obj
     tc__is_pathname_in_obj = tcase_create("_is_pathname_in_obj");
     tcase_add_checked_fixture(tc__is_pathname_in_obj, 
                               _setup_empty_vm_obj, _teardown_vm_obj);
     tcase_add_test(tc__is_pathname_in_obj, test__map_is_pathname_in_obj);
 
-    //tc__find_obj_for_area()
+    //tc__find_obj_for_area
     tc__find_obj_for_area = tcase_create("_find_obj_for_area");
     tcase_add_checked_fixture(tc__find_obj_for_area, 
                               _setup_empty_vm_map, _teardown_vm_map);
     tcase_add_test(tc__find_obj_for_area, test__map_find_obj_for_area);
 
-    //tc__backtrack_unmapped_obj_last_vm_areas()
+    //tc__backtrack_unmapped_obj_last_vm_areas
     tc__backtrack_unmapped_obj_last_vm_areas 
         = tcase_create("_backtrack_unmapped_obj_last_vm_areas");
     tcase_add_checked_fixture(tc__backtrack_unmapped_obj_last_vm_areas, 
@@ -1757,7 +1757,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     tcase_add_test(tc__backtrack_unmapped_obj_last_vm_areas, 
                    test__map_backtrack_unmapped_obj_last_vm_areas);
 
-    //tc__forward_unmapped_obj_last_vm_areas()
+    //tc__forward_unmapped_obj_last_vm_areas
     tc__forward_unmapped_obj_last_vm_areas 
         = tcase_create("_forward_unmapped_obj_last_vm_areas");
     tcase_add_checked_fixture(tc__forward_unmapped_obj_last_vm_areas, 
@@ -1765,67 +1765,67 @@ START_TEST(test_mc_map_clean_unmapped) {
     tcase_add_test(tc__forward_unmapped_obj_last_vm_areas, 
                    test__map_forward_unmapped_obj_last_vm_areas);
 
-    //tc__unlink_unmapped_obj()
+    //tc__unlink_unmapped_obj
     tc__unlink_unmapped_obj = tcase_create("_unlink_unmapped_obj");
     tcase_add_checked_fixture(tc__unlink_unmapped_obj, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__unlink_unmapped_obj, test__map_unlink_unmapped_obj);
 
-    //tc__unlink_unmapped_area()
+    //tc__unlink_unmapped_area
     tc__unlink_unmapped_area = tcase_create("_unlink_unmapped_area");
     tcase_add_checked_fixture(tc__unlink_unmapped_area, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__unlink_unmapped_area, test__map_unlink_unmapped_area);
 
-    //tc__check_area_eql()
+    //tc__check_area_eql
     tc__check_area_eql = tcase_create("_check_area_eql");
     tcase_add_checked_fixture(tc__check_area_eql, 
                               _setup_empty_vm_map, _teardown_vm_map);
     tcase_add_test(tc__check_area_eql, test__map_check_area_eql);
 
-    //tc__state_inc_area()
+    //tc__state_inc_area
     tc__state_inc_area = tcase_create("_state_inc_area");
     tcase_add_checked_fixture(tc__state_inc_area, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__state_inc_area, test__map_state_inc_area);
 
-    //tc__state_inc_obj()
+    //tc__state_inc_obj
     tc__state_inc_obj = tcase_create("_state_inc_obj");
     tcase_add_checked_fixture(tc__state_inc_obj, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__state_inc_obj, test__map_state_inc_obj);
 
-    //tc__resync_area()
+    //tc__resync_area
     tc__resync_area = tcase_create("_resync_area");
     tcase_add_checked_fixture(tc__resync_area, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__resync_area, test__map_resync_area);
 
-    //tc__add_obj()
+    //tc__add_obj
     tc__add_obj = tcase_create("_add_obj");
     tcase_add_checked_fixture(tc__add_obj, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__add_obj, test__map_add_obj);
 
-    //tc__add_area()
+    //tc__add_area
     tc__add_area = tcase_create("_add_area");
     tcase_add_checked_fixture(tc__add_area, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__add_area, test__map_add_area);
 
-    //tc_send_entry()
+    //tc_send_entry
     tc_send_entry = tcase_create("send_entry");
     tcase_add_checked_fixture(tc_send_entry, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc_send_entry, test_map_send_entry);
 
-    //tc_init_traverse_state()
+    //tc_init_traverse_state
     tc_init_traverse_state = tcase_create("init_traverse_state");
     tcase_add_checked_fixture(tc_init_traverse_state, 
                               _setup_empty_vm_map, _teardown_vm_map);
     tcase_add_test(tc_init_traverse_state, test_map_init_traverse_state);
 
-    //tc_clean_unmapped()
+    //tc_clean_unmapped
     tc_clean_unmapped = tcase_create("clean_unmapped");
     tcase_add_checked_fixture(tc_clean_unmapped, 
                               _setup_stub_vm_map, _teardown_vm_map);

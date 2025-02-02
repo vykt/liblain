@@ -183,8 +183,8 @@ START_TEST(test_mc_get_obj_offset_bnd) {
 
 
 
-//mc_get_vm_area_by_addr [target fixture]
-START_TEST(test_mc_get_vm_area_by_addr) {
+//mc_get_area_node_by_addr [target fixture]
+START_TEST(test_mc_get_area_node_by_addr) {
 
     cm_lst_node * ret_n;
     off_t off;
@@ -216,8 +216,8 @@ START_TEST(test_mc_get_vm_area_by_addr) {
 
 
 
-//mc_get_vm_obj_by_addr [target fixture]
-START_TEST(test_mc_get_vm_obj_by_addr) {
+//mc_get_obj_node_by_addr [target fixture]
+START_TEST(test_mc_get_obj_node_by_addr) {
 
     cm_lst_node * ret_n;
     off_t off;
@@ -306,3 +306,88 @@ START_TEST(test_mc_get_obj_node_by_basename) {
     return;
 
 } END_TEST
+
+
+
+/*
+ *  --- [SUITE] ---
+ */
+
+Suite * map_util_suite() {
+
+    //test cases
+    TCase * tc_get_area_offset;
+    TCase * tc_get_obj_offset;
+    TCase * tc_get_area_offset_bnd;
+    TCase * tc_get_obj_offset_bnd;
+    TCase * tc_get_area_node_by_addr;
+    TCase * tc_get_obj_node_by_addr;
+    TCase * tc_get_obj_node_by_pathname;
+    TCase * tc_get_obj_node_by_basename;
+
+    Suite * s = suite_create("map_util");
+
+
+    //tc_get_area_offset
+    tc_get_area_offset = tcase_create("get_area_offset");
+    tcase_add_checked_fixture(tc_get_area_offset,
+                              _setup_target, _teardown_target);
+    tcase_add_test(tc_get_area_offset, test_mc_get_area_offset);
+
+    //tc_get_obj_offset
+    tc_get_obj_offset = tcase_create("get_obj_offset");
+    tcase_add_checked_fixture(tc_get_obj_offset,
+                              _setup_target, _teardown_target);
+    tcase_add_test(tc_get_obj_offset, test_mc_get_obj_offset);
+
+    //tc_get_area_offset_bnd
+    tc_get_area_offset_bnd = tcase_create("get_area_offset_bnd");
+    tcase_add_checked_fixture(tc_get_area_offset_bnd,
+                              _setup_target, _teardown_target);
+    tcase_add_test(tc_get_area_offset_bnd, test_mc_get_area_offset_bnd);
+
+    //tc_get_obj_offset_bnd
+    tc_get_obj_offset_bnd = tcase_create("get_obj_offset_bnd");
+    tcase_add_checked_fixture(tc_get_obj_offset_bnd,
+                              _setup_target, _teardown_target);
+    tcase_add_test(tc_get_obj_offset_bnd, test_mc_get_obj_offset_bnd);
+
+    //tc_get_vm_area_by_addr
+    tc_get_area_node_by_addr = tcase_create("get_area_node_by_addr");
+    tcase_add_checked_fixture(tc_get_area_node_by_addr,
+                              _setup_target, _teardown_target);
+    tcase_add_test(tc_get_area_node_by_addr, test_mc_get_area_node_by_addr);
+
+    //tc_get_vm_area_by_addr
+    tc_get_obj_node_by_addr = tcase_create("get_obj_node_by_addr");
+    tcase_add_checked_fixture(tc_get_obj_node_by_addr,
+                              _setup_target, _teardown_target);
+    tcase_add_test(tc_get_obj_node_by_addr, test_mc_get_obj_node_by_addr);
+
+    //tc_get_obj_node_by_pathname
+    tc_get_obj_node_by_pathname = tcase_create("get_obj_node_by_pathname");
+    tcase_add_checked_fixture(tc_get_obj_node_by_pathname,
+                              _setup_target, _teardown_target);
+    tcase_add_test(tc_get_obj_node_by_pathname,
+                   test_mc_get_obj_node_by_pathname);
+
+    //tc_get_obj_node_by_basename
+    tc_get_obj_node_by_basename = tcase_create("get_obj_node_by_basename");
+    tcase_add_checked_fixture(tc_get_obj_node_by_basename,
+                              _setup_target, _teardown_target);
+    tcase_add_test(tc_get_obj_node_by_basename,
+                   test_mc_get_obj_node_by_basename);
+
+
+    //add test cases to map util test suite
+    suite_add_tcase(s, tc_get_area_offset);
+    suite_add_tcase(s, tc_get_obj_offset);
+    suite_add_tcase(s, tc_get_area_offset_bnd);
+    suite_add_tcase(s, tc_get_obj_offset_bnd);
+    suite_add_tcase(s, tc_get_area_node_by_addr);
+    suite_add_tcase(s, tc_get_obj_node_by_addr);
+    suite_add_tcase(s, tc_get_obj_node_by_pathname);
+    suite_add_tcase(s, tc_get_obj_node_by_basename);
+
+    return s;
+}

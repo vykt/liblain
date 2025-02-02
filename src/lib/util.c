@@ -106,7 +106,7 @@ int _get_status_name(char * name_buf, const pid_t pid) {
  *  --- EXTERNAL
  */
 
-const char * mc_pathname_to_basename(const char * pathname) {
+char * mc_pathname_to_basename(const char * pathname) {
 
     char * basename = strrchr(pathname, (int) '/');
     

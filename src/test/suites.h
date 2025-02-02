@@ -6,7 +6,6 @@
 
 
 //unit test suites
-Suite * iface_suite();
 Suite * krncry_iface_suite();
 Suite * procfs_iface_suite();
 Suite * map_suite();
