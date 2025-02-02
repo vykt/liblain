@@ -25,28 +25,30 @@
 
 /*
  *  [ADVANCED TEST]
- *
- *      The virtual memory map management code is complicated and as such,
- *      almost every internal function has independent tests. For these tests 
- *      to run, the debug target must be built.
- *
- *      The following functions do not have unit tests:
- *
- *        _map_obj_add_area_insert():
- *
- *            > Tested through `_map_obj_add_area()` 
- *              and `_map_obj_add_last_area()`
- *
- *        _map_obj_find_area_outer_node():
- *
- *            > Tested through `_map_obj_rmv_area()` 
- *              and `_map_obj_rmv_last_area()`
  */
 
 /*
- *  Functions are not tested in the same order as they appear in the map.c
- *  source file. This assists with bootstrapping many tests. The order of
- *  testing remains close.
+ *  NOTE: The virtual memory map management code is complicated and as such,
+ *        almost every internal function has independent tests. For these
+ *        tests to run, the debug target must be built.
+ *
+ *        The following functions do not have unit tests:
+ *
+ *            _map_obj_add_area_insert():
+ *
+ *                > Tested through `_map_obj_add_area()` 
+ *                  and `_map_obj_add_last_area()`
+ *
+ *            _map_obj_find_area_outer_node():
+ *
+ *                > Tested through `_map_obj_rmv_area()` 
+ *                  and `_map_obj_rmv_last_area()`
+ */
+
+/*
+ *  NOTE: Functions are not tested in the same order as they appear in
+ *        the map.c source file. This assists with bootstrapping many tests.
+ *        The order of testing remains close.
  */
  
 

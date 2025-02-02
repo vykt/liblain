@@ -17,6 +17,26 @@
 
 
 
+#define TARGET_AREAS_UNCHANGED 22
+extern char areas_unchanged[TARGET_AREAS_UNCHANGED][NAME_MAX];
+
+#define TARGET_OBJS_UNCHANGED 7
+extern char objs_unchanged[TARGET_OBJS_UNCHANGED][NAME_MAX];
+
+#define TARGET_AREAS_MAPPED 33
+extern char areas_mapped[TARGET_AREAS_MAPPED][NAME_MAX];
+
+#define TARGET_OBJS_MAPPED 10
+extern char objs_mapped[TARGET_OBJS_MAPPED][NAME_MAX];
+
+#define TARGET_AREAS_UNMAPPED 23
+extern char areas_unmapped[TARGET_AREAS_UNMAPPED][NAME_MAX];
+
+#define TARGET_OBJS_UNMAPPED 8
+extern char objs_unmapped[TARGET_OBJS_UNMAPPED][NAME_MAX];
+
+
+
 //the state of the target's memory map
 enum target_map_state {
     UNCHANGED, //default state
@@ -28,7 +48,7 @@ enum target_map_state {
 
 //target metadata
 #define TARGET_PATH "target"
-#define TARGET_BUF_SZ 16
+#define TARGET_BUF_SZ 16 /* must be even */
 
 #define IFACE_RW_BUF_STR "read & write me "
 

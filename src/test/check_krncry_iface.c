@@ -34,8 +34,8 @@
 
 static void _assert_session(mc_session * se, pid_t pid) {
 
-    ck_assert_int_ne(se->fd_mem, -1);
-    ck_assert_int_eq(se->pid, pid);
+    ck_assert_int_ne(se->major, -1);
+    ck_assert_int_eq(se->fd_dev_krncry, pid);
 
     return;
 }
@@ -46,30 +46,30 @@ static void _assert_session(mc_session * se, pid_t pid) {
  *  --- [UNIT TESTS] ---
  */
 
-//procfs_open() & procfs_close() [no fixture]
-START_TEST(test_procfs_mc_open_close) {
+//krncry_open() & krncry_close() [no fixture]
+START_TEST(test_krncry_mc_open_close) {
 
-    assert_iface_open_close(PROCFS, _assert_session);
+    assert_iface_open_close(KRNCRY, _assert_session);
     return;
    
 } END_TEST
 
 
 
-//procfs_update_map() [no fixture]
-START_TEST(test_procfs_mc_update_map) {
+//krncry_update_map() [no fixture]
+START_TEST(test_krncry_mc_update_map) {
 
-    assert_iface_update_map(PROCFS);
+    assert_iface_update_map(KRNCRY);
     return;
     
 } END_TEST
 
 
 
-//procfs_read() & procfs_write() [no fixture]
-START_TEST(test_procfs_mc_read_write) {
+//krncry_read() & krncry_write() [no fixture]
+START_TEST(test_krncry_mc_read_write) {
 
-    assert_iface_read_write(PROCFS);
+    assert_iface_read_write(KRNCRY);
     return;
     
 } END_TEST

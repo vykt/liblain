@@ -11,7 +11,7 @@
 #include <check.h>
 
 //local headers
-#include "suites.h"
+#include "info.h"
 #include "iface_helper.h"
 #include "target_helper.h"
 
@@ -22,9 +22,9 @@
 
 
 /*
- * Interface helper is a generic interface tester. It requires the test suite
- * of an interface to implement a custom `assert_session()` function that
- * verifies the validity of an open session.
+ *  NOTE: Interface helper is a generic interface tester. It requires the
+ *        test suite of an interface to implement a custom `assert_session()`
+ *        function that verifies the validity of an open session.
  */
 
 
@@ -92,8 +92,8 @@ void assert_iface_open_close(enum mc_iface_type iface,
     ret = mc_close(&s);
     ck_assert_int_eq(ret, 0);
 
-    return;
-    
+
+    return;    
 }
 
 
@@ -157,6 +157,8 @@ void assert_iface_update_map(enum mc_iface_type iface) {
     ret = mc_del_vm_map(&m);
     ck_assert_int_eq(ret, 0);
 
+    end_target(pid);
+
     return;   
 }
 
@@ -173,10 +175,9 @@ void assert_iface_read_write(enum mc_iface_type iface) {
      */
 
     int ret;
-    ssize_t bytes;
 
     cm_byte rw_buf[16];
-    uintptr_t rw_buf_addr;
+    uintptr_t tgt_buf_addr;
 
     pid_t pid;
     mc_session s;
@@ -197,25 +198,26 @@ void assert_iface_read_write(enum mc_iface_type iface) {
     ck_assert_int_eq(ret, 0);
 
 
-    //first test: read & write predefined rw- segment
-    rw_buf_addr = _get_addr(&m, IFACE_RW_BUF_OBJ_INDEX,
+    //first test: read & write predefined rw- segment, seek & no seek
+    tgt_buf_addr = _get_addr(&m, IFACE_RW_BUF_OBJ_INDEX,
                             IFACE_RW_BUF_AREA_INDEX, IFACE_RW_BUF_OFF);
+    
     //read foreign buffer
-    bytes = mc_read(&s, rw_buf_addr, rw_buf, TARGET_BUF_SZ);
-    ck_assert_int_ne(bytes, -1);
+    ret = mc_read(&s, tgt_buf_addr, rw_buf, TARGET_BUF_SZ);
+    ck_assert_int_eq(ret, 0);
 
     //check foreign buffer was read correctly
     ret = strncmp((char *) rw_buf, IFACE_RW_BUF_STR, TARGET_BUF_SZ);
     ck_assert_int_eq(ret, 0);
 
 
-    //write to foreign buffer
-    bytes = mc_write(&s, rw_buf_addr, (cm_byte *) w_buf, TARGET_BUF_SZ);
-    ck_assert_int_ne(bytes, -1);
+    //write to foreign buffer (first half)
+    ret = mc_write(&s, tgt_buf_addr, (cm_byte *) w_buf, TARGET_BUF_SZ);
+    ck_assert_int_eq(ret, 0);
 
     //re-read foreign buffer
-    bytes = mc_read(&s, rw_buf_addr, rw_buf, TARGET_BUF_SZ);
-    ck_assert_int_ne(bytes, -1);
+    ret = mc_read(&s, tgt_buf_addr, rw_buf, TARGET_BUF_SZ);
+    ck_assert_int_eq(ret, -1);
 
     //check the write was performed correctly
     ret = strncmp((char *) rw_buf, w_buf, TARGET_BUF_SZ);
@@ -224,11 +226,52 @@ void assert_iface_read_write(enum mc_iface_type iface) {
 
 
     //second test: read & write to region with no read & write permissions
+    tgt_buf_addr = _get_addr(&m, IFACE_NONE_OBJ_INDEX,
+                            IFACE_NONE_AREA_INDEX, IFACE_NONE_OFF);
+
+    //write to foreign buffer
+    ret = mc_write(&s, tgt_buf_addr, (cm_byte *) w_buf, TARGET_BUF_SZ);
+    INFO_PRINT("[%s][no perm]<mc_write()>: returned %d\n",
+               get_iface_name(iface), ret);
+    
+    //read foreign buffer
+    ret = mc_read(&s, tgt_buf_addr, rw_buf, TARGET_BUF_SZ);
+    INFO_PRINT("[%s][no perm]<mc_read()>: returned %d\n",
+               get_iface_name(iface), ret);    
+
+    //check if write succeeded
+    ret = strncmp((char *) rw_buf, IFACE_RW_BUF_STR, TARGET_BUF_SZ);
+    INFO_PRINT("[%s][none perm]<write check>: returned %d\n",
+               get_iface_name(iface), ret);    
 
 
 
     //third test: read & write to unmapped memory
+    tgt_buf_addr = 0x1337;
 
+    //write to foreign buffer
+    ret = mc_write(&s, tgt_buf_addr, (cm_byte *) w_buf, TARGET_BUF_SZ);
+    INFO_PRINT("[%s][unmapped]<mc_write()>: returned %d\n",
+               get_iface_name(iface), ret);    
+    
+    //read foreign buffer
+    ret = mc_read(&s, tgt_buf_addr, rw_buf, TARGET_BUF_SZ);
+    INFO_PRINT("[%s][unmapped]<mc_read()>: returned %d\n",
+               get_iface_name(iface), ret);    
+
+    ret = strncmp((char *) rw_buf, IFACE_RW_BUF_STR, TARGET_BUF_SZ);
+    INFO_PRINT("[%s][none perm]<write check>: returned %d\n",
+               get_iface_name(iface), ret);    
+
+
+    //cleanup
+    ret = mc_close(&s);
+    ck_assert_int_eq(ret, 0);    
+
+    ret = mc_del_vm_map(&m);
+    ck_assert_int_eq(ret, 0);
+
+    end_target(pid);
 
     return;
     

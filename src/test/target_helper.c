@@ -25,7 +25,6 @@
 //globals
 static enum target_map_state target_state;
 
-#define TARGET_AREAS_UNCHANGED 22
 char areas_unchanged[TARGET_AREAS_UNCHANGED][NAME_MAX] = {
     "",
     "unit_target",
@@ -51,7 +50,6 @@ char areas_unchanged[TARGET_AREAS_UNCHANGED][NAME_MAX] = {
     "[vdso]"
 };
 
-#define TARGET_OBJS_UNCHANGED 7
 char objs_unchanged[TARGET_OBJS_UNCHANGED][NAME_MAX] = {
     "0x0",
     "unit_target",
@@ -62,7 +60,7 @@ char objs_unchanged[TARGET_OBJS_UNCHANGED][NAME_MAX] = {
     "[vdso]"
 };
 
-#define TARGET_AREAS_MAPPED 33
+
 char areas_mapped[TARGET_AREAS_MAPPED][NAME_MAX] = {
     "",
     "unit_target",
@@ -99,7 +97,6 @@ char areas_mapped[TARGET_AREAS_MAPPED][NAME_MAX] = {
     "[vdso]"
 };
 
-#define TARGET_OBJS_MAPPED 10
 char objs_mapped[TARGET_OBJS_MAPPED][NAME_MAX] = {
     "0x0",
     "unit_target",
@@ -113,7 +110,7 @@ char objs_mapped[TARGET_OBJS_MAPPED][NAME_MAX] = {
     "[vdso]"
 };
 
-#define TARGET_AREAS_UNMAPPED 23
+
 char areas_unmapped[TARGET_AREAS_UNMAPPED][NAME_MAX] = {
     "",
     "unit_target",
@@ -140,7 +137,6 @@ char areas_unmapped[TARGET_AREAS_UNMAPPED][NAME_MAX] = {
     "[vdso]"
 };
 
-#define TARGET_OBJS_UNMAPPED 8
 char objs_unmapped[TARGET_OBJS_UNMAPPED][NAME_MAX] = {
     "0x0",
     "unit_target",

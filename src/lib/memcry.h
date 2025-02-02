@@ -32,7 +32,6 @@ extern "C"{
 //pseudo object id
 #define MC_ZERO_OBJ_ID -1
 
-//do not seek when reading/writing
 
 
 //interface types
@@ -163,10 +162,10 @@ extern int mc_open(mc_session * session,
                    const enum mc_iface_type iface, const pid_t pid);
 extern int mc_close(mc_session * session);
 extern int mc_update_map(const mc_session * session, mc_vm_map * vm_map);
-extern ssize_t mc_read(const mc_session * session, const uintptr_t addr, 
-                       cm_byte * buf, const size_t buf_sz);
-extern ssize_t mc_write(const mc_session * session, const uintptr_t addr,
-                        const cm_byte * buf, const size_t buf_sz);
+extern int mc_read(const mc_session * session, const uintptr_t addr, 
+                   cm_byte * buf, const size_t buf_sz);
+extern int mc_write(const mc_session * session, const uintptr_t addr,
+                    const cm_byte * buf, const size_t buf_sz);
 
 // --- [map]
 //all return 0 = success, -1 = fail/error
@@ -177,23 +176,28 @@ extern int mc_map_clean_unmapped(mc_vm_map * map);
 
 // --- [map util]
 //return: offset from start of area/object
-extern off_t mc_get_area_offset(const cm_lst_node * area_node, const uintptr_t addr);
-extern off_t mc_get_obj_offset(const cm_lst_node * obj_node, const uintptr_t addr);
+extern off_t mc_get_area_offset(const cm_lst_node * area_node,
+                                const uintptr_t addr);
+extern off_t mc_get_obj_offset(const cm_lst_node * obj_node,
+                               const uintptr_t addr);
 //return: offset from start of area/object = success, -1 = not in area/object
 extern off_t mc_get_area_offset_bnd(const cm_lst_node * area_node, 
                                     const uintptr_t addr);
 extern off_t mc_get_obj_offset_bnd(const cm_lst_node * obj_node, 
                                    const uintptr_t addr);
+
 //return area node * = success, NULL = fail/error
-extern cm_lst_node * mc_get_vm_area_by_addr(const mc_vm_map * vm_map, 
-                                             const uintptr_t addr, off_t * offset);
+extern cm_lst_node * mc_get_area_node_by_addr(const mc_vm_map * vm_map, 
+                                              const uintptr_t addr,
+                                              off_t * offset);
 //return obj node * = success, NULL = fail/error
-extern cm_lst_node * mc_get_vm_obj_by_addr(const mc_vm_map * vm_map, 
-                                            const uintptr_t addr, off_t * offset);
-extern cm_lst_node * mc_get_vm_obj_by_pathname(const mc_vm_map * vm_map, 
-                                                const char * pathname);
-extern cm_lst_node * mc_get_vm_obj_by_basename(const mc_vm_map * vm_map, 
-                                                const char * basename);
+extern cm_lst_node * mc_get_obj_node_by_addr(const mc_vm_map * vm_map, 
+                                             const uintptr_t addr,
+                                             off_t * offset);
+extern cm_lst_node * mc_get_obj_node_by_pathname(const mc_vm_map * vm_map, 
+                                                 const char * pathname);
+extern cm_lst_node * mc_get_obj_node_by_basename(const mc_vm_map * vm_map, 
+                                                 const char * basename);
 
 
 // --- [error handling]

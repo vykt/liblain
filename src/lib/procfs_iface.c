@@ -196,8 +196,8 @@ int procfs_update_map(const mc_session * session, mc_vm_map * vm_map) {
 
 
 
-ssize_t procfs_read(const mc_session * session, const uintptr_t addr, 
-                 cm_byte * buf, const size_t buf_sz) {
+int procfs_read(const mc_session * session, const uintptr_t addr, 
+                cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;
 	ssize_t read_bytes, read_done, read_left;
@@ -236,7 +236,7 @@ ssize_t procfs_read(const mc_session * session, const uintptr_t addr,
 
 
 int procfs_write(const mc_session * session, const uintptr_t addr, 
-                  const cm_byte * buf, const size_t buf_sz) {
+                 const cm_byte * buf, const size_t buf_sz) {
 
 	off_t off_ret;
 	ssize_t write_bytes, write_done, write_left;
