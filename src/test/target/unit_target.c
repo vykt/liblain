@@ -45,7 +45,7 @@ enum target_map_state state = UNCHANGED;
 
 
 //unit test signal handler
-void sigusr1_handler(int signum) {
+void sigusr1_handler() {
 
     if (state == UNCHANGED) {
 
@@ -69,6 +69,8 @@ int main(int argc, char ** argv) {
     pid_t parent_pid;
     void * protected_area;
 
+    //check correct number of args is provided (quiet -Wunused-parameter)
+    if (argc != 2) return -1;
 
     //recover parent pid
     parent_pid = atoi(argv[1]);

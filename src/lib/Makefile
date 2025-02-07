@@ -18,8 +18,8 @@ SOURCES_LIB=error.c iface.c krncry_iface.c \
             map.c map_util.c procfs_iface.c util.c
 OBJECTS_LIB=${SOURCES_LIB:%.c=${BUILD_DIR}/%.o}
 
-SHARED=libcmore.so
-STATIC=libcmore.a
+SHARED=libmcry.so
+STATIC=libmcry.a
 
 
 shared: ${SHARED}
@@ -40,4 +40,6 @@ ${BUILD_DIR}/%.o: %.c
 > ${CC} ${CFLAGS} ${WARN_OPTS} -c $< -o $@
 
 clean:
-> -rm -v ${BUILD_DIR}/{*.o,${SHARED},${STATIC}}
+> -rm -v ${BUILD_DIR}/*.o
+> -rm -v ${BUILD_DIR}/${SHARED}
+> -rm -v ${BUILD_DIR}/${STATIC}

@@ -95,26 +95,26 @@ int mc_update_map(const mc_session * session, mc_vm_map * vm_map) {
 
 
 
-ssize_t mc_read(const mc_session * session, const uintptr_t addr, 
-                cm_byte * buf, const size_t buf_sz) {
+int mc_read(const mc_session * session, const uintptr_t addr, 
+            cm_byte * buf, const size_t buf_sz) {
 
-    size_t read_bytes;
+    int ret;
 
-    read_bytes = session->iface.read(session, addr, buf, buf_sz);
-    if (read_bytes == -1) return -1;
+    ret = session->iface.read(session, addr, buf, buf_sz);
+    if (ret == -1) return -1;
 
     return 0;
 }
 
 
 
-ssize_t mc_write(const mc_session * session, const uintptr_t addr, 
-                 const cm_byte * buf, const size_t buf_sz) {
+int mc_write(const mc_session * session, const uintptr_t addr, 
+             const cm_byte * buf, const size_t buf_sz) {
 
-    size_t write_bytes;
+    int ret;
 
-    write_bytes = session->iface.write(session, addr, buf, buf_sz);
-    if (write_bytes) return -1;
+    ret = session->iface.write(session, addr, buf, buf_sz);
+    if (ret == -1) return -1;
 
     return 0;
 }

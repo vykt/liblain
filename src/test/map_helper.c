@@ -31,7 +31,6 @@ void create_lst_wrapper(cm_lst_node * node, void * data) {
 }
 
 
-
 //assert the length of a list, also works as an integration test for CMore
 void assert_lst_len(cm_lst * list, int len) {
 
@@ -62,7 +61,6 @@ void assert_lst_len(cm_lst * list, int len) {
 }
 
 
-
 //basic assertion of state for a mc_vm_map
 void assert_vm_map(mc_vm_map * map, int vm_areas_len, int vm_objs_len,
                    int vm_areas_unmapped_len, int vm_objs_unmapped_len,
@@ -82,7 +80,6 @@ void assert_vm_map(mc_vm_map * map, int vm_areas_len, int vm_objs_len,
 
     return;
 }
-
 
 
 //assert the state of all [unmapped] objects inside a mc_vm_map
@@ -105,9 +102,8 @@ void assert_vm_map_objs(cm_lst * obj_lst, struct obj_check * obj_checks,
 }
 
 
-
 //assert only pathnames, not mapped address ranges
-void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[PATH_MAX],
+void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[NAME_MAX],
                              int start_index, int len) {
 
     mc_vm_obj * obj;
@@ -122,7 +118,6 @@ void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[PATH_MAX],
 
     return;
 }
-
 
 
 //assert the state of all [unmapped] memory areas inside a mc_vm_map
@@ -145,9 +140,8 @@ void assert_vm_map_areas(cm_lst * area_lst, struct area_check * area_checks,
 }
 
 
-
 //assert only pathnames, not mapped address ranges
-void assert_vm_map_areas_aslr(cm_lst * area_lst, char * basenames[PATH_MAX],
+void assert_vm_map_areas_aslr(cm_lst * area_lst, char * basenames[NAME_MAX],
                               int start_index, int len) {
 
     mc_vm_area * area;
@@ -162,7 +156,6 @@ void assert_vm_map_areas_aslr(cm_lst * area_lst, char * basenames[PATH_MAX],
 
     return;
 }
-
 
 
 void assert_vm_obj(mc_vm_obj * obj, char * pathname, char * basename,
@@ -189,7 +182,6 @@ void assert_vm_obj(mc_vm_obj * obj, char * pathname, char * basename,
 
     return;
 }
-
 
 
 /*
@@ -222,7 +214,6 @@ void assert_vm_obj_list(cm_lst * outer_node_lst,
         iter_node = iter_node->next;
     }
 }
-
 
 
 void assert_vm_area(mc_vm_area * area, char * pathname, char * basename,

@@ -26,14 +26,12 @@ struct obj_check {
 };
 
 
-
 struct area_check {
 
     char basename[NAME_MAX];
     uintptr_t start_addr;
     uintptr_t end_addr;
 };
-
 
 
 //map helper functions
@@ -46,12 +44,12 @@ void assert_vm_map(mc_vm_map * map, int vm_areas_len, int vm_objs_len,
 
 void assert_vm_map_objs(cm_lst * obj_lst, struct obj_check * obj_checks,
                         int start_index, int len);
-void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[PATH_MAX],
+void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[NAME_MAX],
                              int start_index, int len);
 
 void assert_vm_map_areas(cm_lst * area_lst, struct area_check * area_checks,
                          int start_index, int len);
-void assert_vm_map_areas_aslr(cm_lst * area_lst, char * basenames[PATH_MAX],
+void assert_vm_map_areas_aslr(cm_lst * area_lst, char * basenames[NAME_MAX],
                               int start_index, int len);
 
 void assert_vm_obj(mc_vm_obj * obj, char * pathname, char * basename,

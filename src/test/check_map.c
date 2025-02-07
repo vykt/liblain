@@ -968,7 +968,7 @@ START_TEST(test__map_unlink_unmapped_area) {
 
     //remove /lib/foo:1: area state
     struct area_check first_areas[3] = {           //start index: 4
-        {NULL,      0x6000, 0x7000},
+        {"",        0x6000, 0x7000},
         {"foo",     0x9000, 0xA000},
         {"foo",     0xA000, 0xB000}
     };
@@ -991,7 +991,7 @@ START_TEST(test__map_unlink_unmapped_area) {
     //remove [heap]: area state:
     struct area_check second_areas[2] = {          //start index: 2
         {"cat",     0x3000, 0x4000},
-        {NULL,      0x6000, 0x7000}
+        {"",        0x6000, 0x7000}
     };
 
     struct area_check second_areas_unmapped[2] = { //start index: 0
@@ -1155,12 +1155,12 @@ START_TEST(test__map_state_inc_obj) {
     //first test: advance from pseudo object
     state.prev_obj_node = m.vm_objs.head;
     _map_state_inc_obj(&state, &m);
-    ck_assert_int_eq(MC_GET_NODE_OBJ(state.prev_obj_node), 0);
+    ck_assert_int_eq(MC_GET_NODE_OBJ(state.prev_obj_node)->id, 0);
     
     //second test: advance from regular object
     state.prev_obj_node = &m_a_n[0];
     _map_state_inc_obj(&state, &m);
-    ck_assert_int_eq(MC_GET_NODE_OBJ(state.prev_obj_node), 1);
+    ck_assert_int_eq(MC_GET_NODE_OBJ(state.prev_obj_node)->id, 1);
 
     return;
     
@@ -1184,7 +1184,7 @@ START_TEST(test__map_resync_area) {
     //remove [heap]: area state
     struct area_check first_areas[2] = {           //start index: 2
         {"cat",     0x3000, 0x4000},
-        {NULL,      0x6000, 0x7000}
+        {"",        0x6000, 0x7000}
     };
 
     struct area_check first_areas_unmapped[1] = {  //start index 0
@@ -1206,9 +1206,9 @@ START_TEST(test__map_resync_area) {
     
     //remove /lib/foo:1,2: area state
     struct area_check second_areas[3] = {          //start index 3
-        {NULL,      0x6000, 0x7000},
+        {"",        0x6000, 0x7000},
         {"foo",     0xA000, 0xB000},
-        {NULL,      0xC000, 0xD000}
+        {"",        0xC000, 0xD000}
     };
 
     struct area_check second_areas_unmapped[3] = { //start index 0
@@ -1232,7 +1232,7 @@ START_TEST(test__map_resync_area) {
     
     //remove /bin/cat:1,2,3: area state
     struct area_check third_areas[2] = {           //start index: 0
-        {NULL, 0x6000, 0x7000},
+        {"",   0x6000, 0x7000},
         {"foo", 0xA000, 0xB000}
     };
 
@@ -1692,7 +1692,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     TCase * tc_send_entry;
     TCase * tc_init_traverse_state;
     TCase * tc_clean_unmapped;
-     #endif
+    #endif
 
     Suite * s = suite_create("map");
 
@@ -1701,11 +1701,18 @@ START_TEST(test_mc_map_clean_unmapped) {
     tc_new_del_vm_map = tcase_create("new_del_vm_map");
     tcase_add_test(tc_new_del_vm_map, test_mc_new_del_vm_map);
 
-    //tc__make_zero_obj
+    #ifdef DEBUG
+    //tc__new_del_vm_obj
     tc__new_del_vm_obj = tcase_create("_new_del_vm_obj");
     tcase_add_checked_fixture(tc__new_del_vm_obj, 
                               _setup_empty_vm_map, _teardown_vm_map);
     tcase_add_test(tc__new_del_vm_obj, test__map_new_del_vm_obj);
+
+    //tc__make_zero_obj
+    tc__make_zero_obj = tcase_create("_make_zero_obj");
+    tcase_add_checked_fixture(tc__make_zero_obj, 
+                              _setup_empty_vm_map, _teardown_vm_map);
+    tcase_add_test(tc__make_zero_obj, test__map_make_zero_obj);
 
     //tc__init_vm_area
     tc__init_vm_area = tcase_create("_init_vm_area");
@@ -1830,7 +1837,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     tcase_add_checked_fixture(tc_clean_unmapped, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc_clean_unmapped, test_mc_map_clean_unmapped);
-    
+    #endif
 
     //add test cases to map test suite
     suite_add_tcase(s, tc_new_del_vm_map);

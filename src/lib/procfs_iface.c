@@ -222,13 +222,15 @@ int procfs_read(const mc_session * session, const uintptr_t addr,
                           read_left > session->page_size 
                           ? session->page_size : read_left);
 		//if error or EOF before reading len bytes
-		if (read_bytes == -1 || (read_bytes == 0 && read_done < buf_sz)) {
+		if (read_bytes == -1 || (read_bytes == 0
+            && read_done < (ssize_t) buf_sz)) {
+
             mc_errno = MC_ERR_READ_WRITE;
             return -1;
         }
 		read_done += read_bytes;
 
-	} while (read_done < buf_sz);
+	} while (read_done < (ssize_t) buf_sz);
 
 	return 0;
 }
@@ -261,13 +263,15 @@ int procfs_write(const mc_session * session, const uintptr_t addr,
                             write_left > session->page_size 
                             ? session->page_size : write_left);
 		//if error or EOF before writing len bytes
-		if (write_bytes == -1 || (write_bytes == 0 && write_done < buf_sz)) {
+		if (write_bytes == -1 || (write_bytes == 0
+            && write_done < (ssize_t) buf_sz)) {
+
             mc_errno = MC_ERR_READ_WRITE;
             return -1;
         }
 		write_done += write_bytes;
 
-	} while (write_done < buf_sz);
+	} while (write_done < (ssize_t) buf_sz);
 
 	return 0;
 }

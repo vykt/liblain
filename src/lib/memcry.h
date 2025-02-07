@@ -18,7 +18,7 @@ extern "C"{
 #include <cmore.h>
 
 
-//these macros take a cm_list_node pointer
+//easy extract from a cm_list_node pointer
 #define MC_GET_NODE_AREA(node)  ((mc_vm_area *) (node->data))
 #define MC_GET_NODE_OBJ(node)   ((mc_vm_obj *) (node->data))
 #define MC_GET_NODE_PTR(node)   *((cm_lst_node **) (node->data))
@@ -32,6 +32,8 @@ extern "C"{
 //pseudo object id
 #define MC_ZERO_OBJ_ID -1
 
+//-Wsign-compare '-1'
+#define MC_UNDEF_ADDR UINTPTR_MAX
 
 
 //interface types
@@ -39,7 +41,6 @@ enum mc_iface_type {
     PROCFS = 0,
     KRNCRY = 1
 };
-
 
 
 /*
@@ -112,10 +113,10 @@ typedef struct {
     int (*open)(struct _mc_session *, const int);
     int (*close)(struct _mc_session *);
     int (*update_map)(const struct _mc_session *, mc_vm_map *);
-    ssize_t (*read)(const struct _mc_session *,
-                    const uintptr_t, cm_byte *, const size_t);
-    ssize_t (*write)(const struct _mc_session *,
-                     const uintptr_t, const cm_byte *, const size_t);
+    int (*read)(const struct _mc_session *,
+                const uintptr_t, cm_byte *, const size_t);
+    int (*write)(const struct _mc_session *,
+                 const uintptr_t, const cm_byte *, const size_t);
 
 } mc_iface;
 

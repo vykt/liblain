@@ -25,9 +25,9 @@
 
 
 //globals
-mc_vm_map m;
-mc_session s;
-pid_t pid;
+static mc_vm_map m;
+static mc_session s;
+static pid_t pid;
 
 
 

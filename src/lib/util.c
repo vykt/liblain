@@ -110,7 +110,7 @@ char * mc_pathname_to_basename(const char * pathname) {
 
     char * basename = strrchr(pathname, (int) '/');
     
-    if (basename == NULL) return pathname;
+    if (basename == NULL) return (char *) pathname;
     return basename + 1;
 }
 

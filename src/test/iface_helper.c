@@ -122,7 +122,7 @@ void assert_iface_update_map(enum mc_iface_type iface) {
     ret = mc_update_map(&s, &m);
     ck_assert_int_eq(ret, 0);
 
-    assert_target_map(pid, &m);
+    assert_target_map(&m);
     
 
     //second test: update filled map (map new areas)
@@ -131,7 +131,7 @@ void assert_iface_update_map(enum mc_iface_type iface) {
     ret = mc_update_map(&s, &m);
     ck_assert_int_eq(ret, 0);
 
-    assert_target_map(pid, &m);
+    assert_target_map(&m);
 
 
     //third test: update filled map (unmap old areas)
@@ -140,7 +140,7 @@ void assert_iface_update_map(enum mc_iface_type iface) {
     ret = mc_update_map(&s, &m);
     ck_assert_int_eq(ret, 0);
 
-    assert_target_map(pid, &m);
+    assert_target_map(&m);
 
 
     //fourth test: process exited

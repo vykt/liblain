@@ -48,7 +48,7 @@ cm_lst_node * _get_starting_obj(const mc_vm_map * vm_map) {
     vm_obj = MC_GET_NODE_OBJ(obj_node);
 
     //if pseudo object has no areas
-    if (vm_obj->start_addr == -1 || vm_obj->start_addr == 0x0) {
+    if (vm_obj->start_addr == MC_UNDEF_ADDR || vm_obj->start_addr == 0x0) {
         obj_node = obj_node->next;
     }
 

@@ -208,7 +208,7 @@ int _map_obj_add_area(mc_vm_obj * obj,
 
 
     //if this object has no areas yet
-    if (obj->start_addr == -1 || obj->start_addr == 0x0) {
+    if (obj->start_addr == MC_UNDEF_ADDR || obj->start_addr == 0x0) {
 
         //set new addr bounds
         obj->start_addr = area->start_addr;
@@ -313,8 +313,8 @@ int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * area_node) {
 DBG_STATIC DBG_INLINE
 int _map_obj_rmv_last_area(mc_vm_obj * obj, cm_lst_node * last_area_node) {
 
-    int ret, index;
-    cm_lst_node * last_area_outer_node, * temp_node;
+    int ret;
+    cm_lst_node * last_area_outer_node;
 
 
     //remove area node from the object

@@ -11,7 +11,7 @@
 
 //local headers
 #include "suites.h"
-#include "iface_helper.c"
+#include "iface_helper.h"
 
 //test target headers
 #include "../lib/memcry.h"

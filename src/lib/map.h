@@ -6,11 +6,6 @@
 #include "krncry.h"
 
 
-//TODO REMOVE
-#define DEBUG
-
-
-
 #define _MAP_OBJ_PREV 0
 #define _MAP_OBJ_NEW  1
 #define _MAP_OBJ_NEXT 2

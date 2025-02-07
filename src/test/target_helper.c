@@ -175,7 +175,7 @@ pid_t start_target() {
     pid_t target_pid, parent_pid;
     char pid_buf[8];
     
-    char * argv[3] = {TARGET_PATH, 0, 0};
+    char * argv[3] = {TARGET_NAME, 0, 0};
     target_state = UNCHANGED;
     
 
@@ -191,7 +191,7 @@ pid_t start_target() {
     //change image to target in child
     if (target_pid == 0) {
 
-        ret = execve(TARGET_PATH, argv, NULL);
+        ret = execve(TARGET_NAME, argv, NULL);
         ck_assert_int_ne(ret, -1);
 
     //if parent, register signal handler for child
@@ -253,12 +253,11 @@ void change_target_map(pid_t pid) {
 
 
 
-void assert_target_map(pid_t pid, mc_vm_map * map) {
+void assert_target_map(mc_vm_map * map) {
 
     switch(target_state) {
 
         case UNCHANGED:
-
             assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_unchanged,
                                      0, TARGET_AREAS_UNCHANGED);
             assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_unchanged,
@@ -266,7 +265,6 @@ void assert_target_map(pid_t pid, mc_vm_map * map) {
             break;
 
         case MAPPED:
-
             assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_mapped,
                                      0, TARGET_AREAS_MAPPED);
             assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_mapped,
@@ -274,13 +272,11 @@ void assert_target_map(pid_t pid, mc_vm_map * map) {
             break;
 
         case UNMAPPED:
-
             assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_unmapped,
                                      0, TARGET_AREAS_UNMAPPED);
             assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_unmapped,
                                     0, TARGET_OBJS_UNMAPPED);
             break;
-
         
     } //end switch
     

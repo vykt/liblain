@@ -13,11 +13,14 @@
 #[parameters]
 CFLAGS=${_CFLAGS} -fsanitize=address
 WARN_OPTS+=${_WARN_OPTS} -Wno-unused-variable -Wno-unused-but-set-variable
-LDFLAGS=-L${LIB_BIN_DIR} -Wl,-rpath=${LIB_BIN_DIR} -lcmore -lcheck -static-libasan
+LDFLAGS=-L${LIB_BIN_DIR} \
+        -Wl,-rpath=${LIB_BIN_DIR} -lmcry -lcmore -lcheck -lsubunit -static-libasan
 
 
 #[build constants]
-SOURCES_TEST=main.c
+SOURCES_TEST=check_map.c check_procfs_iface.c check_krncry_iface.c \
+             check_map_util.c check_util.c map_helper.c target_helper.c \
+			 iface_helper.c info.c main.c
 OBJECTS_TEST=${SOURCES_TEST:%.c=${BUILD_DIR}/%.o}
 TARGET_DIR=${shell pwd}/target
 
@@ -40,4 +43,5 @@ tgt:
 
 clean:
 > ${MAKE} -C ${TARGET_DIR} clean BUILD_DIR='${BUILD_DIR}'
-> -rm -v ${BUILD_DIR}/{*.o,${TESTS}}
+> -rm -v ${BUILD_DIR}/*.o
+> -rm -v ${BUILD_DIR}/${TESTS}

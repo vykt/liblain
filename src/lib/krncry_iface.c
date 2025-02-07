@@ -34,7 +34,7 @@ char _krncry_iface_get_major() {
 
     int fd;
     
-    size_t read_bytes;
+    ssize_t read_bytes;
     char major, read_buf[8];
 
 
@@ -122,6 +122,10 @@ int krncry_close(mc_session * session) {
     ioctl_call = KRNCRY_APPLY_TEMPLATE((char) session->major, 
                                        KRNCRY_TEMPLATE_RELEASE_TGT);
     ret = ioctl(session->fd_dev_krncry, ioctl_call, &arg);
+    if (ret == -1) {
+
+        return -1;
+    } //FIXME check this is correct
 
     //close device
     close(session->fd_dev_krncry);
@@ -172,13 +176,13 @@ int krncry_update_map(const mc_session * session, mc_vm_map * vm_map) {
 
 
     //update the map with each received segment
-    _map_init_traverse_state(vm_map, &state);
+    map_init_traverse_state(&state, vm_map);
 
     for (int i = 0; i < count; ++i) {
         
-        ret = _map_send_entry(vm_map, &state, 
-                              (struct vm_entry *) 
-                              (arg.u_buf + (i * sizeof(struct vm_entry))));
+        ret = map_send_entry((struct vm_entry *) 
+                             (arg.u_buf + (i * sizeof(struct vm_entry))),
+                             &state, vm_map);
         if (ret) {
             munmap(arg.u_buf, u_buf_sz);
             return -1;
@@ -221,13 +225,15 @@ int krncry_read(const mc_session * session, const uintptr_t addr,
                           read_left > session->page_size 
                           ? session->page_size : read_left);
 		//if error or EOF before reading len bytes
-		if (read_bytes == -1 || (read_bytes == 0 && read_done < buf_sz)) {
+		if (read_bytes == -1 || (read_bytes == 0
+            && read_done < (ssize_t) buf_sz)) {
+
             mc_errno = MC_ERR_READ_WRITE;
             return -1;
         }
 		read_done += read_bytes;
 
-	} while (read_done < buf_sz);
+	} while (read_done < (ssize_t) buf_sz);
 
 	return 0;
 }
@@ -262,13 +268,15 @@ int krncry_write(const mc_session * session, const uintptr_t addr,
                             write_left > session->page_size 
                             ? session->page_size : write_left);
 		//if error or EOF before writing len bytes
-		if (write_bytes == -1 || (write_bytes == 0 && write_done < buf_sz)) {
+		if (write_bytes == -1 || (write_bytes == 0
+            && write_done < (ssize_t) buf_sz)) {
+
             mc_errno = MC_ERR_READ_WRITE;
             return -1;
         }
 		write_done += write_bytes;
 
-	} while (write_done < buf_sz);
+	} while (write_done < (ssize_t) buf_sz);
 
 	return 0;
 }

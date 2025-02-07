@@ -1,5 +1,5 @@
-#ifndef TARGET_H
-#define TARGET_H
+#ifndef TARGET_HELPER_H
+#define TARGET_HELPER_H
 
 //system headers
 #include <unistd.h>
@@ -66,7 +66,7 @@ enum target_map_state {
 pid_t start_target();
 void end_target(pid_t pid);
 void change_target_map(pid_t pid);
-void assert_target_map(pid_t pid, mc_vm_map * map);
+void assert_target_map(mc_vm_map * map);
 
 
 #endif

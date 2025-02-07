@@ -28,8 +28,8 @@
 
 
 //globals
-mc_session s;
-pid_t pid;
+static mc_session s;
+static pid_t pid;
 
 
 /*
@@ -156,7 +156,7 @@ START_TEST(test_mc_name_by_pid) {
 
     //second test: target does not exist
     memset(name_buf, 0, NAME_MAX);
-    ret = mc_name_by_pid(pow(2, 32) - 1, name_buf);
+    ret = mc_name_by_pid((int) (pow(2, 32)) - 1, name_buf);
     ck_assert_int_eq(ret, -1);
     ck_assert_str_eq(name_buf, "\0");
 
