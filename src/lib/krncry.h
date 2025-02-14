@@ -9,7 +9,6 @@ extern "C" {
 #include <linux/limits.h>
 
 
-
 /*
  *  This header comes from the krncry project.
  */
@@ -43,14 +42,12 @@ typedef unsigned long krncry_pgprot_t;
 #define VM_SHARED	 0x00000008
 
 
-
 /*
  *  --- [DATA TYPES] ---
  */
 
 // [byte]
 typedef unsigned char kc_byte;
-
 
 
 // [ioctl argument]

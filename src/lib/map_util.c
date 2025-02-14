@@ -32,7 +32,6 @@ bool _is_map_empty(const mc_vm_map * vm_map) {
 }
 
 
-
 /*
  *  Determines starting object for iteration. 
  *  Will skip the pseudo-object if it is empty.
@@ -56,7 +55,6 @@ cm_lst_node * _get_starting_obj(const mc_vm_map * vm_map) {
 }
 
 
-
 DBG_STATIC DBG_INLINE
 cm_lst_node * _get_obj_last_area(const mc_vm_obj * vm_obj) {
 
@@ -73,7 +71,6 @@ cm_lst_node * _get_obj_last_area(const mc_vm_obj * vm_obj) {
 
     return last_node;
 }
-
 
 
 DBG_STATIC
@@ -158,7 +155,6 @@ cm_lst_node * _fast_addr_find(const mc_vm_map * vm_map,
 }
 
 
-
 DBG_STATIC
 cm_lst_node * _obj_name_find(const mc_vm_map * vm_map, 
                               const char * name, const int mode) {
@@ -214,7 +210,6 @@ off_t mc_get_area_offset(const cm_lst_node * area_node,
 }
 
 
-
 off_t mc_get_obj_offset(const cm_lst_node * obj_node,
                         const uintptr_t addr) {
 
@@ -222,7 +217,6 @@ off_t mc_get_obj_offset(const cm_lst_node * obj_node,
 
     return (addr - vm_obj->start_addr);
 }
-
 
 
 off_t mc_get_area_offset_bnd(const cm_lst_node * area_node, 
@@ -235,7 +229,6 @@ off_t mc_get_area_offset_bnd(const cm_lst_node * area_node,
 }
 
 
-
 off_t mc_get_obj_offset_bnd(const cm_lst_node * obj_node, 
                             const uintptr_t addr) {
 
@@ -244,7 +237,6 @@ off_t mc_get_obj_offset_bnd(const cm_lst_node * obj_node,
     if ((addr >= vm_obj->end_addr) || (addr < vm_obj->start_addr)) return -1;
     return (addr - vm_obj->start_addr);
 }
-
 
 
 cm_lst_node * mc_get_area_node_by_addr(const mc_vm_map * vm_map, 
@@ -262,7 +254,6 @@ cm_lst_node * mc_get_area_node_by_addr(const mc_vm_map * vm_map,
 }
 
 
-
 cm_lst_node * mc_get_obj_node_by_addr(const mc_vm_map * vm_map, 
                                       const uintptr_t addr,
                                       off_t * offset) {
@@ -278,7 +269,6 @@ cm_lst_node * mc_get_obj_node_by_addr(const mc_vm_map * vm_map,
 }
 
 
-
 cm_lst_node * mc_get_obj_node_by_pathname(const mc_vm_map * vm_map, 
                                           const char * pathname) {
 
@@ -289,7 +279,6 @@ cm_lst_node * mc_get_obj_node_by_pathname(const mc_vm_map * vm_map,
 
     return obj_node;
 }
-
 
 
 cm_lst_node * mc_get_obj_node_by_basename(const mc_vm_map * vm_map, 

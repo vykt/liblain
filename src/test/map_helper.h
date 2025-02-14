@@ -16,7 +16,6 @@
 #include "../lib/memcry.h"
 
 
-
 //map test structures
 struct obj_check {
 
@@ -38,6 +37,7 @@ struct area_check {
 void create_lst_wrapper(cm_lst_node * node, void * data);
 void assert_lst_len(cm_lst * list, int len);
 
+void assert_names(char * name_1, char * name_2);
 void assert_vm_map(mc_vm_map * map, int vm_areas_len, int vm_objs_len,
                    int vm_areas_unmapped_len, int vm_objs_unmapped_len,
                    int next_id_area, int next_id_obj);

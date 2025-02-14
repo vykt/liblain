@@ -42,5 +42,4 @@ cm_lst_node * mc_get_obj_node_by_pathname(const mc_vm_map * vm_map,
 cm_lst_node * mc_get_obj_node_by_basename(const mc_vm_map * vm_map, 
                                           const char * basename);
 
-
 #endif

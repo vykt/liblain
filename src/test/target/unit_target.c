@@ -17,19 +17,16 @@
 #include "../target_helper.h"
 
 
-
 /*
  * Unit target is tied directly to `../target_helper.{c,h}`. Changing this 
  * target likely necessitates also changing the target helper.
  */
-
 
 /*
  * This program sleeps indefinitely, awaiting a signal from its parent,
  * which will cause it to dlopen() an additional library and hence change
  * its memory map. This is done from inside unit tests.
  */
-
 
 
 //globals
@@ -41,7 +38,6 @@ enum target_map_state state = UNCHANGED;
  */
 
  char rw_buf[TARGET_BUF_SZ] = IFACE_RW_BUF_STR;
-
 
 
 //unit test signal handler
@@ -60,7 +56,6 @@ void sigusr1_handler() {
 
     return;
 }
-
 
 
 int main(int argc, char ** argv) {

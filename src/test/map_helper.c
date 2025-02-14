@@ -20,7 +20,6 @@
 #include "../lib/map.h"
 
 
-
 //initialise a cm_lst_node stub wrapper
 void create_lst_wrapper(cm_lst_node * node, void * data) {
 
@@ -45,18 +44,38 @@ void assert_lst_len(cm_lst * list, int len) {
     //if length is one (1), ensure head is not null
     ck_assert_ptr_nonnull(list->head);
     cm_lst_node * iter = list->head;
-    if (len == 1) return;
+
+    if (len == 1) {
+        ck_assert_ptr_null(iter->next);
+        ck_assert_ptr_null(iter->prev);
+        return;
+    }
 
     //if length is greater than 1 (1), iterate over nodes to ensure length
     ck_assert_ptr_nonnull(iter->next);
     iter = iter->next;
 
     for (int i = 1; i < len; ++i) {
-
         ck_assert(iter != list->head);
         iter = iter->next;
     }
     
+    return;
+}
+
+
+//properly assert a potentially NULL string pair
+void assert_names(char * a, char * b) {
+
+    //if one is NULL, both must be NULL
+    if (a == NULL || b == NULL) {
+        ck_assert_ptr_eq(a, b);
+        
+    //otherwise, assert strings
+    } else {
+        ck_assert_str_eq(a, b);
+    }
+
     return;
 }
 
@@ -93,7 +112,7 @@ void assert_vm_map_objs(cm_lst * obj_lst, struct obj_check * obj_checks,
         obj = cm_lst_get_p(obj_lst, start_index + i);
         ck_assert_ptr_nonnull(obj);
 
-        ck_assert_str_eq(obj->basename, obj_checks[i].basename);
+        assert_names(obj->basename, obj_checks[i].basename);
         ck_assert_int_eq(obj->start_addr, obj_checks[i].start_addr);
         ck_assert_int_eq(obj->end_addr, obj_checks[i].end_addr);
     }
@@ -113,7 +132,7 @@ void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[NAME_MAX],
         obj = cm_lst_get_p(obj_lst, start_index + i);
         ck_assert_ptr_nonnull(obj);
 
-        ck_assert_str_eq(obj->basename, basenames[i]);
+        assert_names(obj->basename, basenames[i]);
     }
 
     return;
@@ -131,7 +150,7 @@ void assert_vm_map_areas(cm_lst * area_lst, struct area_check * area_checks,
         area = cm_lst_get_p(area_lst, start_index + i);
         ck_assert_ptr_nonnull(area);
 
-        ck_assert_str_eq(area->basename, area_checks[i].basename);
+        assert_names(area->basename, area_checks[i].basename);
         ck_assert_int_eq(area->start_addr, area_checks[i].start_addr);
         ck_assert_int_eq(area->end_addr, area_checks[i].end_addr);
     }
@@ -151,7 +170,7 @@ void assert_vm_map_areas_aslr(cm_lst * area_lst, char * basenames[NAME_MAX],
         area = cm_lst_get_p(area_lst, start_index + i);
         ck_assert_ptr_nonnull(area);
 
-        ck_assert_str_eq(area->basename, basenames[i]);
+        assert_names(area->basename, basenames[i]);
     }
 
     return;
@@ -163,8 +182,8 @@ void assert_vm_obj(mc_vm_obj * obj, char * pathname, char * basename,
                    int last_vm_areas_len, int id, bool mapped) {
 
     //check names
-    ck_assert_str_eq(obj->pathname, pathname);
-    ck_assert_str_eq(obj->basename, basename);
+    assert_names(obj->pathname, pathname);
+    assert_names(obj->basename, basename);
 
     //check addresses
     ck_assert_int_eq(obj->start_addr, start_addr);
@@ -222,8 +241,8 @@ void assert_vm_area(mc_vm_area * area, char * pathname, char * basename,
                     cm_lst_node * last_obj_node_p, int id, bool mapped) {
 
     //check names
-    ck_assert_str_eq(area->pathname, pathname);
-    ck_assert_str_eq(area->basename, basename);
+    assert_names(area->pathname, pathname);
+    assert_names(area->basename, basename);
 
     //check addresses
     ck_assert_int_eq(area->start_addr, start_addr);

@@ -55,7 +55,6 @@ START_TEST(test_krncry_mc_open_close) {
 } END_TEST
 
 
-
 //krncry_update_map() [no fixture]
 START_TEST(test_krncry_mc_update_map) {
 
@@ -63,7 +62,6 @@ START_TEST(test_krncry_mc_update_map) {
     return;
     
 } END_TEST
-
 
 
 //krncry_read() & krncry_write() [no fixture]

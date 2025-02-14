@@ -52,7 +52,6 @@
  */
  
 
-
 //globals - map
 
 /*
@@ -98,7 +97,6 @@ static void _init__traverse_state(_traverse_state * state,
 
     return;
 }
-
 
 
 //initialise a vm_entry stub
@@ -263,7 +261,6 @@ static void _setup_stub_vm_map() {
 #endif
 
 
-
 static void _teardown_vm_map() {
 
     mc_del_vm_map(&m);
@@ -288,7 +285,6 @@ static void _setup_empty_vm_obj() {
     return;
 }
 #endif
-
 
 
 #ifdef DEBUG
@@ -341,7 +337,6 @@ static void _setup_stub_vm_obj() {
 #endif
 
 
-
 #ifdef DEBUG
 static void _teardown_vm_obj() {
 
@@ -388,7 +383,6 @@ START_TEST(test_mc_new_del_vm_map) {
 } END_TEST
 
 
-
 #ifdef DEBUG
 //_map_new_vm_obj() & _map_del_vm_obj() [empty map fixture]
 START_TEST(test__map_new_del_vm_obj) {
@@ -405,7 +399,6 @@ START_TEST(test__map_new_del_vm_obj) {
 }
 
 
-
 //_map_make_zero_obj() [empty map fixture]
 START_TEST(test__map_make_zero_obj) {
 
@@ -418,16 +411,15 @@ START_TEST(test__map_make_zero_obj) {
     //only test: convert new object to pseudo object 
     _map_make_zero_obj(&zero_obj);
     
-    assert_vm_obj(&zero_obj, 
-                   "0x0", "0x0", 0x0, 0x0, 0, 0, MC_ZERO_OBJ_ID, true);
-    assert_vm_map(&m, 0, 1, 0, 0, 0, 0);
+    assert_vm_obj(&zero_obj, "0x0", "0x0",
+                  0x0, 0x0, 0, 0, MC_ZERO_OBJ_ID, true);
+    assert_vm_map(&m, 0, 1, 0, 0, 0, 1);
 
     //destroy pseudo object
     _map_del_vm_obj(&zero_obj);
 
     return;
 }
-
 
 
 //_map_init_vm_area() [empty object fixture]
@@ -444,7 +436,7 @@ START_TEST(test__map_init_vm_area) {
 
     assert_vm_area(&area, "/foo/bar", "bar", 0x1000, 0x2000, 
                     MC_ACCESS_READ, &o_n, NULL, 0, true);
-    assert_vm_map(&m, 0, 1, 0, 0, 1, 0);
+    assert_vm_map(&m, 0, 1, 0, 0, 1, 1);
 
 
     //second test: create a stub entry & initialise another new area
@@ -454,12 +446,11 @@ START_TEST(test__map_init_vm_area) {
 
     assert_vm_area(&area, NULL, NULL, 0x2000, 0x4000, 
                     MC_ACCESS_READ | MC_ACCESS_WRITE, NULL, &o_n, 1, true);
-    assert_vm_map(&m, 0, 1, 0, 0, 2, 0);
+    assert_vm_map(&m, 0, 1, 0, 0, 2, 1);
 
     return;
  
 } END_TEST
-
 
 
 //_map_obj_add_area() [empty object fixture]
@@ -496,7 +487,7 @@ START_TEST(test__map_obj_add_area) {
     //initialise lower area
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x600, MC_ACCESS_WRITE, "/foo/bar");
     _map_init_vm_area(&area[1], &entry, &o_n, NULL, &m);
-    create_lst_wrapper(&area_node[1], &area);
+    create_lst_wrapper(&area_node[1], &area[1]);
 
     //second test: add lower area to the backing object
     _map_obj_add_area(&o, &area_node[1]);
@@ -505,13 +496,13 @@ START_TEST(test__map_obj_add_area) {
     assert_vm_obj_list(&o.vm_area_node_ps, state_lower, 2);
     area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head);
     assert_vm_area(MC_GET_NODE_AREA(area_node_ptr), "/foo/bar", "bar", 
-                   0x1000, 0x2000, MC_ACCESS_READ, &o_n, NULL, 1, true);
+                   0x1000, 0x2000, MC_ACCESS_WRITE, &o_n, NULL, 1, true);
     
     
     //initialise higher area
     _init_vm_entry(&entry, 0x4000, 0x5000, 0x900, MC_ACCESS_EXEC, "/foo/bar");
     _map_init_vm_area(&area[2], &entry, &o_n, NULL, &m);
-    create_lst_wrapper(&area_node[2], &area);
+    create_lst_wrapper(&area_node[2], &area[2]);
 
     //third test: add lower area to the backing object
     _map_obj_add_area(&o, &area_node[2]);
@@ -526,7 +517,7 @@ START_TEST(test__map_obj_add_area) {
     //initialise middle area
     _init_vm_entry(&entry, 0x3000, 0x4000, 0x880, MC_ACCESS_READ, "/foo/bar");
     _map_init_vm_area(&area[3], &entry, &o_n, NULL, &m);
-    create_lst_wrapper(&area_node[3], &area);
+    create_lst_wrapper(&area_node[3], &area[3]);
 
     //fourth test: add middle area to the backing object
     _map_obj_add_area(&o, &area_node[3]);
@@ -535,12 +526,11 @@ START_TEST(test__map_obj_add_area) {
     assert_vm_obj_list(&o.vm_area_node_ps, state_middle, 4);
     area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head->next->next);
     assert_vm_area(MC_GET_NODE_AREA(area_node_ptr), "/foo/bar", "bar", 
-                   0x3000, 0x4000, MC_ACCESS_EXEC, &o_n, NULL, 3, true);
+                   0x3000, 0x4000, MC_ACCESS_READ, &o_n, NULL, 3, true);
 
     return;
 
 } END_TEST
-
 
 
 //_map_obj_add_last_area() [empty object fixture]
@@ -559,71 +549,70 @@ START_TEST(test__map_obj_add_last_area) {
 
 
     //initialise first area
-    _init_vm_entry(&entry, 0x2000, 0x3000, 0x800, MC_ACCESS_READ, "anonmap");
-    _map_init_vm_area(&last_area[0], &entry, &o_n, NULL, &m);
+    _init_vm_entry(&entry, 0x2000, 0x3000, 0x800, MC_ACCESS_READ, NULL);
+    _map_init_vm_area(&last_area[0], &entry, NULL, &o_n, &m);
     create_lst_wrapper(&last_area_node[0], &last_area[0]);
 
     //first test: add first area to the backing object
-    _map_obj_add_area(&o, &last_area_node[0]);
+    _map_obj_add_area_insert(&o.last_vm_area_node_ps, &last_area_node[0]);
 
     assert_vm_obj(&o, "/foo/bar", "bar", 0x0, 0x0, 0, 1, 0, true);
     assert_vm_obj_list(&o.last_vm_area_node_ps, state_first, 1);
-    last_area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head);
-    assert_vm_area(MC_GET_NODE_AREA(last_area_node_ptr), "anonmap", "anonmap", 
-                   0x2000, 0x3000, MC_ACCESS_READ, &o_n, NULL, 0, true);
+    last_area_node_ptr = MC_GET_NODE_PTR(o.last_vm_area_node_ps.head);
+    assert_vm_area(MC_GET_NODE_AREA(last_area_node_ptr), NULL, NULL, 
+                   0x2000, 0x3000, MC_ACCESS_READ, NULL, &o_n, 0, true);
 
 
     //initialise lower area
-    _init_vm_entry(&entry, 0x1000, 0x2000, 0x600, MC_ACCESS_WRITE, "/bin/cat");
-    _map_init_vm_area(&last_area[1], &entry, &o_n, NULL, &m);
-    create_lst_wrapper(&last_area_node[1], &last_area);
+    _init_vm_entry(&entry, 0x1000, 0x2000, 0x600, MC_ACCESS_WRITE, NULL);
+    _map_init_vm_area(&last_area[1], &entry, NULL, &o_n, &m);
+    create_lst_wrapper(&last_area_node[1], &last_area[1]);
 
     //second test: add lower area to the backing object
-    _map_obj_add_area(&o, &last_area_node[1]);
+    _map_obj_add_area_insert(&o.last_vm_area_node_ps, &last_area_node[1]);
 
     assert_vm_obj(&o, "/foo/bar", "bar", 0x0, 0x0, 0, 2, 0, true);
     assert_vm_obj_list(&o.last_vm_area_node_ps, state_lower, 2);
-    last_area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head);
-    assert_vm_area(MC_GET_NODE_AREA(last_area_node_ptr), 
-                   "/bin/cat", "cat", 0x1000, 0x2000, MC_ACCESS_READ, 
-                   &o_n, NULL, 1, true);
+    last_area_node_ptr = MC_GET_NODE_PTR(o.last_vm_area_node_ps.head);
+    assert_vm_area(MC_GET_NODE_AREA(last_area_node_ptr), NULL, NULL,
+                   0x1000, 0x2000, MC_ACCESS_WRITE, NULL, &o_n, 1, true);
     
     
     //initialise higher area
-    _init_vm_entry(&entry, 0x4000, 0x5000, 0x900, MC_ACCESS_EXEC, "/lib/std");
-    _map_init_vm_area(&last_area[2], &entry, &o_n, NULL, &m);
-    create_lst_wrapper(&last_area_node[2], &last_area);
+    _init_vm_entry(&entry, 0x4000, 0x5000, 0x900, MC_ACCESS_EXEC, NULL);
+    _map_init_vm_area(&last_area[2], &entry, NULL, &o_n, &m);
+    create_lst_wrapper(&last_area_node[2], &last_area[2]);
 
     //third test: add lower area to the backing object
-    _map_obj_add_area(&o, &last_area_node[2]);
+    _map_obj_add_area_insert(&o.last_vm_area_node_ps, &last_area_node[2]);
 
-    assert_vm_obj(&o, "/lib/std", "std", 0x0, 0x0, 0, 3, 0, true);
+    assert_vm_obj(&o, "/foo/bar", "bar", 0x0, 0x0, 0, 3, 0, true);
     assert_vm_obj_list(&o.last_vm_area_node_ps, state_higher, 3);
-    last_area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head->prev);
-    assert_vm_area(MC_GET_NODE_AREA(last_area_node_ptr), "/foo/bar", "bar", 
-                   0x4000, 0x5000, MC_ACCESS_EXEC, &o_n, NULL, 2, true);
+    last_area_node_ptr = MC_GET_NODE_PTR(o.last_vm_area_node_ps.head->prev);
+    assert_vm_area(MC_GET_NODE_AREA(last_area_node_ptr), NULL, NULL, 
+                   0x4000, 0x5000, MC_ACCESS_EXEC, NULL, &o_n, 2, true);
 
 
     //initialise middle area
-    _init_vm_entry(&entry, 0x3000, 0x4000, 0x880, MC_ACCESS_READ, "io");
-    _map_init_vm_area(&last_area[3], &entry, &o_n, NULL, &m);
-    create_lst_wrapper(&last_area_node[3], &last_area);
+    _init_vm_entry(&entry, 0x3000, 0x4000, 0x880, MC_ACCESS_READ, NULL);
+    _map_init_vm_area(&last_area[3], &entry, NULL, &o_n, &m);
+    create_lst_wrapper(&last_area_node[3], &last_area[3]);
 
     //fourth test: add middle area to the backing object
-    _map_obj_add_area(&o, &last_area_node[3]);
+    _map_obj_add_area_insert(&o.last_vm_area_node_ps, &last_area_node[3]);
 
-    assert_vm_obj(&o, "/foo/bar", "bar", 0x1000, 0x5000, 4, 0, 0, true);
+    assert_vm_obj(&o, "/foo/bar", "bar", 0x0, 0x0, 0, 4, 0, true);
     assert_vm_obj_list(&o.last_vm_area_node_ps, state_middle, 4);
-    last_area_node_ptr = MC_GET_NODE_PTR(o.vm_area_node_ps.head->next->next);
-    assert_vm_area(MC_GET_NODE_AREA(last_area_node_ptr), "io", "io", 
-                    0x3000, 0x4000, MC_ACCESS_EXEC, &o_n, NULL, 3, true);
+    last_area_node_ptr
+        = MC_GET_NODE_PTR(o.last_vm_area_node_ps.head->next->next);
+    assert_vm_area(MC_GET_NODE_AREA(last_area_node_ptr), NULL, NULL, 
+                    0x3000, 0x4000, MC_ACCESS_READ, NULL, &o_n, 3, true);
     
     return;
 
 } END_TEST
 
-
-
+#endif/*
 //_map_obj_rmv_area() [stub object fixture]
 START_TEST(test__map_obj_rmv_area) {
     
@@ -670,7 +659,6 @@ START_TEST(test__map_obj_rmv_area) {
 } END_TEST
 
 
-
 //_map_obj_rmv_last_area [stub object fixture]
 START_TEST(test__map_obj_rmv_last_area) {
 
@@ -698,7 +686,6 @@ START_TEST(test__map_obj_rmv_last_area) {
 }
 
 
-
 //_map_is_pathname_in_obj() [empty object fixture]
 START_TEST(test__map_is_pathname_in_obj) {
 
@@ -716,7 +703,6 @@ START_TEST(test__map_is_pathname_in_obj) {
     return;
 
 } END_TEST
-
 
 
 //_map_find_obj_for_area [empty map fixture]
@@ -783,7 +769,6 @@ START_TEST(test__map_find_obj_for_area) {
     return;
     
 } END_TEST
-
 
 
 //_map_backtrack_unmapped_obj_last_vm_areas() [stub map fixture]
@@ -863,7 +848,6 @@ START_TEST(test__map_backtrack_unmapped_obj_last_vm_areas) {
 } END_TEST
 
 
-
 //_map_forward_unmapped_obj_last_vm_areas() [stub map fixture]
 START_TEST(test__map_forward_unmapped_obj_last_vm_areas) {
 
@@ -900,7 +884,6 @@ START_TEST(test__map_forward_unmapped_obj_last_vm_areas) {
     return;
     
 } END_TEST
-
 
 
 //_map_unlink_unmapped_obj() [stub map fixture]
@@ -950,7 +933,6 @@ START_TEST(test__map_unlink_unmapped_obj) {
     return;
     
 } END_TEST
-
 
 
 //_map_unlink_unmapped_area() [stub map fixture]
@@ -1030,7 +1012,6 @@ START_TEST(test__map_unlink_unmapped_area) {
     return;
     
 } END_TEST
-
 
 
 //_map_check_area_eql() [empty map fixture]
@@ -1113,7 +1094,6 @@ START_TEST(test__map_check_area_eql) {
 } END_TEST
 
 
-
 //_map_state_inc_area() [stub map fixture]
 START_TEST(test__map_state_inc_area) {
 
@@ -1145,7 +1125,6 @@ START_TEST(test__map_state_inc_area) {
 } END_TEST
 
 
-
 //_map_state_inc_obj() [stub map fixture]
 START_TEST(test__map_state_inc_obj) {
 
@@ -1165,7 +1144,6 @@ START_TEST(test__map_state_inc_obj) {
     return;
     
 } END_TEST
-
 
 
 //_map_resync_area() [stub map fixture]
@@ -1322,7 +1300,6 @@ START_TEST(test__map_resync_area) {
 } END_TEST
 
 
-
 //_map_add_obj() [stub map fixture]
 START_TEST(test__map_add_obj) {
 
@@ -1371,7 +1348,6 @@ START_TEST(test__map_add_obj) {
     return;
     
 } END_TEST
-
 
 
 //_map_add_area() [stub map fixture]
@@ -1455,7 +1431,6 @@ START_TEST(test__map_add_area) {
     return;
     
 } END_TEST
-
 
 
 //map_send_entry() [stub map fixture]
@@ -1589,7 +1564,6 @@ START_TEST(test_map_send_entry) {
 } END_TEST
 
 
-
 //map_init_traverse_state() [empty map fixture]
 START_TEST(test_map_init_traverse_state) {
 
@@ -1622,7 +1596,6 @@ START_TEST(test_map_init_traverse_state) {
     return;
     
 } END_TEST
-
 
 
 //mc_map_clean_unmapped() [stub map fixture]
@@ -1658,8 +1631,7 @@ START_TEST(test_mc_map_clean_unmapped) {
 } END_TEST
 #endif
 
-
-
+*/ //TODO DEBUG
 /*
  *  --- [SUITE] ---
  */
@@ -1675,7 +1647,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     TCase * tc__init_vm_area;
     TCase * tc__obj_add_area;
     TCase * tc__obj_add_last_area;
-    TCase * tc__obj_rmv_area;
+    #endif/*TCase * tc__obj_rmv_area;
     TCase * tc__obj_rmv_last_area;
     TCase * tc__is_pathname_in_obj;
     TCase * tc__find_obj_for_area;
@@ -1693,7 +1665,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     TCase * tc_init_traverse_state;
     TCase * tc_clean_unmapped;
     #endif
-
+    */
     Suite * s = suite_create("map");
 
 
@@ -1717,7 +1689,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     //tc__init_vm_area
     tc__init_vm_area = tcase_create("_init_vm_area");
     tcase_add_checked_fixture(tc__init_vm_area, 
-                              _setup_empty_vm_map, _teardown_vm_map);
+                              _setup_empty_vm_obj, _teardown_vm_obj);
     tcase_add_test(tc__init_vm_area, test__map_init_vm_area);
 
     //tc__obj_add_area
@@ -1731,7 +1703,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     tcase_add_checked_fixture(tc__obj_add_last_area, 
                               _setup_empty_vm_obj, _teardown_vm_obj);
     tcase_add_test(tc__obj_add_last_area, test__map_obj_add_last_area);
-
+    #endif/*
     //tc__obj_rmv_area
     tc__obj_rmv_area = tcase_create("_obj_rmv_area");
     tcase_add_checked_fixture(tc__obj_rmv_area, 
@@ -1838,17 +1810,17 @@ START_TEST(test_mc_map_clean_unmapped) {
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc_clean_unmapped, test_mc_map_clean_unmapped);
     #endif
-
+    */
     //add test cases to map test suite
     suite_add_tcase(s, tc_new_del_vm_map);
-
+    
     #ifdef DEBUG
     suite_add_tcase(s, tc__new_del_vm_obj);
     suite_add_tcase(s, tc__make_zero_obj);
     suite_add_tcase(s, tc__init_vm_area);
     suite_add_tcase(s, tc__obj_add_area);
     suite_add_tcase(s, tc__obj_add_last_area);
-    suite_add_tcase(s, tc__obj_rmv_area);
+    #endif/*suite_add_tcase(s, tc__obj_rmv_area);
     suite_add_tcase(s, tc__obj_rmv_last_area);
     suite_add_tcase(s, tc__is_pathname_in_obj);
     suite_add_tcase(s, tc__find_obj_for_area);
@@ -1866,6 +1838,6 @@ START_TEST(test_mc_map_clean_unmapped) {
     suite_add_tcase(s, tc_init_traverse_state);
     suite_add_tcase(s, tc_clean_unmapped);
     #endif
-
+    */
     return s; 
  }

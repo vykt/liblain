@@ -10,14 +10,13 @@ __thread int mc_errno;
 
 
 /*
- *  TODO: Find a metaprogramming way to do this.
+ *  TODO: Find a better way to do this.
  */
 
 
 void mc_perror(const char * prefix) {
 
     switch(mc_errno) {
-
         // 1XX - user errors
         case MC_ERR_PROC_MEM:
             fprintf(stderr, "%s: %s", prefix, MC_ERR_PROC_MEM_MSG);
@@ -72,7 +71,6 @@ void mc_perror(const char * prefix) {
             fprintf(stderr, "%s: %s", prefix, MC_ERR_PROC_NAV_MSG);
             break;
 
-
         // 3XX - environmental errors
         case MC_ERR_MEM:
             fprintf(stderr, "%s: %s", prefix, MC_ERR_MEM_MSG);
@@ -99,11 +97,9 @@ void mc_perror(const char * prefix) {
 }
 
 
-
 const char * mc_strerror(const int mc_errnum) {
 
     switch (mc_errnum) {
-
         // 1XX - user errors
         case MC_ERR_PROC_MEM:
             return MC_ERR_PROC_MEM_MSG;

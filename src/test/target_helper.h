@@ -8,13 +8,11 @@
 #include "../lib/memcry.h"
 
 
-
 /*
  * The target helper is directly tied to `target/unit_target.c`, changing
  * the target helper means you likely have to change the unit target and 
  * vice versa.
  */
-
 
 
 #define TARGET_AREAS_UNCHANGED 22
@@ -45,7 +43,6 @@ enum target_map_state {
 };
 
 
-
 //target metadata
 #define TARGET_NAME "unit_target"
 #define TARGET_BUF_SZ 16 /* must be even */
@@ -61,12 +58,10 @@ enum target_map_state {
 #define IFACE_NONE_OFF        0x0
 
 
-
 //target helpers
 pid_t start_target();
 void end_target(pid_t pid);
 void change_target_map(pid_t pid);
 void assert_target_map(mc_vm_map * map);
-
 
 #endif

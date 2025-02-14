@@ -2,13 +2,11 @@
 #include "../lib/memcry.h"
 
 
-
 //mc_iface_type names
 static char * _iface_names[2] = {
     "PROCFS",
     "KRNCRY"
 };
-
 
 
 //convert enum to name

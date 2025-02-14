@@ -110,7 +110,6 @@ int krncry_open(mc_session * session, const pid_t pid) {
 }
 
 
-
 int krncry_close(mc_session * session) {
 
     int ret;
@@ -132,7 +131,6 @@ int krncry_close(mc_session * session) {
 
     return 0;
 }
-
 
 
 int krncry_update_map(const mc_session * session, mc_vm_map * vm_map) {
@@ -196,7 +194,6 @@ int krncry_update_map(const mc_session * session, mc_vm_map * vm_map) {
 }
 
 
-
 int krncry_read(const mc_session * session, const uintptr_t addr, 
                 cm_byte * buf, const size_t buf_sz) {
 
@@ -237,7 +234,6 @@ int krncry_read(const mc_session * session, const uintptr_t addr,
 
 	return 0;
 }
-
 
 
 int krncry_write(const mc_session * session, const uintptr_t addr, 

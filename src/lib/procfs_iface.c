@@ -142,7 +142,6 @@ int procfs_open(mc_session * session,  const int pid) {
 }
 
 
-
 int procfs_close(mc_session * session) {
 
     //close procfs mem file
@@ -150,7 +149,6 @@ int procfs_close(mc_session * session) {
 
     return 0;
 }
-
 
 
 int procfs_update_map(const mc_session * session, mc_vm_map * vm_map) {
@@ -195,7 +193,6 @@ int procfs_update_map(const mc_session * session, mc_vm_map * vm_map) {
 }
 
 
-
 int procfs_read(const mc_session * session, const uintptr_t addr, 
                 cm_byte * buf, const size_t buf_sz) {
 
@@ -234,7 +231,6 @@ int procfs_read(const mc_session * session, const uintptr_t addr,
 
 	return 0;
 }
-
 
 
 int procfs_write(const mc_session * session, const uintptr_t addr, 

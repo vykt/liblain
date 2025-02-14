@@ -32,11 +32,6 @@ static mc_session s;
 static pid_t pid;
 
 
-/*
- *  --- [HELPERS] ---
- */
-
-
 
 /*
  *  --- [FIXTURES] ---
@@ -56,7 +51,6 @@ static void _setup_target() {
 
     return;
 }
-
 
 
 //teardown the target
@@ -103,7 +97,6 @@ START_TEST(test_mc_pathname_to_basename) {
 } END_TEST
 
 
-
 //mc_pid_by_name() [target fixture]
 START_TEST(test_mc_pid_by_name) {
 
@@ -131,7 +124,6 @@ START_TEST(test_mc_pid_by_name) {
     return;
 
 } END_TEST
-
 
 
 //mc_name_by_pid() [no fixture]
@@ -167,7 +159,6 @@ START_TEST(test_mc_name_by_pid) {
     return;
    
 } END_TEST
-
 
 
 //mc_bytes_to_hex() [no fixture]

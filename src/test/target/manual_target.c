@@ -12,7 +12,6 @@
 #include <time.h>
 
 
-
 /*
  * This program will continue counting up to confirm that it is running.
  * Press `ENTER` at any point to make the program dlopen() an additional
@@ -20,10 +19,8 @@
  */
 
 
-
 //globals
 struct termios old_term, new_term;
-
 
 
 //Ctrl+C signal handler
@@ -32,7 +29,6 @@ void sigint_handler(int signum) {
     tcsetattr(STDIN_FILENO, TCSANOW, &old_term);
     _exit(signum);
 }
-
 
 
 //set terminal to non-blocking, non-canon, non-echo mode
@@ -52,7 +48,6 @@ void setup_terminal() {
 
     return;
 }
-
 
 
 int main() {

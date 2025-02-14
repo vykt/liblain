@@ -66,7 +66,6 @@ void _map_init_vm_area(mc_vm_area * area, const struct vm_entry * entry,
 }
 
 
-
 /*
  *  Note that while the vm_obj constructor does take a vm_map pointer as a  
  *  parameter, the vm_obj is not added to the vm_map in the constructor. Only 
@@ -99,7 +98,6 @@ void _map_new_vm_obj(mc_vm_obj * obj,
 }
 
 
-
 DBG_STATIC
 void _map_del_vm_obj(mc_vm_obj * obj) {
 
@@ -108,7 +106,6 @@ void _map_del_vm_obj(mc_vm_obj * obj) {
 
     return;
 }
-
 
 
 DBG_STATIC DBG_INLINE
@@ -120,12 +117,11 @@ void _map_make_zero_obj(mc_vm_obj * obj) {
 }
 
 
-
 DBG_STATIC
 int _map_obj_add_area_insert(cm_lst * obj_area_lst, 
                              const cm_lst_node * area_node) {
 
-    cm_lst_node * ret_node, * iter_node;
+    cm_lst_node * ret_node, * iter_node, * inner_node;
     mc_vm_area * area = MC_GET_NODE_AREA(area_node);
 
     //if list is empty, append
@@ -140,8 +136,11 @@ int _map_obj_add_area_insert(cm_lst * obj_area_lst,
         iter_node = obj_area_lst->head;
         for (int i = 0; i < obj_area_lst->len; ++i) {
 
+            //get area node that iter_node points to
+            inner_node = MC_GET_NODE_PTR(iter_node);
+
             //new area ends at a lower address than some existing area
-            if (area->end_addr < MC_GET_NODE_AREA(iter_node)->end_addr) {
+            if (area->end_addr < MC_GET_NODE_AREA(inner_node)->end_addr) {
             
                 ret_node = cm_lst_ins_nb(obj_area_lst, iter_node, &area_node);
                 break;
@@ -168,7 +167,6 @@ int _map_obj_add_area_insert(cm_lst * obj_area_lst,
 
     return 0;
 }
-
 
 
 DBG_STATIC
@@ -198,7 +196,7 @@ cm_lst_node * _map_obj_find_area_outer_node(cm_lst * obj_area_lst,
 }
 
 
-
+// This function only updates the vm_obj structure itself, not the area list
 DBG_STATIC DBG_INLINE
 int _map_obj_add_area(mc_vm_obj * obj, 
                       const cm_lst_node * area_node) {
@@ -234,7 +232,6 @@ int _map_obj_add_area(mc_vm_obj * obj,
 }
 
 
-
 DBG_STATIC DBG_INLINE
 int _map_obj_add_last_area(mc_vm_obj * obj, 
                            const cm_lst_node * last_area_node) {
@@ -247,7 +244,6 @@ int _map_obj_add_last_area(mc_vm_obj * obj,
 
     return 0;
 }
-
 
 
 DBG_STATIC DBG_INLINE
@@ -304,10 +300,8 @@ int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * area_node) {
 
     obj->end_addr = MC_GET_NODE_AREA(temp_node)->end_addr;
 
-
     return 0;
 }
-
 
 
 DBG_STATIC DBG_INLINE
@@ -336,7 +330,6 @@ int _map_obj_rmv_last_area(mc_vm_obj * obj, cm_lst_node * last_area_node) {
 }
 
 
-
 DBG_STATIC
 bool _map_is_pathname_in_obj(const char * pathname, const mc_vm_obj * obj) {
 
@@ -346,7 +339,6 @@ bool _map_is_pathname_in_obj(const char * pathname, const mc_vm_obj * obj) {
     
     return ret;
 }
-
 
 
 DBG_STATIC DBG_INLINE
@@ -378,7 +370,6 @@ int _map_find_obj_for_area(const struct vm_entry * entry,
 
     return _MAP_OBJ_NEW; 
 }
-
 
 
 //called when deleting an object; moves `last_obj_node_p` back if needed
@@ -425,7 +416,6 @@ int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
 
     return 0;
 }
-
 
 
 //called when adding an object; moves `last_obj_node_p` forward if needed
@@ -489,7 +479,6 @@ int _map_forward_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
 }
 
 
-
 DBG_STATIC DBG_INLINE
 int _map_unlink_unmapped_obj(cm_lst_node * obj_node, mc_vm_map * map) {
 
@@ -537,7 +526,6 @@ int _map_unlink_unmapped_obj(cm_lst_node * obj_node, mc_vm_map * map) {
 
     return 0;
 }
-
 
 
 DBG_STATIC DBG_INLINE
@@ -611,7 +599,6 @@ int _map_unlink_unmapped_area(cm_lst_node * area_node, mc_vm_map * map) {
 }
 
 
-
 DBG_STATIC DBG_INLINE
 int _map_check_area_eql(const struct vm_entry * entry, 
                         const cm_lst_node * area_node) {
@@ -631,7 +618,6 @@ int _map_check_area_eql(const struct vm_entry * entry,
 
     return 0;
 }
-
 
 
 DBG_STATIC
@@ -669,7 +655,6 @@ void _map_state_inc_area(_traverse_state * state, const int inc_type,
 }
 
 
-
 DBG_STATIC
 void _map_state_inc_obj(_traverse_state * state, mc_vm_map * map) {
 
@@ -690,7 +675,6 @@ void _map_state_inc_obj(_traverse_state * state, mc_vm_map * map) {
 
     return;
 }
-
 
 
 DBG_STATIC DBG_INLINE
@@ -728,7 +712,6 @@ int _map_resync_area(const struct vm_entry * entry,
 }
 
 
-
 DBG_STATIC
 cm_lst_node * _map_add_obj(const struct vm_entry * entry,
                            _traverse_state * state, mc_vm_map * map) {
@@ -761,7 +744,6 @@ cm_lst_node * _map_add_obj(const struct vm_entry * entry,
 
     return obj_node;
 }
-
 
 
 DBG_STATIC
@@ -897,7 +879,6 @@ int map_send_entry(const struct vm_entry * entry,
 }
 
 
-
 void map_init_traverse_state(_traverse_state * state, const mc_vm_map * map) {
 
     state->next_area_node = map->vm_areas.head;
@@ -935,7 +916,6 @@ void mc_new_vm_map(mc_vm_map * map) {
 
     return;
 }
-
 
 
 int mc_del_vm_map(mc_vm_map * map) {
@@ -976,7 +956,6 @@ int mc_del_vm_map(mc_vm_map * map) {
 
     return 0;
 }
-
 
  
 int mc_map_clean_unmapped(mc_vm_map * map) {

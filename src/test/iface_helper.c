@@ -28,7 +28,6 @@
  */
 
 
-
 //get address for testing a read / write in a PIE process
 static inline uintptr_t _get_addr(mc_vm_map * m,
                                   int obj_index, int area_index, off_t off) {
@@ -53,7 +52,6 @@ static inline uintptr_t _get_addr(mc_vm_map * m,
 
     return (a->start_addr + off);
 }
-
 
 
 //assert open() and close() methods of an interface
@@ -95,7 +93,6 @@ void assert_iface_open_close(enum mc_iface_type iface,
 
     return;    
 }
-
 
 
 //procfs_update_map() [no fixture]
@@ -161,7 +158,6 @@ void assert_iface_update_map(enum mc_iface_type iface) {
 
     return;   
 }
-
 
 
 //procfs_read() & procfs_write() [no fixture]

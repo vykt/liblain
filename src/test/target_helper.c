@@ -21,7 +21,6 @@
 #include "../lib/memcry.h"
 
 
-
 //globals
 static enum target_map_state target_state;
 
@@ -149,7 +148,6 @@ char objs_unmapped[TARGET_OBJS_UNMAPPED][NAME_MAX] = {
 };
 
 
-
 //signal handlers
 static void _sigusr1_handler() {
 
@@ -163,7 +161,6 @@ static void _sigusr1_handler() {
 
     return;
 }
-
 
 
 //helpers
@@ -205,7 +202,6 @@ pid_t start_target() {
 }
 
 
-
 void end_target(pid_t pid) {
 
     int ret;
@@ -229,7 +225,6 @@ void end_target(pid_t pid) {
 }
 
 
-
 void change_target_map(pid_t pid) {
 
     int ret;
@@ -250,7 +245,6 @@ void change_target_map(pid_t pid) {
 
     return;
 }
-
 
 
 void assert_target_map(mc_vm_map * map) {

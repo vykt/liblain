@@ -71,9 +71,6 @@ typedef struct {
 // [backing object]
 typedef struct {
 
-    char pathname[PATH_MAX];
-    char basename[NAME_MAX];
-
     uintptr_t start_addr;
     uintptr_t end_addr;
 
@@ -82,6 +79,9 @@ typedef struct {
 
     int id;
     bool mapped; //set to false when a map update discovers obj. to be unmapped
+
+    char basename[NAME_MAX];
+    char pathname[PATH_MAX];
 
 } mc_vm_obj;
 

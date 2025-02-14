@@ -48,7 +48,6 @@ void _line_to_name(const char * line_buf, char * name_buf) {
 }
 
 
-
 /*
  *  Use `/proc/pid/status` to get the name of a process. This is
  *  how utilities like `ps` and `top` fetch process names.
@@ -113,7 +112,6 @@ char * mc_pathname_to_basename(const char * pathname) {
     if (basename == NULL) return (char *) pathname;
     return basename + 1;
 }
-
 
 
 pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
@@ -202,7 +200,6 @@ pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
 }
 
 
-
 int mc_name_by_pid(const pid_t pid, char * name_buf) {
 
     int ret;
@@ -213,7 +210,6 @@ int mc_name_by_pid(const pid_t pid, char * name_buf) {
 
     return 0;
 }
-
 
 
 void mc_bytes_to_hex(const cm_byte * inp, const int inp_len, char * out) {

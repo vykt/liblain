@@ -55,7 +55,6 @@ START_TEST(test_procfs_mc_open_close) {
 } END_TEST
 
 
-
 //procfs_update_map() [no fixture]
 START_TEST(test_procfs_mc_update_map) {
 
@@ -63,7 +62,6 @@ START_TEST(test_procfs_mc_update_map) {
     return;
     
 } END_TEST
-
 
 
 //procfs_read() & procfs_write() [no fixture]

@@ -31,7 +31,6 @@ void _set_procfs_session(mc_session * session) {
 }
 
 
-
 DBG_STATIC DBG_INLINE
 void _set_krncry_session(mc_session * session) {
 
@@ -70,7 +69,6 @@ int mc_open(mc_session * session,
 }
 
 
-
 int mc_close(mc_session * session) {
 
     int ret;
@@ -80,7 +78,6 @@ int mc_close(mc_session * session) {
 
     return 0;
 }
-
 
 
 int mc_update_map(const mc_session * session, mc_vm_map * vm_map) {
@@ -94,7 +91,6 @@ int mc_update_map(const mc_session * session, mc_vm_map * vm_map) {
 }
 
 
-
 int mc_read(const mc_session * session, const uintptr_t addr, 
             cm_byte * buf, const size_t buf_sz) {
 
@@ -105,7 +101,6 @@ int mc_read(const mc_session * session, const uintptr_t addr,
 
     return 0;
 }
-
 
 
 int mc_write(const mc_session * session, const uintptr_t addr, 

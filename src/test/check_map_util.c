@@ -23,7 +23,6 @@
  */
 
 
-
 //globals
 static mc_vm_map m;
 static mc_session s;
@@ -53,7 +52,6 @@ static void _setup_target() {
 
     return;
 }
-
 
 
 //teardown the target
@@ -105,7 +103,6 @@ START_TEST(test_mc_get_area_offset) {
 } END_TEST
 
 
-
 //mc_get_obj_offset() [target fixture]
 START_TEST(test_mc_get_obj_offset) {
 
@@ -128,7 +125,6 @@ START_TEST(test_mc_get_obj_offset) {
     return;
     
 } END_TEST
-
 
 
 //mc_get_area_offset_bnd() [target fixture]
@@ -157,7 +153,6 @@ START_TEST(test_mc_get_area_offset_bnd) {
 } END_TEST
 
 
-
 //mc_get_obj_offset_bnd() [target fixture]
 START_TEST(test_mc_get_obj_offset_bnd) {
 
@@ -180,7 +175,6 @@ START_TEST(test_mc_get_obj_offset_bnd) {
     return;
     
 } END_TEST
-
 
 
 //mc_get_area_node_by_addr [target fixture]
@@ -215,7 +209,6 @@ START_TEST(test_mc_get_area_node_by_addr) {
 } END_TEST
 
 
-
 //mc_get_obj_node_by_addr [target fixture]
 START_TEST(test_mc_get_obj_node_by_addr) {
 
@@ -247,7 +240,6 @@ START_TEST(test_mc_get_obj_node_by_addr) {
 } END_TEST
 
 
-
 //mc_get_obj_node_by_pathname() [target fixture]
 START_TEST(test_mc_get_obj_node_by_pathname) {
 
@@ -275,7 +267,6 @@ START_TEST(test_mc_get_obj_node_by_pathname) {
     return;
     
 } END_TEST
-
 
 
 //mc_get_obj_node_by_basename() [target_fixture]

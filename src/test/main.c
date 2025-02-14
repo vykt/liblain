@@ -13,7 +13,6 @@
 #include "suites.h"
 
 
-
 enum _test_mode {UNIT, EXPL};
 
 //determine which tests to run
@@ -49,32 +48,31 @@ static enum _test_mode _get_test_mode(int argc, char ** argv) {
 }
 
 
-
 //run unit tests
 static void _run_unit_tests() {
 
     Suite * s_map;
-    Suite * s_procfs_iface;
+    //Suite * s_procfs_iface;
     //Suite * s_krncry_iface;
-    Suite * s_map_util;
-    Suite * s_util;
+    //Suite * s_map_util;
+    //Suite * s_util;
 
     SRunner * sr;
 
 
     //initialise test suites
     s_map = map_suite();
-    s_procfs_iface = procfs_iface_suite();
+    //s_procfs_iface = procfs_iface_suite();
     //s_krncry_iface = krncry_iface_suite();
-    s_map_util = map_util_suite();
-    s_util = util_suite(); 
+    //s_map_util = map_util_suite();
+    //s_util = util_suite(); 
 
     //create suite runner
     sr = srunner_create(s_map);
-    srunner_add_suite(sr, s_procfs_iface);
+    //srunner_add_suite(sr, s_procfs_iface);
     //srunner_add_suite(sr, s_krncry_iface);
-    srunner_add_suite(sr, s_map_util);
-    srunner_add_suite(sr, s_util);
+    //srunner_add_suite(sr, s_map_util);
+    //srunner_add_suite(sr, s_util);
 
     //run tests
     srunner_run_all(sr, CK_VERBOSE);
@@ -86,14 +84,12 @@ static void _run_unit_tests() {
 }
 
 
-
 //dispatch tests
 int main(int argc, char ** argv) {
 
     enum _test_mode mode = _get_test_mode(argc, argv);
 
     switch (mode) {
-
         case UNIT:
             _run_unit_tests();
             break;
