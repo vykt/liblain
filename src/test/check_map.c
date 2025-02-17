@@ -43,6 +43,16 @@
  *
  *                > Tested through `_map_obj_rmv_area()` 
  *                  and `_map_obj_rmv_last_area()`
+ *
+ *            _map_obj_rmv_area_fast():
+ *
+ *                > Tested through `map_obj_rmv_area()`
+ *                  which calls this function.
+ *
+ *            _map_obj_rmv_last_area_fast():
+ *
+ *                > Tested through `map_obj_rmv_last_area()`
+ *                  which calls this function.
  */
 
 /*
@@ -122,6 +132,62 @@ static void _init_vm_entry(struct vm_entry * entry, unsigned long vm_start,
 }
 
 
+//connect nodes
+static void _connect_nodes(cm_lst_node * node_1, cm_lst_node * node_2) {
+
+    if (node_1 != NULL) {
+        node_1->next = node_2;
+    }
+
+    if (node_2 != NULL) {
+        node_2->prev = node_1;
+    }
+
+    return;
+}
+
+
+//check if a pointer points to a static allocation
+static bool _map_check_static(void * ptr, void * arr, int len, size_t ent_sz) {
+
+    for (int i = 0; i < len; ++i) {
+        if ((cm_byte *) ptr == (((cm_byte *) arr) + (i * ent_sz))) return true;
+    }
+
+    return false;
+}
+
+
+//remove static pointers from a list
+static void _map_remove_static(cm_lst * lst,
+                               void * arr, int len, size_t ent_sz) {
+
+    cm_lst_node * temp_node;
+    cm_lst_node * node = lst->head;
+
+
+    for (int i = 0; i < lst->len; ++i) {
+
+        //static node
+        if (_map_check_static(node, arr, len, ent_sz)) {
+
+            //adjust iteration & unlink static node
+            temp_node = node->next;
+            cm_lst_uln_n(lst, node);
+            node = temp_node;
+            i -= 1;
+
+        //dynamic node
+        } else {            
+            node = node->next;
+
+        } //end if 
+
+    } //end for
+
+    return;
+}
+
 
 /*
  *  --- [FIXTURES] ---
@@ -138,7 +204,13 @@ static void _setup_empty_vm_map() {
 
 
 #ifdef DEBUG
-#define STUB_MAP_LEN 10
+
+/*
+ *  NOTE: I recognise setting this up and tearing it down is an enormous pain,
+ *        and a time sink, however without it the majority of internal
+ *        functions can't be tested.
+ */
+
 //stub map fixture
 static void _setup_stub_vm_map() {
 
@@ -256,13 +328,73 @@ static void _setup_stub_vm_map() {
     ret = _map_obj_add_area(&m_o[3], &m_a_n[9]);
     ck_assert_int_eq(ret, 0);
 
+
+    //connect area nodes
+    for (int i = 0; i < STUB_MAP_AREA_NUM - 1; ++i) {
+        _connect_nodes(&m_a_n[i], &m_a_n[i+1]);
+    }
+    _connect_nodes(&m_a_n[STUB_MAP_AREA_NUM-1], &m_a_n[0]);
+
+    //connect object nodes
+    for (int i = 0; i < STUB_MAP_OBJ_NUM - 1; ++i) {
+        _connect_nodes(&m_o_n[i], &m_o_n[i+1]);
+    }
+    _connect_nodes(m.vm_objs.head, &m_o_n[0]);
+    _connect_nodes(&m_o_n[STUB_MAP_OBJ_NUM-1], m.vm_objs.head);
+
+
+    //connect area nodes and object nodes to the map
+    m.vm_areas.head = &m_a_n[0];
+
+    m.vm_areas.len += STUB_MAP_AREA_NUM;
+    m.vm_objs.len  += STUB_MAP_OBJ_NUM;
+
     return;
 }
 #endif
 
 
+/*
+ *  NOTE: The map starts out containing only statically allocated areas,
+ *        objects, and nodes. After tests are carried out, it can contain
+ *        a mix of statically and dynamically allocated data. The map 
+ *        destructor expects exclusively dynamically allocated data. As such,
+ *        it is important to remove all statically allocated data from the map
+ *        before calling the destructor.
+ */
+
 static void _teardown_vm_map() {
 
+    cm_lst_node * node;
+    mc_vm_obj * obj;
+    mc_vm_area * area;
+
+
+    //setup iteration
+    node = m.vm_objs.head;
+
+    //empty all object lists
+    for (int i = 0; i < m.vm_objs.len; ++i) {
+
+        //empty lists of this object (always dynamic)
+        obj = MC_GET_NODE_OBJ(node);
+        cm_lst_emp(&obj->vm_area_node_ps);
+        cm_lst_emp(&obj->last_vm_area_node_ps);
+        node = node->next;
+    }
+
+    //remove static objects & areas
+    _map_remove_static(&m.vm_objs, m_o_n,
+                       STUB_MAP_OBJ_NUM, sizeof(cm_lst_node));
+    _map_remove_static(&m.vm_areas, m_a_n,
+                       STUB_MAP_AREA_NUM, sizeof(cm_lst_node));
+    _map_remove_static(&m.vm_objs_unmapped, m_o_n,
+                       STUB_MAP_OBJ_NUM, sizeof(cm_lst_node));
+    _map_remove_static(&m.vm_areas_unmapped, m_a_n,
+                       STUB_MAP_AREA_NUM, sizeof(cm_lst_node));
+
+
+    //call regular destructor
     mc_del_vm_map(&m);
 
     return;
@@ -311,6 +443,7 @@ static void _setup_stub_vm_obj() {
         _init_vm_entry(&entry, addr, addr + 0x1000, 
                        file_off, MC_ACCESS_READ, "/foo/bar");
         _map_init_vm_area(&o_a[i], &entry, &o_n, NULL, &m);
+        create_lst_wrapper(&o_a_n[i], &o_a[i]);
         _map_obj_add_area(&o, &o_a_n[i]);
 
         //advance iteration
@@ -326,6 +459,7 @@ static void _setup_stub_vm_obj() {
         _init_vm_entry(&entry, last_addr, last_addr + 0x1000,
                        0x0, MC_ACCESS_READ, NULL);
         _map_init_vm_area(&o_a_l[i], &entry, NULL, &o_n, &m);
+        create_lst_wrapper(&o_a_l_n[i], &o_a_l[i]);
         _map_obj_add_last_area(&o, &o_a_l_n[i]);
     
         //advance iteration
@@ -612,7 +746,7 @@ START_TEST(test__map_obj_add_last_area) {
 
 } END_TEST
 
-#endif/*
+
 //_map_obj_rmv_area() [stub object fixture]
 START_TEST(test__map_obj_rmv_area) {
     
@@ -724,27 +858,31 @@ START_TEST(test__map_find_obj_for_area) {
         create_lst_wrapper(&obj_nodes[i], &objs[i]);
     }
 
+    //connect test objects
+    _connect_nodes(&obj_nodes[0], &obj_nodes[1]);
+    _connect_nodes(&obj_nodes[1], &obj_nodes[2]);
+    
 
     //first test: new object, state empty
     _init__traverse_state(&state, NULL, NULL);
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x500, 
-                   MC_ACCESS_READ, "/lib/libpthread");
+                   MC_ACCESS_READ, "/lib/libc");
 
     ret = _map_find_obj_for_area(&entry, &state);
     ck_assert_int_eq(ret, _MAP_OBJ_NEW);
 
     
     //second test: new object, state full
-    _init__traverse_state(&state, NULL, &obj_nodes[1]);
+    _init__traverse_state(&state, NULL, &obj_nodes[0]);
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x500, 
-                   MC_ACCESS_READ, "/lib/libpthread");
+                   MC_ACCESS_READ, "anonmap");
 
     ret = _map_find_obj_for_area(&entry, &state);
     ck_assert_int_eq(ret, _MAP_OBJ_NEW);
 
 
     //third test: previous object 
-    _init__traverse_state(&state, NULL, &obj_nodes[1]);
+    _init__traverse_state(&state, NULL, &obj_nodes[0]);
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x500, 
                    MC_ACCESS_READ, "/lib/libc");
 
@@ -753,15 +891,15 @@ START_TEST(test__map_find_obj_for_area) {
 
 
     //fourth test: next object 
-    _init__traverse_state(&state, NULL, &obj_nodes[1]);
+    _init__traverse_state(&state, NULL, &obj_nodes[0]);
     _init_vm_entry(&entry, 0x1000, 0x2000, 0x500, 
-                   MC_ACCESS_READ, "anonmap");
+                   MC_ACCESS_READ, "/lib/libpthread");
 
     ret = _map_find_obj_for_area(&entry, &state);
     ck_assert_int_eq(ret, _MAP_OBJ_NEXT);
 
 
-    //destruct objects
+    //destruct test objects
     for (int i = 0; i < 3; ++i) {
         _map_del_vm_obj(&objs[i]);
     }
@@ -773,6 +911,13 @@ START_TEST(test__map_find_obj_for_area) {
 
 //_map_backtrack_unmapped_obj_last_vm_areas() [stub map fixture]
 START_TEST(test__map_backtrack_unmapped_obj_last_vm_areas) {
+
+    /*
+     *  NOTE: For this test, `m_o{_n}` arrays are used to refer to objects
+     *        in the stub map. Note `m_o{_n}[0]` is not the first object in
+     *        in the map; the map contains a pseudo object that is not in
+     *        the `m_o{_n}` arrays.
+     */
 
     int ret;
 
@@ -813,7 +958,7 @@ START_TEST(test__map_backtrack_unmapped_obj_last_vm_areas) {
     assert_vm_obj_list(&m_o[0].last_vm_area_node_ps, first_state, 2);
 
     //check the transfered last areas (indeces: 4, 8) now point to `/bin/cat`
-    assert_vm_area(&m_a[4], NULL, NULL, 0xC000, 0xD000,
+    assert_vm_area(&m_a[4], NULL, NULL, 0x6000, 0x7000,
                     MC_ACCESS_READ | MC_ACCESS_WRITE, NULL, &m_o_n[0], 4, true);
     
     assert_vm_area(&m_a[8], NULL, NULL, 0xC000, 0xD000,
@@ -837,7 +982,7 @@ START_TEST(test__map_backtrack_unmapped_obj_last_vm_areas) {
     assert_vm_obj_list(&zero_obj->last_vm_area_node_ps, third_state, 2);
 
     //check the transfered last areas (indeces: 4, 8) now point to `/bin/cat`
-    assert_vm_area(&m_a[4], NULL, NULL, 0xC000, 0xD000,
+    assert_vm_area(&m_a[4], NULL, NULL, 0x6000, 0x7000,
                     MC_ACCESS_READ | MC_ACCESS_WRITE, NULL, zero_node, 4, true);
     
     assert_vm_area(&m_a[8], NULL, NULL, 0xC000, 0xD000,
@@ -853,29 +998,50 @@ START_TEST(test__map_forward_unmapped_obj_last_vm_areas) {
 
     int ret;
 
-    uintptr_t heap_state[2]  = {0x6000};
-    uintptr_t lib_foo_state[2] = {0xC000};
+    uintptr_t first_heap_state[2] = {0x6000, 0xC000};
+
+    uintptr_t second_heap_state[1]  = {0x6000};
+    uintptr_t second_lib_foo_state[1] = {0xC000};
 
 
-    //setup the test by backtracking `/lib/foo`'s last area.
+    //setup the test by backtracking `/lib/foo`'s and `[heap]`'s last areas.
     ret = _map_backtrack_unmapped_obj_last_vm_areas(&m_o_n[2]);
     ck_assert_int_eq(ret, 0);
 
+    ret = _map_backtrack_unmapped_obj_last_vm_areas(&m_o_n[1]);
+    ck_assert_int_eq(ret, 0);
 
-    //only test: pretend the `/lib/foo` object was just inserted
+
+    //first test: pretend `[heap]` object was just inserted
+    ret = _map_forward_unmapped_obj_last_vm_areas(&m_o_n[1]);
+    ck_assert_int_eq(ret, 0);
+
+    //check `/bin/cat` has no last areas associated with it
+    assert_vm_obj(&m_o[0], "/bin/cat", "cat", 0x1000, 0x4000, 3, 0, 0, true);
+    assert_vm_obj_list(&m_o[0].last_vm_area_node_ps, NULL, 0);
+
+    //check the transferred last areas (indeces 4, 8) now point to  correct objs
+    assert_vm_area(&m_a[4], NULL, NULL, 0x6000, 0x7000,
+                    MC_ACCESS_READ | MC_ACCESS_WRITE, NULL, &m_o_n[1], 4, true);
+    
+    assert_vm_area(&m_a[8], NULL, NULL, 0xC000, 0xD000,
+                    MC_ACCESS_READ | MC_ACCESS_WRITE, NULL, &m_o_n[1], 8, true);
+
+
+    //second test: pretend the `/lib/foo` object was just inserted
     ret = _map_forward_unmapped_obj_last_vm_areas(&m_o_n[2]);
     ck_assert_int_eq(ret, 0);
     
     //check `[heap]` has only one last area associated with it
     assert_vm_obj(&m_o[1], "[heap]", "[heap]", 0x4000, 0x5000, 1, 1, 1, true);
-    assert_vm_obj_list(&m_o[1].last_vm_area_node_ps, heap_state, 1);
+    assert_vm_obj_list(&m_o[1].last_vm_area_node_ps, second_heap_state, 1);
 
     //check `/lib/foo` now has one last area associated with it
-    assert_vm_obj(&m_o[2], "/lib/foo", "foo", 0x8000, 0xB000, 3, 2, 0, true);
-    assert_vm_obj_list(&m_o[2].last_vm_area_node_ps, lib_foo_state, 1);
+    assert_vm_obj(&m_o[2], "/lib/foo", "foo", 0x8000, 0xB000, 3, 1, 2, true);
+    assert_vm_obj_list(&m_o[2].last_vm_area_node_ps, second_lib_foo_state, 1);
 
-    //check the transfered last areas (indeces: 4, 8) now point to `/bin/cat`
-    assert_vm_area(&m_a[4], NULL, NULL, 0xC000, 0xD000,
+    //check the transferred last areas (indeces: 4, 8) now point to correct objs
+    assert_vm_area(&m_a[4], NULL, NULL, 0x6000, 0x7000,
                     MC_ACCESS_READ | MC_ACCESS_WRITE, NULL, &m_o_n[1], 4, true);
     
     assert_vm_area(&m_a[8], NULL, NULL, 0xC000, 0xD000,
@@ -885,7 +1051,7 @@ START_TEST(test__map_forward_unmapped_obj_last_vm_areas) {
     
 } END_TEST
 
-
+#endif/*
 //_map_unlink_unmapped_obj() [stub map fixture]
 START_TEST(test__map_unlink_unmapped_obj) {
 
@@ -1647,13 +1813,13 @@ START_TEST(test_mc_map_clean_unmapped) {
     TCase * tc__init_vm_area;
     TCase * tc__obj_add_area;
     TCase * tc__obj_add_last_area;
-    #endif/*TCase * tc__obj_rmv_area;
+    TCase * tc__obj_rmv_area;
     TCase * tc__obj_rmv_last_area;
     TCase * tc__is_pathname_in_obj;
     TCase * tc__find_obj_for_area;
     TCase * tc__backtrack_unmapped_obj_last_vm_areas;
     TCase * tc__forward_unmapped_obj_last_vm_areas;
-    TCase * tc__unlink_unmapped_obj;
+    #endif/*TCase * tc__unlink_unmapped_obj;
     TCase * tc__unlink_unmapped_area;
     TCase * tc__check_area_eql;
     TCase * tc__state_inc_area;
@@ -1703,7 +1869,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     tcase_add_checked_fixture(tc__obj_add_last_area, 
                               _setup_empty_vm_obj, _teardown_vm_obj);
     tcase_add_test(tc__obj_add_last_area, test__map_obj_add_last_area);
-    #endif/*
+    
     //tc__obj_rmv_area
     tc__obj_rmv_area = tcase_create("_obj_rmv_area");
     tcase_add_checked_fixture(tc__obj_rmv_area, 
@@ -1714,7 +1880,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     tc__obj_rmv_last_area = tcase_create("_obj_rmv_last_area");
     tcase_add_checked_fixture(tc__obj_rmv_last_area, 
                               _setup_stub_vm_obj, _teardown_vm_obj);
-    tcase_add_test(tc__obj_rmv_last_area, test__map_obj_rmv_area);
+    tcase_add_test(tc__obj_rmv_last_area, test__map_obj_rmv_last_area);
 
     //tc__is_pathname_in_obj
     tc__is_pathname_in_obj = tcase_create("_is_pathname_in_obj");
@@ -1743,7 +1909,7 @@ START_TEST(test_mc_map_clean_unmapped) {
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__forward_unmapped_obj_last_vm_areas, 
                    test__map_forward_unmapped_obj_last_vm_areas);
-
+    #endif/*
     //tc__unlink_unmapped_obj
     tc__unlink_unmapped_obj = tcase_create("_unlink_unmapped_obj");
     tcase_add_checked_fixture(tc__unlink_unmapped_obj, 
@@ -1820,13 +1986,13 @@ START_TEST(test_mc_map_clean_unmapped) {
     suite_add_tcase(s, tc__init_vm_area);
     suite_add_tcase(s, tc__obj_add_area);
     suite_add_tcase(s, tc__obj_add_last_area);
-    #endif/*suite_add_tcase(s, tc__obj_rmv_area);
+    suite_add_tcase(s, tc__obj_rmv_area);
     suite_add_tcase(s, tc__obj_rmv_last_area);
     suite_add_tcase(s, tc__is_pathname_in_obj);
     suite_add_tcase(s, tc__find_obj_for_area);
     suite_add_tcase(s, tc__backtrack_unmapped_obj_last_vm_areas);
     suite_add_tcase(s, tc__forward_unmapped_obj_last_vm_areas);
-    suite_add_tcase(s, tc__unlink_unmapped_obj);
+    #endif/*suite_add_tcase(s, tc__unlink_unmapped_obj);
     suite_add_tcase(s, tc__unlink_unmapped_area);
     suite_add_tcase(s, tc__check_area_eql);
     suite_add_tcase(s, tc__state_inc_area);

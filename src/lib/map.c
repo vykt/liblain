@@ -219,9 +219,7 @@ int _map_obj_add_area(mc_vm_obj * obj,
         if (area->start_addr < obj->start_addr) 
             obj->start_addr = area->start_addr;
         if (area->end_addr > obj->end_addr) 
-            obj->end_addr = area->end_addr;
-    
-        
+            obj->end_addr = area->end_addr;    
     }
 
     //insert new area & ensure the area list remains sorted 
@@ -246,22 +244,15 @@ int _map_obj_add_last_area(mc_vm_obj * obj,
 }
 
 
-DBG_STATIC DBG_INLINE
-int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * area_node) {
+DBG_STATIC
+int _map_obj_rmv_area_fast(mc_vm_obj * obj, cm_lst_node * outer_area_node) {
 
     int ret, index;
-    cm_lst_node * area_outer_node, * temp_node;
+    cm_lst_node * temp_node;
 
-
-    //remove area node from the object
-
-    //find index of area in object
-    area_outer_node = _map_obj_find_area_outer_node(&obj->vm_area_node_ps, 
-                                                    area_node);
-    if (area_outer_node == NULL) return -1;
 
     //remove area node from object
-    ret = cm_lst_rmv_n(&obj->vm_area_node_ps, area_outer_node);
+    ret = cm_lst_rmv_n(&obj->vm_area_node_ps, outer_area_node);
     if (ret != 0) {
         mc_errno = MC_ERR_LIBCMORE;
         return -1;
@@ -305,26 +296,62 @@ int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * area_node) {
 
 
 DBG_STATIC DBG_INLINE
-int _map_obj_rmv_last_area(mc_vm_obj * obj, cm_lst_node * last_area_node) {
+int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * inner_area_node) {
 
     int ret;
-    cm_lst_node * last_area_outer_node;
+    cm_lst_node * outer_area_node;
+
+    //find index of area in object
+    outer_area_node = _map_obj_find_area_outer_node(&obj->vm_area_node_ps, 
+                                                    inner_area_node);
+    if (outer_area_node == NULL) {
+        mc_errno = MC_ERR_AREA_IN_OBJ;
+        return -1;
+    }
+
+    ret = _map_obj_rmv_area_fast(obj, outer_area_node);
+    if (ret != 0) return -1;
+
+    return 0;
+}
+
+
+DBG_STATIC
+int _map_obj_rmv_last_area_fast(mc_vm_obj * obj,
+                                cm_lst_node * outer_area_node) {
+
+    int ret;
+
+    ret = cm_lst_rmv_n(&obj->last_vm_area_node_ps, outer_area_node);
+    if (ret != 0) {
+        mc_errno = MC_ERR_LIBCMORE;
+        return -1;
+    }
+
+    return 0;
+}
+
+
+DBG_STATIC DBG_INLINE
+int _map_obj_rmv_last_area(mc_vm_obj * obj,
+                           cm_lst_node * inner_area_node) {
+
+    int ret;
+    cm_lst_node * outer_area_node;
 
 
     //remove area node from the object
 
     //find index of area in object
-    last_area_outer_node = _map_obj_find_area_outer_node(&obj->
-                                                         last_vm_area_node_ps, 
-                                                         last_area_node);
-    if (last_area_outer_node == NULL) return -1;
-
-    //remove area node from object
-    ret = cm_lst_rmv_n(&obj->last_vm_area_node_ps, last_area_outer_node);
-    if (ret != 0) {
-        mc_errno = MC_ERR_LIBCMORE;
+    outer_area_node = _map_obj_find_area_outer_node(&obj->last_vm_area_node_ps, 
+                                                    inner_area_node);
+    if (outer_area_node == NULL) {
+        mc_errno = MC_ERR_AREA_IN_OBJ;
         return -1;
     }
+
+    ret = _map_obj_rmv_last_area_fast(obj, outer_area_node);
+    if (ret != 0) return -1;
 
     return 0;
 }
@@ -377,20 +404,27 @@ DBG_STATIC DBG_INLINE
 int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
 
     int ret;
+    cm_lst_node * ret_p;
+    
     int iterations;
 
     mc_vm_area * last_area;
-    cm_lst_node * last_area_node;
+    cm_lst_node * last_area_node, * temp_area_node;
 
-    mc_vm_obj * temp_obj;
+    mc_vm_obj * temp_obj, * temp_prev_obj;
 
 
     //setup iteration
-    temp_obj = MC_GET_NODE_OBJ(obj_node);
+    temp_obj      = MC_GET_NODE_OBJ(obj_node);
+    temp_prev_obj = MC_GET_NODE_OBJ(obj_node->prev);
+
+    //get first node 
     last_area_node = temp_obj->last_vm_area_node_ps.head;
     if (last_area_node == NULL) return 0;
 
-    last_area = MC_GET_NODE_AREA(last_area_node);
+    //get last area from first node
+    temp_area_node = MC_GET_NODE_PTR(last_area_node);
+    last_area = MC_GET_NODE_AREA(temp_area_node);
 
 
     //for every area, backtrack last object pointer
@@ -399,9 +433,18 @@ int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
 
         //update pointer
         last_area->last_obj_node_p = obj_node->prev;
-        
+        ret_p = cm_lst_apd(&temp_prev_obj->last_vm_area_node_ps,
+                           &temp_area_node);
+        if (ret_p == NULL) {
+            mc_errno = MC_ERR_LIBCMORE;
+            return -1;
+        }
+
         //advance iteration (part 1)
         last_area_node = last_area_node->next;
+        if (last_area_node != NULL) {
+            temp_area_node = MC_GET_NODE_PTR(last_area_node);
+        }
 
         //remove this area from the object's last_vm_area_node_ps list
         ret = cm_lst_rmv(&temp_obj->last_vm_area_node_ps, 0);
@@ -411,7 +454,9 @@ int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
         }
 
         //advance iteration (part 2)
-        last_area = MC_GET_NODE_AREA(last_area_node);
+        if (last_area_node != NULL) {
+            last_area = MC_GET_NODE_AREA(temp_area_node);
+        }
     }
 
     return 0;
@@ -424,27 +469,23 @@ int _map_forward_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
 
     int ret;
 
-    //declarations
-    mc_vm_obj * obj;
-    
-    cm_lst_node * prev_obj_node;
-    mc_vm_obj * prev_obj;
-
-    cm_lst_node * last_area_node;
+    cm_lst_node * last_area_node, * temp_area_node, * prev_obj_node;
     mc_vm_area * last_area;
+    mc_vm_obj * obj, * prev_obj;
 
 
-    //setup iteration
+    //setup objects
     obj = MC_GET_NODE_OBJ(obj_node);
-    
     prev_obj_node = obj_node->prev;
     prev_obj = MC_GET_NODE_OBJ(prev_obj_node);
 
+
+    //setup iteration
     last_area_node = prev_obj->last_vm_area_node_ps.head;
     if (last_area_node == NULL) return 0;
-    
-    last_area = MC_GET_NODE_AREA(last_area_node);
 
+    temp_area_node = MC_GET_NODE_PTR(last_area_node);
+    last_area = MC_GET_NODE_AREA(temp_area_node);
 
     //for every area, move last object pointer forward if necessary
     for (int i = 0; i < prev_obj->last_vm_area_node_ps.len; ++i) {
@@ -456,22 +497,32 @@ int _map_forward_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
             last_area->last_obj_node_p = obj_node;
 
             //add this area to this object's last_vm_area_node_ps list
-            ret = _map_obj_add_last_area(obj, last_area_node);
+            ret = _map_obj_add_last_area(obj, temp_area_node);
             if (ret == -1) return -1;
+
+            //advance iteration (part 1)
+            temp_area_node = last_area_node->next; 
 
             //remove this area from the previous 
             //last object's last_vm_area_node_ps
-            ret =_map_obj_rmv_last_area(prev_obj, last_area_node);
+            ret =_map_obj_rmv_last_area_fast(prev_obj, last_area_node);
             if (ret == -1) return -1;
 
             //correct iteration index
             i -= 1;
 
-        } //end if area's address range comes completely after this object
+        //otherwise just update iteration
+        } else {
+            temp_area_node = last_area_node->next;
+        }
 
         //advance iteration
-        last_area_node = last_area_node->next;
-        last_area = MC_GET_NODE_AREA(last_area_node);
+        if (temp_area_node != NULL) {
+        
+            last_area_node = temp_area_node;
+            temp_area_node = MC_GET_NODE_PTR(last_area_node);
+            last_area = MC_GET_NODE_AREA(temp_area_node);
+        }
 
     } //end for
 
@@ -920,9 +971,9 @@ void mc_new_vm_map(mc_vm_map * map) {
 
 int mc_del_vm_map(mc_vm_map * map) {
 
-    int ret, len_obj;
+    int ret, len_unmapped_obj;
 
-    cm_lst_node * obj_node;
+    cm_lst_node * unmapped_obj_node;
     mc_vm_obj * obj;
 
 
@@ -932,18 +983,18 @@ int mc_del_vm_map(mc_vm_map * map) {
 
 
     //setup iteration
-    len_obj = map->vm_objs.len;
-    obj_node = map->vm_objs.head;
+    len_unmapped_obj = map->vm_objs_unmapped.len;
+    unmapped_obj_node = map->vm_objs_unmapped.head;
     
     //manually free all unmapped obj nodes
-    for (int i = 0; i < len_obj; ++i) {
+    for (int i = 0; i < len_unmapped_obj; ++i) {
 
         //fetch & destroy the object
-        obj = MC_GET_NODE_OBJ(obj_node);
+        obj = MC_GET_NODE_OBJ(unmapped_obj_node);
         _map_del_vm_obj(obj);
 
         //advance iteration
-        obj_node = obj_node->next;
+        unmapped_obj_node = unmapped_obj_node->next;
 
     } //end for
 

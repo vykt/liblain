@@ -63,5 +63,5 @@ define pxnodea
 	end
 end
 
-tb test__map_obj_add_last_area_fn
+tb test__map_forward_unmapped_obj_last_vm_areas_fn
 run

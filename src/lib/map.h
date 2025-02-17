@@ -50,8 +50,10 @@ cm_lst_node * _map_obj_find_area_outer_node(cm_lst * obj_area_lst,
 int _map_obj_add_area(mc_vm_obj * obj, const cm_lst_node * area_node);
 int _map_obj_add_last_area(mc_vm_obj * obj, const cm_lst_node * last_area_node);
 
-int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * area_node);
-int _map_obj_rmv_last_area(mc_vm_obj * obj, cm_lst_node * last_area_node);
+int _map_obj_rmv_area_fast(mc_vm_obj * obj, cm_lst_node * outer_area_node);
+int _map_obj_rmv_area(mc_vm_obj * obj, cm_lst_node * inner_area_node);
+int _map_obj_rmv_last_area_fast(mc_vm_obj * obj, cm_lst_node * outer_area_node);
+int _map_obj_rmv_last_area(mc_vm_obj * obj, cm_lst_node * inner_area_node);
 
 bool _map_is_pathname_in_obj(const char * pathname, const mc_vm_obj * obj);
 int _map_find_obj_for_area(const struct vm_entry * entry,
