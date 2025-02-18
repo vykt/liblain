@@ -42,15 +42,15 @@ void assert_vm_map(mc_vm_map * map, int vm_areas_len, int vm_objs_len,
                    int vm_areas_unmapped_len, int vm_objs_unmapped_len,
                    int next_id_area, int next_id_obj);
 
-void assert_vm_map_objs(cm_lst * obj_lst, struct obj_check * obj_checks,
-                        int start_index, int len);
-void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[NAME_MAX],
-                             int start_index, int len);
+void assert_vm_map_objs(cm_lst * lst, struct obj_check * obj_checks,
+                        int start_index, int len, bool mapped);
+void assert_vm_map_objs_aslr(cm_lst * lst, char * basenames[NAME_MAX],
+                             int start_index, int len, bool mapped);
 
-void assert_vm_map_areas(cm_lst * area_lst, struct area_check * area_checks,
-                         int start_index, int len);
-void assert_vm_map_areas_aslr(cm_lst * area_lst, char * basenames[NAME_MAX],
-                              int start_index, int len);
+void assert_vm_map_areas(cm_lst * lst, struct area_check * area_checks,
+                         int start_index, int len, bool mapped);
+void assert_vm_map_areas_aslr(cm_lst * lst, char * basenames[NAME_MAX],
+                              int start_index, int len, bool mapped);
 
 void assert_vm_obj(mc_vm_obj * obj, char * pathname, char * basename,
                    uintptr_t start_addr, uintptr_t end_addr, int vm_areas_len,

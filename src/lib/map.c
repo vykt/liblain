@@ -81,8 +81,8 @@ void _map_new_vm_obj(mc_vm_obj * obj,
     strncpy(obj->pathname, pathname, PATH_MAX);
     strncpy(obj->basename, basename, NAME_MAX);
 
-    obj->start_addr = 0x0;
-    obj->end_addr = 0x0;
+    obj->start_addr = MC_UNDEF_ADDR;
+    obj->end_addr = MC_UNDEF_ADDR;
 
     //initialise area list
     cm_new_lst(&obj->vm_area_node_ps, sizeof(cm_lst_node *));
@@ -112,6 +112,7 @@ DBG_STATIC DBG_INLINE
 void _map_make_zero_obj(mc_vm_obj * obj) {
     
     obj->id = MC_ZERO_OBJ_ID;
+    obj->start_addr = obj->end_addr = 0x0;
 
     return;
 }
@@ -206,15 +207,13 @@ int _map_obj_add_area(mc_vm_obj * obj,
 
 
     //if this object has no areas yet
-    if (obj->start_addr == MC_UNDEF_ADDR || obj->start_addr == 0x0) {
-
+    if (obj->start_addr == MC_UNDEF_ADDR) {
         //set new addr bounds
         obj->start_addr = area->start_addr;
         obj->end_addr = area->end_addr;
         
     //if this object has areas, only update the start and end addr if necessary
     } else {
-
         //set new addr bounds if necessary
         if (area->start_addr < obj->start_addr) 
             obj->start_addr = area->start_addr;
@@ -261,10 +260,9 @@ int _map_obj_rmv_area_fast(mc_vm_obj * obj, cm_lst_node * outer_area_node) {
 
     //update object's address range
 
-    //if no area nodes left, address range is now zero (unmapped)
+    //if no area nodes left, address range is now undefined (unmapped)
     if (obj->vm_area_node_ps.len == 0) {
-        
-        obj->end_addr = obj->start_addr = 0x0;   
+        obj->end_addr = obj->start_addr = MC_UNDEF_ADDR;
         return 0;
     }
 
@@ -276,7 +274,6 @@ int _map_obj_rmv_area_fast(mc_vm_obj * obj, cm_lst_node * outer_area_node) {
     }
 
     obj->start_addr = MC_GET_NODE_AREA(temp_node)->start_addr;
-
 
     //get end addr
     index = obj->vm_area_node_ps.len == 1 ? 0 : -1;
@@ -563,8 +560,8 @@ int _map_unlink_unmapped_obj(cm_lst_node * obj_node, mc_vm_map * map) {
 
     //disconnect object node's attributes
     obj->mapped     = false;
-    obj->start_addr = 0x0;
-    obj->end_addr   = 0x0;
+    obj->start_addr = MC_UNDEF_ADDR;
+    obj->end_addr   = MC_UNDEF_ADDR;
     obj_node->next = NULL;
     obj_node->prev = NULL;
 

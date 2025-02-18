@@ -101,16 +101,33 @@ void assert_vm_map(mc_vm_map * map, int vm_areas_len, int vm_objs_len,
 }
 
 
-//assert the state of all [unmapped] objects inside a mc_vm_map
-void assert_vm_map_objs(cm_lst * obj_lst, struct obj_check * obj_checks, 
-                        int start_index, int len) {
+/*
+ *  NOTE: The mapped area & object lists store areas and objects directly.
+ *        Unmapped area & object lists store unmapped nodes instead, which 
+ *        means an additional pointer dereference is required.
+ */
 
+//assert the state of all [unmapped] objects inside a mc_vm_map
+void assert_vm_map_objs(cm_lst * lst, struct obj_check * obj_checks, 
+                        int start_index, int len, bool mapped) {
+
+    int ret;
+
+    cm_lst_node * node;
     mc_vm_obj * obj;
+
 
     for (int i = 0; i < len; ++i) {
 
-        obj = cm_lst_get_p(obj_lst, start_index + i);
-        ck_assert_ptr_nonnull(obj);
+        if (!mapped) {
+            ret = cm_lst_get(lst, start_index + i, &node);
+            ck_assert_int_eq(ret, 0);
+            obj = MC_GET_NODE_OBJ(node);
+
+        } else {
+            obj = cm_lst_get_p(lst, start_index + i);
+            ck_assert_ptr_nonnull(obj);
+        }
 
         assert_names(obj->basename, obj_checks[i].basename);
         ck_assert_int_eq(obj->start_addr, obj_checks[i].start_addr);
@@ -122,15 +139,26 @@ void assert_vm_map_objs(cm_lst * obj_lst, struct obj_check * obj_checks,
 
 
 //assert only pathnames, not mapped address ranges
-void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[NAME_MAX],
-                             int start_index, int len) {
+void assert_vm_map_objs_aslr(cm_lst * lst, char * basenames[NAME_MAX],
+                             int start_index, int len, bool mapped) {
 
+    int ret;
+
+    cm_lst_node * node;
     mc_vm_obj * obj;
+
 
     for (int i = 0; i < len; ++i) {
 
-        obj = cm_lst_get_p(obj_lst, start_index + i);
-        ck_assert_ptr_nonnull(obj);
+        if (!mapped) {
+            ret = cm_lst_get(lst, start_index + i, &node);
+            ck_assert_int_eq(ret, 0);
+            obj = MC_GET_NODE_OBJ(node);
+
+        } else {
+            obj = cm_lst_get_p(lst, start_index + i);
+            ck_assert_ptr_nonnull(obj);
+        }
 
         assert_names(obj->basename, basenames[i]);
     }
@@ -140,15 +168,25 @@ void assert_vm_map_objs_aslr(cm_lst * obj_lst, char * basenames[NAME_MAX],
 
 
 //assert the state of all [unmapped] memory areas inside a mc_vm_map
-void assert_vm_map_areas(cm_lst * area_lst, struct area_check * area_checks,
-                         int start_index, int len) {
+void assert_vm_map_areas(cm_lst * lst, struct area_check * area_checks,
+                         int start_index, int len, bool mapped) {
 
+    int ret;
+
+    cm_lst_node * node;
     mc_vm_area * area;
 
     for (int i = 0; i < len; ++i) {
 
-        area = cm_lst_get_p(area_lst, start_index + i);
-        ck_assert_ptr_nonnull(area);
+        if (!mapped) {
+            ret = cm_lst_get(lst, start_index + i, &node);
+            ck_assert_int_eq(ret, 0);
+            area = MC_GET_NODE_AREA(node);
+
+        } else {
+            area = cm_lst_get_p(lst, start_index + i);
+            ck_assert_ptr_nonnull(area);
+        }
 
         assert_names(area->basename, area_checks[i].basename);
         ck_assert_int_eq(area->start_addr, area_checks[i].start_addr);
@@ -160,15 +198,25 @@ void assert_vm_map_areas(cm_lst * area_lst, struct area_check * area_checks,
 
 
 //assert only pathnames, not mapped address ranges
-void assert_vm_map_areas_aslr(cm_lst * area_lst, char * basenames[NAME_MAX],
-                              int start_index, int len) {
+void assert_vm_map_areas_aslr(cm_lst * lst, char * basenames[NAME_MAX],
+                              int start_index, int len, bool mapped) {
 
+    int ret;
+
+    cm_lst_node * node;
     mc_vm_area * area;
 
     for (int i = 0; i < len; ++i) {
 
-        area = cm_lst_get_p(area_lst, start_index + i);
-        ck_assert_ptr_nonnull(area);
+        if (!mapped) {
+            ret = cm_lst_get(lst, start_index + i, &node);
+            ck_assert_int_eq(ret, 0);
+            area = MC_GET_NODE_AREA(node);
+
+        } else {
+            area = cm_lst_get_p(lst, start_index + i);
+            ck_assert_ptr_nonnull(area);
+        }
 
         assert_names(area->basename, basenames[i]);
     }

@@ -54,7 +54,7 @@ define pnodea
 	end
 end
 
-# hex print the are aat a node at the specified node:
+# hex print the area at a node at the specified node:
 define pxnodea
 	if $argc != 1
 		printf "Use: pnodea <*obj_area_node>\n"
@@ -63,5 +63,23 @@ define pxnodea
 	end
 end
 
-tb test__map_forward_unmapped_obj_last_vm_areas_fn
+# print the object at a node at the specified node:
+define pnodeo
+	if $argc != 1
+		printf "Use: pnodea <*obj_area_node>\n"
+	else
+		p *((mc_vm_obj *) ((*((cm_lst_node **) ($arg0->data)))->data))
+	end
+end
+
+# hex print the object at a node at the specified node:
+define pxnodeo
+	if $argc != 1
+		printf "Use: pnodea <*obj_area_node>\n"
+	else
+		p/x *((mc_vm_obj *) ((*((cm_lst_node **) ($arg0->data)))->data))
+	end
+end
+
+tb test__map_unlink_unmapped_obj_fn
 run
