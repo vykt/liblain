@@ -154,8 +154,6 @@ void assert_iface_update_map(enum mc_iface_type iface) {
     ret = mc_del_vm_map(&m);
     ck_assert_int_eq(ret, 0);
 
-    end_target(pid);
-
     return;   
 }
 

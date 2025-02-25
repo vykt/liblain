@@ -1,2 +1,3 @@
 #!/bin/sh
-gdb -x init.gdb --args ./test -u "$@"
+kill $(pidof unit_target)
+gdb -x init.gdb --args ./test -p -m "$@"

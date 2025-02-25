@@ -359,6 +359,13 @@ bool _map_is_pathname_in_obj(const char * pathname, const mc_vm_obj * obj) {
 
     if (obj == NULL) return false;
 
+    //if looking at pseudo object, '\0' pathname is a match 
+    if (obj->id == MC_ZERO_OBJ_ID) {
+        if (*pathname == '\0') return true;
+        return false;
+    }
+
+    //else require a string match
     bool ret = (strncmp(pathname, obj->pathname, PATH_MAX) ? false : true);
     
     return ret;
@@ -728,7 +735,8 @@ void _map_state_inc_obj(_traverse_state * state, mc_vm_map * map) {
 }
 
 
-//return: 0 - do not re-add, 1 - do re-add, -1 - error
+//return: 0: removed all areas up to entry->end_addr
+//        1: stopped iterating when matching area found
 DBG_STATIC DBG_INLINE
 int _map_resync_area(const struct vm_entry * entry, 
                      _traverse_state * state, mc_vm_map * map) {
@@ -799,7 +807,7 @@ int _map_add_area(const struct vm_entry * entry,
     bool use_obj;
     bool forward_obj = false;
 
-    mc_vm_area area;
+    mc_vm_area area, * area_p;
     cm_lst_node * area_node;
     
     mc_vm_obj * obj;
@@ -892,8 +900,17 @@ int _map_add_area(const struct vm_entry * entry,
         if (ret == -1) return -1;
     }
 
-    //increment area state
-    _map_state_inc_area(state, _STATE_AREA_NODE_REASSIGN, area_node->next, map);
+    /*
+     *  Increment area state if this new area is higher than the state's area.
+     *  It should be impossible for areas to have address overlap due to
+     *  _map_resync_area() eliminating old areas that overlap with new areas.
+     *  Because of this, comparing just end addresses should suffice.
+     */
+    if ((state->next_area_node != NULL)
+        && (entry->vm_end
+            >= MC_GET_NODE_AREA(state->next_area_node)->end_addr)) {
+        _map_state_inc_area(state, _STATE_AREA_NODE_ADVANCE, NULL, map);
+    }
 
     return 0;
 }
@@ -911,8 +928,7 @@ int map_send_entry(const struct vm_entry * entry,
 
 
     //if reached the end of the old map
-    if (state->next_area_node == NULL
-        || state->next_area_node->next == map->vm_areas.head) {
+    if (state->next_area_node == NULL) {
 
         ret = _map_add_area(entry, state, map);
         if (ret == -1) return -1;
@@ -926,9 +942,14 @@ int map_send_entry(const struct vm_entry * entry,
             ret = _map_resync_area(entry, state, map);
             if (ret == -1) return -1;
 
+            //replace area
             if (ret == 0) {
                 ret = _map_add_area(entry, state, map);
                 if (ret == -1) return -1;
+            //area match found, advance state
+            } else {
+                _map_state_inc_area(state,
+                                    _STATE_AREA_NODE_ADVANCE, NULL, map);
             }
 
         // else entry matches next area

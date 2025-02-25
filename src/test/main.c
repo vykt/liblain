@@ -7,72 +7,91 @@
 #include <getopt.h>
 
 //external libraries
+#include <cmore.h>
 #include <check.h>
 
 //local headers
 #include "suites.h"
 
 
-enum _test_mode {UNIT, EXPL};
+//manipulated by debug.sh; see `suites.h`
+bool _DEBUG_ACTIVE = false;
+
+//tests bitmask
+#define PROCFS_TEST   0x1
+#define KRNCRY_TEST   0x2
+#define MAP_UTIL_TEST 0x4
+#define UTIL_TEST     0x8
+
 
 //determine which tests to run
-static enum _test_mode _get_test_mode(int argc, char ** argv) {
+static cm_byte _get_test_mode(int argc, char ** argv) {
 
     const struct option long_opts[] = {
-        {"unit-tests", no_argument, NULL, 'u'},
-        {"explore", no_argument, NULL, 'e'},
+        {"procfs", no_argument, NULL, 'p'},
+        {"krncry", no_argument, NULL, 'k'},
+        {"map-util", no_argument, NULL, 'm'},
+        {"util", no_argument, NULL, 'u'},
         {0,0,0,0}
     };
 
     int opt;
-    enum _test_mode test_mode = UNIT;
+    cm_byte test_mask = 0;
 
     
-    while((opt = getopt_long(argc, argv, "ue", long_opts, NULL)) != -1 
+    while((opt = getopt_long(argc, argv, "pkmu", long_opts, NULL)) != -1 
           && opt != 0) {
 
         //determine parsed argument
         switch (opt) {
 
-            case 'u':
-                test_mode = UNIT;
+            case 'p':
+                test_mask |= PROCFS_TEST;
                 break;
 
-            case 'e':
-                test_mode = EXPL;
+            case 'k':
+                test_mask |= KRNCRY_TEST;
+                break;
+
+            case 'm':
+                test_mask |= MAP_UTIL_TEST;
+                break;
+
+            case 'u':
+                test_mask |= UTIL_TEST;
                 break;
         }
     }
 
-    return test_mode;
+    return test_mask;
 }
 
 
 //run unit tests
-static void _run_unit_tests() {
+static void _run_unit_tests(cm_byte test_mask) {
 
     Suite * s_map;
-    //Suite * s_procfs_iface;
-    //Suite * s_krncry_iface;
-    //Suite * s_map_util;
-    //Suite * s_util;
+    Suite * s_procfs_iface;
+    Suite * s_krncry_iface;
+    Suite * s_map_util;
+    Suite * s_util;
 
     SRunner * sr;
 
 
     //initialise test suites
     s_map = map_suite();
-    //s_procfs_iface = procfs_iface_suite();
-    //s_krncry_iface = krncry_iface_suite();
-    //s_map_util = map_util_suite();
-    //s_util = util_suite(); 
+    if (test_mask & PROCFS_TEST) s_procfs_iface = procfs_iface_suite();
+    if (test_mask & KRNCRY_TEST) s_krncry_iface = krncry_iface_suite();
+    if (test_mask & MAP_UTIL_TEST) s_map_util = map_util_suite();
+    if (test_mask & UTIL_TEST) s_util = util_suite(); 
 
     //create suite runner
     sr = srunner_create(s_map);
-    //srunner_add_suite(sr, s_procfs_iface);
-    //srunner_add_suite(sr, s_krncry_iface);
-    //srunner_add_suite(sr, s_map_util);
-    //srunner_add_suite(sr, s_util);
+    if (test_mask & PROCFS_TEST) srunner_add_suite(sr, s_procfs_iface);
+    if (test_mask & KRNCRY_TEST) srunner_add_suite(sr, s_krncry_iface);
+    if (test_mask & MAP_UTIL_TEST) srunner_add_suite(sr, s_map_util);
+    if (test_mask & UTIL_TEST) srunner_add_suite(sr, s_util);
 
     //run tests
     srunner_run_all(sr, CK_VERBOSE);
@@ -87,17 +106,8 @@ static void _run_unit_tests() {
 //dispatch tests
 int main(int argc, char ** argv) {
 
-    enum _test_mode mode = _get_test_mode(argc, argv);
-
-    switch (mode) {
-        case UNIT:
-            _run_unit_tests();
-            break;
-
-        case EXPL:
-            fprintf(stderr, "[ERR] `-e, --expore` not implemented.\n");
-            break;    
-    }
+    cm_byte test_mask = _get_test_mode(argc, argv);
+    _run_unit_tests(test_mask);
     
     return 0;
 }

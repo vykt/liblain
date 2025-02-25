@@ -16,6 +16,7 @@
 //local headers
 #include "target_helper.h"
 #include "map_helper.h"
+#include "suites.h"
 
 //test target headers
 #include "../lib/memcry.h"
@@ -39,24 +40,24 @@ char areas_unchanged[TARGET_AREAS_UNCHANGED][NAME_MAX] = {
     "libc.so.6",
     "",
     "",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "[stack]",
     "[vvar]",
-    "[vdso]"
+    "[vdso]",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "[stack]"
 };
 
 char objs_unchanged[TARGET_OBJS_UNCHANGED][NAME_MAX] = {
     "0x0",
     "unit_target",
     "libc.so.6",
-    "ld-linux-x86-64.so.2",
-    "[stack]",
     "[vvar]",
-    "[vdso]"
+    "[vdso]",
+    "ld-linux-x86-64.so.2",
+    "[stack]"
 };
 
 
@@ -86,14 +87,14 @@ char areas_mapped[TARGET_AREAS_MAPPED][NAME_MAX] = {
     "libc.so.6",
     "",
     "",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "[stack]",
     "[vvar]",
-    "[vdso]"
+    "[vdso]",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "[stack]"
 };
 
 char objs_mapped[TARGET_OBJS_MAPPED][NAME_MAX] = {
@@ -103,10 +104,10 @@ char objs_mapped[TARGET_OBJS_MAPPED][NAME_MAX] = {
     "libz.so.1.2.13",
     "libelf-0.188.so",
     "libc.so.6",
-    "ld-linux-x86-64.so.2",
-    "[stack]",
     "[vvar]",
-    "[vdso]"
+    "[vdso]",
+    "ld-linux-x86-64.so.2",
+    "[stack]"
 };
 
 
@@ -126,14 +127,14 @@ char areas_unmapped[TARGET_AREAS_UNMAPPED][NAME_MAX] = {
     "libc.so.6",
     "",
     "",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "[stack]",
     "[vvar]",
-    "[vdso]"
+    "[vdso]",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "[stack]"
 };
 
 char objs_unmapped[TARGET_OBJS_UNMAPPED][NAME_MAX] = {
@@ -141,10 +142,10 @@ char objs_unmapped[TARGET_OBJS_UNMAPPED][NAME_MAX] = {
     "unit_target",
     "[heap]",
     "libc.so.6",
-    "ld-linux-x86-64.so.2",
-    "[stack]",
     "[vvar]",
-    "[vdso]"
+    "[vdso]",
+    "ld-linux-x86-64.so.2",
+    "[stack]"
 };
 
 
@@ -241,8 +242,13 @@ void change_target_map(pid_t pid) {
     ck_assert_int_eq(ret, 0);
 
     //busy-wait for target to change its memory map
-    while(target_state == old_state) {}
-
+    if (_DEBUG_ACTIVE) {
+        if (target_state == MAPPED) target_state = UNMAPPED;
+        if (target_state == UNCHANGED) target_state = MAPPED;
+    } else {
+        while (target_state == old_state) {}
+    }
+    
     return;
 }
 
@@ -252,23 +258,23 @@ void assert_target_map(mc_vm_map * map) {
     switch(target_state) {
 
         case UNCHANGED:
-            assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_unchanged,
+            assert_vm_map_areas_aslr(&map->vm_areas, areas_unchanged,
                                      0, TARGET_AREAS_UNCHANGED, true);
-            assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_unchanged,
+            assert_vm_map_objs_aslr(&map->vm_objs, objs_unchanged,
                                     0, TARGET_OBJS_UNCHANGED, true);
             break;
 
         case MAPPED:
-            assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_mapped,
+            assert_vm_map_areas_aslr(&map->vm_areas, areas_mapped,
                                      0, TARGET_AREAS_MAPPED, true);
-            assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_mapped,
+            assert_vm_map_objs_aslr(&map->vm_objs, objs_mapped,
                                     0, TARGET_OBJS_MAPPED, true);
             break;
 
         case UNMAPPED:
-            assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_unmapped,
+            assert_vm_map_areas_aslr(&map->vm_areas, areas_unmapped,
                                      0, TARGET_AREAS_UNMAPPED, true);
-            assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_unmapped,
+            assert_vm_map_objs_aslr(&map->vm_objs, objs_unmapped,
                                     0, TARGET_OBJS_UNMAPPED, true);
             break;
         

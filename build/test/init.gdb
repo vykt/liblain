@@ -121,7 +121,7 @@ define pmapa
 			end
 
 			# print relevant entries of this area
-			printf "%-3d: 0x%lx - 0x%lx | obj: %-5d - last_obj: %-5d | \"%s\"\n", $id, $start_addr, $end_addr, $obj_id, $last_obj_id, $basename
+			printf "%-3d: 0x%-12lx - 0x%-12lx | obj: %-5d - last_obj: %-5d | \"%s\"\n", $id, $start_addr, $end_addr, $obj_id, $last_obj_id, $basename
 
 			# advance iteration
 			set $iter = $iter + 1
@@ -169,7 +169,7 @@ define pmapua
 			end
 
 			# print relevant entries of this area
-			printf "%-3d: 0x%lx - 0x%lx | obj: %-5d - last_obj: %-5d | \"%s\"\n", $id, $start_addr, $end_addr, $obj_id, $last_obj_id, $basename
+			printf "%-3d: 0x%-12lx - 0x%-12lx | obj: %-5d - last_obj: %-5d | \"%s\"\n", $id, $start_addr, $end_addr, $obj_id, $last_obj_id, $basename
 
 			# advance iteration
 			set $iter = $iter + 1
@@ -237,7 +237,7 @@ define pmapo
 				end
 
 				# print relevant entries of this area
-				printf "        %-3d: 0x%lx - 0x%lx | obj: %-5d - last_obj: %-5d | \"%s\"\n", $id, $start_addr, $end_addr, $inner_obj_id, $inner_last_obj_id, $basename
+				printf "        %-3d: 0x%-12lx - 0x%-12lx | obj: %-5d - last_obj: %-5d | \"%s\"\n", $id, $start_addr, $end_addr, $inner_obj_id, $inner_last_obj_id, $basename
 
 				# advance iteration over areas
 				set $inner_iter = $inner_iter + 1
@@ -276,7 +276,7 @@ define pmapo
 				end
 
 				# print relevant entries of this area
-				printf "        %-3d: 0x%lx - 0x%lx | obj: %-5d - last_obj: %-5d | \"%s\"\n", $id, $start_addr, $end_addr, $inner_obj_id, $inner_last_obj_id, $basename
+				printf "        %-3d: 0x%-12lx - 0x%-12lx | obj: %-5d - last_obj: %-5d | \"%s\"\n", $id, $start_addr, $end_addr, $inner_obj_id, $inner_last_obj_id, $basename
 
 				# advance iteration over areas
 				set $inner_iter = $inner_iter + 1
@@ -320,7 +320,7 @@ define pmapuo
 			if ($start_addr == -1) && ($end_addr == -1)
 				printf "<%-3d: MC_UNDEF_ADDR - MC_UNDEF_ADDR | areas: %d - last areas: %d | \"%s\">\n", $id, $num_area, $num_last_area, $basename
 			else
-				printf "<%-3d: 0x%lx - 0x%lx | areas: %d - last areas: %d | \"%s\">\n", $id, $start_addr, $end_addr, $num_area, $num_last_area, $basename
+				printf "<%-3d: 0x%-12lx - 0x%-12lx | areas: %d - last areas: %d | \"%s\">\n", $id, $start_addr, $end_addr, $num_area, $num_last_area, $basename
 			end
 			
 			# advance iteration over objects
@@ -331,8 +331,12 @@ define pmapuo
 end
 
 
-# session dependent
+# setup session
 tb main
-layout src
-
 run
+set _DEBUG_ACTIVE = true
+
+# session dependent (modify from here onwards)
+tb test_procfs_mc_update_map_fn
+cont
+layout src

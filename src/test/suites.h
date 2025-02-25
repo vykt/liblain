@@ -1,8 +1,15 @@
 #ifndef SUITES_H
 #define SUITES_H
 
+//standard library
+#include <stdbool.h>
+
 //external libraries
 #include <check.h>
+
+
+//modify behaviour a debugger breaks
+extern bool _DEBUG_ACTIVE;
 
 
 //unit test suites

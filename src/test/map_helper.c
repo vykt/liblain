@@ -151,7 +151,7 @@ void assert_vm_map_objs(cm_lst * lst, struct obj_check * obj_checks,
 
 
 //assert only pathnames, not mapped address ranges
-void assert_vm_map_objs_aslr(cm_lst * lst, char * basenames[NAME_MAX],
+void assert_vm_map_objs_aslr(cm_lst * lst, char (* basenames)[NAME_MAX],
                              int start_index, int len, bool mapped) {
 
     int ret;
@@ -210,7 +210,7 @@ void assert_vm_map_areas(cm_lst * lst, struct area_check * area_checks,
 
 
 //assert only pathnames, not mapped address ranges
-void assert_vm_map_areas_aslr(cm_lst * lst, char * basenames[NAME_MAX],
+void assert_vm_map_areas_aslr(cm_lst * lst, char (* basenames)[NAME_MAX],
                               int start_index, int len, bool mapped) {
 
     int ret;
