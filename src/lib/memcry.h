@@ -74,8 +74,8 @@ typedef struct {
     uintptr_t start_addr;
     uintptr_t end_addr;
 
-    cm_lst vm_area_node_ps;      //STORES: cm_list_node * of mc_vm_area
-    cm_lst last_vm_area_node_ps; //STORES: cm_list_node * of mc_vm_area
+    cm_lst vm_area_node_ps;      //STORES: cm_lst_node * of mc_vm_area
+    cm_lst last_vm_area_node_ps; //STORES: cm_lst_node * of mc_vm_area
 
     int id;
     bool mapped; //set to false when a map update discovers obj. to be unmapped

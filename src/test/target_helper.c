@@ -253,23 +253,23 @@ void assert_target_map(mc_vm_map * map) {
 
         case UNCHANGED:
             assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_unchanged,
-                                     0, TARGET_AREAS_UNCHANGED);
+                                     0, TARGET_AREAS_UNCHANGED, true);
             assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_unchanged,
-                                    0, TARGET_OBJS_UNCHANGED);
+                                    0, TARGET_OBJS_UNCHANGED, true);
             break;
 
         case MAPPED:
             assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_mapped,
-                                     0, TARGET_AREAS_MAPPED);
+                                     0, TARGET_AREAS_MAPPED, true);
             assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_mapped,
-                                    0, TARGET_OBJS_MAPPED);
+                                    0, TARGET_OBJS_MAPPED, true);
             break;
 
         case UNMAPPED:
             assert_vm_map_areas_aslr(&map->vm_areas, (char **) areas_unmapped,
-                                     0, TARGET_AREAS_UNMAPPED);
+                                     0, TARGET_AREAS_UNMAPPED, true);
             assert_vm_map_objs_aslr(&map->vm_objs, (char **) objs_unmapped,
-                                    0, TARGET_OBJS_UNMAPPED);
+                                    0, TARGET_OBJS_UNMAPPED, true);
             break;
         
     } //end switch

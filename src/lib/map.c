@@ -528,13 +528,19 @@ int _map_forward_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
 
 
 DBG_STATIC DBG_INLINE
-int _map_unlink_unmapped_obj(cm_lst_node * obj_node, mc_vm_map * map) {
+int _map_unlink_unmapped_obj(cm_lst_node * obj_node,
+                             _traverse_state * state, mc_vm_map * map) {
 
     int ret;
     cm_lst_node * ret_node;
     
     mc_vm_obj * obj;
 
+
+    //backtrack traverse state if it is currently on this object
+    if (obj_node == state->prev_obj_node) {
+        state->prev_obj_node = state->prev_obj_node->prev;
+    }
 
     //fetch object
     obj = MC_GET_NODE_OBJ(obj_node);
@@ -577,7 +583,8 @@ int _map_unlink_unmapped_obj(cm_lst_node * obj_node, mc_vm_map * map) {
 
 
 DBG_STATIC DBG_INLINE
-int _map_unlink_unmapped_area(cm_lst_node * area_node, mc_vm_map * map) {
+int _map_unlink_unmapped_area(cm_lst_node * area_node,
+                              _traverse_state * state, mc_vm_map * map) {
 
     int ret;
     cm_lst_node * ret_node;
@@ -604,7 +611,7 @@ int _map_unlink_unmapped_area(cm_lst_node * area_node, mc_vm_map * map) {
         //if this area's object now has no areas, unmap it
         if (obj->vm_area_node_ps.len == 0) {
             
-            ret = _map_unlink_unmapped_obj(obj_node, map);
+            ret = _map_unlink_unmapped_obj(obj_node, state, map);
             if (ret) return -1;
         }
     }
@@ -683,12 +690,11 @@ void _map_state_inc_area(_traverse_state * state, const int inc_type,
             //advance next area if we haven't reached the end 
             //& dont circle back to the start
             if (state->next_area_node != NULL
-                && state->next_area_node != map->vm_areas.head) {                
+                && state->next_area_node->next != map->vm_areas.head) {                
                 state->next_area_node = state->next_area_node->next;
             
             } else {
                 state->next_area_node = NULL;
-            
             }            
             break;
 
@@ -708,15 +714,12 @@ void _map_state_inc_obj(_traverse_state * state, mc_vm_map * map) {
 
     //if there is no prev obj, initialise it
     if (state->prev_obj_node == NULL) {
-
         state->prev_obj_node = map->vm_objs.head;
 
     //if there is a prev obj
     } else {
-
         //only advance next object if we won't circle back to start
         if (state->prev_obj_node->next != map->vm_objs.head) {
-
             state->prev_obj_node = state->prev_obj_node->next;
         }
     }
@@ -725,6 +728,7 @@ void _map_state_inc_obj(_traverse_state * state, mc_vm_map * map) {
 }
 
 
+//return: 0 - do not re-add, 1 - do re-add, -1 - error
 DBG_STATIC DBG_INLINE
 int _map_resync_area(const struct vm_entry * entry, 
                      _traverse_state * state, mc_vm_map * map) {
@@ -740,13 +744,14 @@ int _map_resync_area(const struct vm_entry * entry,
     area = MC_GET_NODE_AREA(area_node);
 
     //while there are vm areas left to discard
-    while (entry->vm_end > area->start_addr) {
+    while (entry->vm_end > area->start_addr
+           && _map_check_area_eql(entry, area_node) == -1) {
 
         //advance state
         _map_state_inc_area(state, _STATE_AREA_NODE_ADVANCE, NULL, map);
 
         //remove this area node
-        ret = _map_unlink_unmapped_area(area_node, map);
+        ret = _map_unlink_unmapped_area(area_node, state, map);
         if (ret) return -1;
 
         //update iterator nodes
@@ -756,6 +761,7 @@ int _map_resync_area(const struct vm_entry * entry,
 
     } //end while
 
+    if (entry->vm_end > area->start_addr) return 1;
     return 0;
 }
 
@@ -778,15 +784,6 @@ cm_lst_node * _map_add_obj(const struct vm_entry * entry,
         return NULL;
     }
 
-    /*
-     *  With the insertion of this object, it may now be closer to some 
-     *  memory areas without a backing object. For such memory areas, their 
-     *  `last_obj_node_p` pointer must be updated.
-     *
-     */
-
-    _map_forward_unmapped_obj_last_vm_areas(obj_node);
-
     //advance state
     _map_state_inc_obj(state, map);
 
@@ -800,6 +797,7 @@ int _map_add_area(const struct vm_entry * entry,
 
     int ret;
     bool use_obj;
+    bool forward_obj = false;
 
     mc_vm_area area;
     cm_lst_node * area_node;
@@ -839,6 +837,7 @@ int _map_add_area(const struct vm_entry * entry,
             case _MAP_OBJ_NEW:
                 obj_node = _map_add_obj(entry, state, map);
                 if (obj_node == NULL) return -1;
+                forward_obj = true;
                 break;
 
             //area belongs to the next object
@@ -855,7 +854,19 @@ int _map_add_area(const struct vm_entry * entry,
 
 
     //add area to the map list
-    area_node = cm_lst_ins_nb(&map->vm_areas, state->next_area_node, &area);
+    if (state->next_area_node == NULL) {
+
+        //if map is empty, insert at start
+        if (map->vm_areas.head == NULL) {
+            area_node = cm_lst_ins(&map->vm_areas, 0, &area);
+        } else {
+            area_node = cm_lst_ins(&map->vm_areas, -1, &area);
+        }
+        
+    } else {
+        area_node = cm_lst_ins_nb(&map->vm_areas,
+                                  state->next_area_node, &area);
+    }
     if (area_node == NULL) {
         mc_errno = MC_ERR_LIBCMORE;
         return -1;
@@ -869,6 +880,15 @@ int _map_add_area(const struct vm_entry * entry,
         
     } else {
         ret = _map_obj_add_last_area(obj, area_node);
+        if (ret == -1) return -1;
+    }
+
+    /*
+     *  Only now that the new object has an area associated with it (and hence
+     *  a valid address range) can areas be forwarded to it.
+     */
+    if (forward_obj) {
+        ret = _map_forward_unmapped_obj_last_vm_areas(state->prev_obj_node);
         if (ret == -1) return -1;
     }
 
@@ -891,7 +911,8 @@ int map_send_entry(const struct vm_entry * entry,
 
 
     //if reached the end of the old map
-    if (state->next_area_node == NULL) {
+    if (state->next_area_node == NULL
+        || state->next_area_node->next == map->vm_areas.head) {
 
         ret = _map_add_area(entry, state, map);
         if (ret == -1) return -1;
@@ -900,13 +921,15 @@ int map_send_entry(const struct vm_entry * entry,
     } else {
         
         //if entry doesn't match next area (a change in the map)
-        if (_map_check_area_eql(entry, state->next_area_node)) {
+        if (_map_check_area_eql(entry, state->next_area_node) == -1) {
 
             ret = _map_resync_area(entry, state, map);
-            if (ret) return -1;
-
-            ret = _map_add_area(entry, state, map);
             if (ret == -1) return -1;
+
+            if (ret == 0) {
+                ret = _map_add_area(entry, state, map);
+                if (ret == -1) return -1;
+            }
 
         // else entry matches next area
         } else {

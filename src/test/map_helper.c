@@ -67,14 +67,26 @@ void assert_lst_len(cm_lst * list, int len) {
 //properly assert a potentially NULL string pair
 void assert_names(char * a, char * b) {
 
-    //if one is NULL, both must be NULL
-    if (a == NULL || b == NULL) {
-        ck_assert_ptr_eq(a, b);
+    //determine comparison type
+    int cmp_type = (a == NULL ? 0 : 1) + (b == NULL ? 0 : 2);
+
+
+    switch (cmp_type) {
+
+        case 0:
+            ck_assert_ptr_eq(a, b);
+            break;
+        case 1:
+            ck_assert(*a == '\0' && b == NULL);
+            break;
+        case 2:
+            ck_assert(a == NULL && *b == '\0');
+            break;
+        case 3:
+            ck_assert_str_eq(a, b);
+            break;
         
-    //otherwise, assert strings
-    } else {
-        ck_assert_str_eq(a, b);
-    }
+    } //end switch
 
     return;
 }

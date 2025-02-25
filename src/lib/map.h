@@ -62,8 +62,10 @@ int _map_find_obj_for_area(const struct vm_entry * entry,
 int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node);
 int _map_forward_unmapped_obj_last_vm_areas(cm_lst_node * obj_node);
 
-int _map_unlink_unmapped_obj(cm_lst_node * obj_node, mc_vm_map * map);
-int _map_unlink_unmapped_area(cm_lst_node * area_node, mc_vm_map * map);
+int _map_unlink_unmapped_obj(cm_lst_node * obj_node,
+                             _traverse_state * state, mc_vm_map * map);
+int _map_unlink_unmapped_area(cm_lst_node * area_node,
+                              _traverse_state * state, mc_vm_map * map);
 
 int _map_check_area_eql(const struct vm_entry * entry, 
                         const cm_lst_node * area_node);
