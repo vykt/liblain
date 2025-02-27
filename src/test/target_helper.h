@@ -45,9 +45,13 @@ enum target_map_state {
 
 //target metadata
 #define TARGET_NAME "unit_target"
-#define TARGET_BUF_SZ 16 /* must be even */
 
+#define TARGET_KILL_CMD_FMT "kill $(pidof %s)"
+#define TARGET_KILL_CMD_LEN NAME_MAX + 64
+
+#define TARGET_BUF_SZ 16 /* must be even */
 #define IFACE_RW_BUF_STR "read & write me "
+#define IFACE_W_BUF_STR  "buffer written  "
 
 #define IFACE_RW_BUF_OBJ_INDEX  1
 #define IFACE_RW_BUF_AREA_INDEX 4
@@ -59,6 +63,7 @@ enum target_map_state {
 
 
 //target helpers
+int clean_targets();
 pid_t start_target();
 void end_target(pid_t pid);
 void change_target_map(pid_t pid);

@@ -168,8 +168,8 @@ START_TEST(test_mc_bytes_to_hex) {
 
 
     //only test: convert ascii "foo" to hex representation
-    cm_byte str[3]  = "foo";
-    char hex_str[6] = {0};
+    cm_byte str[4]  = "foo";
+    char hex_str[8] = {0};
 
     mc_bytes_to_hex(str, 3, hex_str);
     ret = memcmp(hex_str, "666f6f", 6); 

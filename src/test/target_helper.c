@@ -1,6 +1,8 @@
 //standard library
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
+#include <string.h>
 
 //system headers
 #include <unistd.h>
@@ -165,6 +167,24 @@ static void _sigusr1_handler() {
 
 
 //helpers
+int clean_targets() {
+
+    int ret;
+    char command_buf[TARGET_KILL_CMD_LEN];
+    
+
+    //build command string
+    snprintf(command_buf, TARGET_KILL_CMD_LEN,
+             TARGET_KILL_CMD_FMT, TARGET_NAME);
+
+    //use system() to kill all existing targets
+    ret = system(command_buf);
+    if (ret == -1) return -1;
+
+    return 0;
+}
+
+
 pid_t start_target() {
 
     int ret;
@@ -175,7 +195,7 @@ pid_t start_target() {
     
     char * argv[3] = {TARGET_NAME, 0, 0};
     target_state = UNCHANGED;
-    
+
 
     //get current pid to pass to target
     parent_pid = getpid();
@@ -188,13 +208,11 @@ pid_t start_target() {
 
     //change image to target in child
     if (target_pid == 0) {
-
         ret = execve(TARGET_NAME, argv, NULL);
         ck_assert_int_ne(ret, -1);
 
-    //if parent, register signal handler for child
+    //parent registers signal handler for child
     } else {
-        
         ret_s = signal(SIGUSR1, _sigusr1_handler);
         ck_assert(ret_s != SIG_ERR);
     }
@@ -210,7 +228,7 @@ void end_target(pid_t pid) {
 
     pid_t ret_p;
 
-
+    
     //unregister signal handler
     ret_s = signal(SIGUSR1, SIG_DFL);
 

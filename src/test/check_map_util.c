@@ -46,6 +46,9 @@ static void _setup_target() {
     ret = mc_open(&s, PROCFS, pid);
     ck_assert_int_eq(ret, 0);
 
+    //wait for ldlinux.so in the target
+    sleep(1);
+
     mc_new_vm_map(&m);
     ret = mc_update_map(&s, &m);
     ck_assert_int_eq(ret, 0);
@@ -88,14 +91,14 @@ START_TEST(test_mc_get_area_offset) {
 
     //first test: typical offset
     o = MC_GET_NODE_OBJ(m.vm_objs.head);
-    a_n = MC_GET_NODE_PTR(o->vm_area_node_ps.head);
+    a_n = MC_GET_NODE_PTR(o->last_vm_area_node_ps.head);
 
     off = mc_get_area_offset(a_n, 0x10800);
     ck_assert_int_eq(off, 0x800);
 
 
     //second test: address is lower than area's starting address
-    off = mc_get_area_offset(a_n, 0x9800);
+    off = mc_get_area_offset(a_n, 0xF800);
     ck_assert_int_eq(off, -0x800);
 
     return;
@@ -109,17 +112,20 @@ START_TEST(test_mc_get_obj_offset) {
     off_t off;
 
     cm_lst_node * o_n;
+    mc_vm_obj * o;
 
 
     //first test: typical offset
     o_n = m.vm_objs.head;
+    o = MC_GET_NODE_OBJ(o_n);
 
-    off = mc_get_obj_offset(o_n, 0x10800);
+    off = mc_get_obj_offset(o_n, 0x800);
     ck_assert_int_eq(off, 0x800);
 
 
     //second test: address is lower than obj's starting address
-    off = mc_get_obj_offset(o_n, 0x9800);
+    o->end_addr = o->start_addr = 0x1000;
+    off = mc_get_obj_offset(o_n, 0x800);
     ck_assert_int_eq(off, -0x800);
     
     return;
@@ -138,14 +144,14 @@ START_TEST(test_mc_get_area_offset_bnd) {
 
     //first test: typical offset
     o = MC_GET_NODE_OBJ(m.vm_objs.head);
-    a_n = MC_GET_NODE_PTR(o->vm_area_node_ps.head);
+    a_n = MC_GET_NODE_PTR(o->last_vm_area_node_ps.head);
 
-    off = mc_get_area_offset(a_n, 0x10800);
+    off = mc_get_area_offset_bnd(a_n, 0x10800);
     ck_assert_int_eq(off, 0x800);
 
 
     //second test: address is lower than area's starting address
-    off = mc_get_area_offset(a_n, 0x9800);
+    off = mc_get_area_offset_bnd(a_n, 0xF800);
     ck_assert_int_eq(off, -1);
 
     return;
@@ -159,17 +165,20 @@ START_TEST(test_mc_get_obj_offset_bnd) {
     off_t off;
 
     cm_lst_node * o_n;
-
+    mc_vm_obj * o;
+    
 
     //first test: typical offset
     o_n = m.vm_objs.head;
+    o = MC_GET_NODE_OBJ(o_n);
 
-    off = mc_get_obj_offset(o_n, 0x10800);
+    off = mc_get_obj_offset_bnd(o_n, 0x800);
     ck_assert_int_eq(off, 0x800);
 
 
     //second test: address is lower than obj's starting address
-    off = mc_get_obj_offset(o_n, 0x9800);
+    o->end_addr = o->start_addr = 0x1000;
+    off = mc_get_obj_offset_bnd(o_n, 0x800);
     ck_assert_int_eq(off, -1);
     
     return;
@@ -284,7 +293,7 @@ START_TEST(test_mc_get_obj_node_by_basename) {
     o_n = m.vm_objs.head->next->next;
     o = MC_GET_NODE_OBJ(o_n); 
 
-    basename = o->pathname;
+    basename = o->basename;
     ret_n = mc_get_obj_node_by_basename(&m, basename);
     ck_assert_ptr_eq(ret_n, o_n);
 

@@ -337,6 +337,8 @@ run
 set _DEBUG_ACTIVE = true
 
 # session dependent (modify from here onwards)
+tb test_procfs_mc_open_close_fn
 tb test_procfs_mc_update_map_fn
+tb test_procfs_mc_read_write_fn
 cont
 layout src
