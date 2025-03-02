@@ -7,11 +7,11 @@
 
 ### ABOUT:
 
-**The Memcry Library () provides**:
+**The Memcry Library provides**:
 
 - Graph-like data structure (*map*) for representing the memory map of a target process.
-- The ability to update the *map* as the target's memory mappings change without invalidating pointers to the *map*.
-- Tracking of (assumed) ownership of unnamed `vm_area`s.
+- The ability to update the *map* as the target's memory mappings change without invalidating pointers to said map.
+- Tracking of (assumed) ownership of unnamed *vm_area*s.
 - Support for **multiple interfaces** for acquiring the memory maps, reading and writing memory.
 - Multiple convenient utilities.
 
@@ -19,7 +19,7 @@
     <img src="media/overview.png">
 </p>
 
-See the example below. Feel free to contact me on discord (*@vykt*), email (*vykt[at]disroot[dot]org*).
+See the example below. Feel free to contact me on discord: *@vykt* or email: *vykt[at]disroot[dot]org*
 
 
 ### DEPENDENCIES:
