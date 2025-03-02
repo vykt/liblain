@@ -73,7 +73,8 @@ clean:
 
 install:
 > mkdir -pv ${INSTALL_DIR}
-> cp -v ${BUILD_DIR}/lib/{${SHARED},${STATIC}} ${INSTALL_DIR}
+> cp -v ${BUILD_DIR}/lib/${SHARED} ${INSTALL_DIR}
+> cp -v ${BUILD_DIR}/lib/${STATIC} ${INSTALL_DIR}
 > mkdir -pv ${INCLUDE_INSTALL_DIR}
 > cp -v ${LIB_DIR}/${HEADER} ${INCLUDE_INSTALL_DIR}
 > echo "${INSTALL_DIR}" > ${LD_DIR}/90memcry.conf
