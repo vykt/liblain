@@ -130,15 +130,18 @@ pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
 
 
     //initialise vector
-    ret = cm_new_vct(pid_vector, sizeof(pid_t));
-    if (ret) {
-        mc_errno = MC_ERR_CMORE;
-        return -1;
+    if (pid_vector != NULL) {
+        ret = cm_new_vct(pid_vector, sizeof(pid_t));
+        if (ret) {
+            mc_errno = MC_ERR_CMORE;
+            return -1;
+        }
     }
 
     //open proc directory
 	ds = opendir("/proc");
 	if (ds == NULL) {
+	    if (pid_vector != NULL) cm_del_vct(pid_vector);
         mc_errno = MC_ERR_PROC_NAV;
         return -1;
     }
@@ -153,7 +156,7 @@ pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
         temp_pid = (pid_t) strtoul(d_ent->d_name, NULL, 10);
         if (errno == ERANGE) {
             closedir(ds);
-            cm_del_vct(pid_vector);
+            if (pid_vector != NULL) cm_del_vct(pid_vector);
             mc_errno = MC_ERR_PROC_NAV;
             return -1;
         }
@@ -162,27 +165,31 @@ pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
         ret = _get_status_name(name_buf, temp_pid);
         if (ret) {
             closedir(ds);
-            cm_del_vct(pid_vector);
+            if (pid_vector != NULL) cm_del_vct(pid_vector);
             return -1;
         }
 
         //if found a match
         ret = strcmp(name_buf, comm);
         if (!ret) {
-            
-            //add pid_t to list of potential PIDs
-            ret = cm_vct_apd(pid_vector, (cm_byte *) &temp_pid);
-            if (ret) {
-                closedir(ds);
-                cm_del_vct(pid_vector);
-                mc_errno = MC_ERR_CMORE;
-                return -1;
-            }
 
+            //add pid_t to list of potential PIDs if a vector is provided
+            if (pid_vector != NULL) {
+
+                ret = cm_vct_apd(pid_vector, (cm_byte *) &temp_pid);
+                if (ret) {
+                    closedir(ds);
+                    cm_del_vct(pid_vector);
+                    mc_errno = MC_ERR_CMORE;
+                    return -1;
+                }
+            }
+            
             //save first pid
             if (!first_recorded) {
                 first_pid = temp_pid;
                 ++first_recorded;
+                if (pid_vector == NULL) break;
             }
 
         }//end if found process with matching name
@@ -191,7 +198,7 @@ pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
 	
 	ret = closedir(ds);
 	if (ret) {
-        cm_del_vct(pid_vector);
+        if (pid_vector != NULL) cm_del_vct(pid_vector);
         mc_errno = MC_ERR_PROC_NAV;
         return -1;
     }

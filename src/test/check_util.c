@@ -106,13 +106,19 @@ START_TEST(test_mc_pid_by_name) {
     cm_vct v;
 
 
-    //first test: target exists
+    //first test: target exists, provide vector
     pid = mc_pid_by_name(TARGET_NAME, &v);
 
     ck_assert_int_ne(pid, -1);
     ck_assert_int_eq(v.len, 1);
 
     cm_del_vct(&v);
+
+
+    //second test: target exists, do not provide vector
+    pid = mc_pid_by_name(TARGET_NAME, NULL);
+
+    ck_assert_int_ne(pid, -1);
 
 
     //second test: target does not exist

@@ -7,83 +7,224 @@
 
 ### ABOUT:
 
-The Lain library (<b>liblain</b>) provides a programmatic interface to the memory and memory maps of processes on Linux. Liblain can be used for:
+<p align="center">
+    <img src="overview.png" width="150" height="150">
+</p>
 
-- Code injection
-- Memory analysis
-- Anti-cheat bypass (see [lain.ko](https://github.com/vykt/lain.ko))
+**Memcry provides**:
 
-<b>liblain</b> offers both a procfs and a [lain.ko](https://github.com/vykt/lain.ko) LKM backend. Both interfaces provide identical functionality and are interchangable.
+- Sophisticated data structure for representing the memory map of a target process.
+- A way to update the memory map as the target's mappings change without invalidating pointers. Your pointer to a `vm_area` will not suddenly read garbage after a map update.
+- All `vm_areas` and "backing objects" (e.g.: `libc.so.6`) store pointers to each other; traversal is easy and fast.
+- Nameless areas are assumed to belong to the previous backing object, while still being distinctly separate from the areas that 'truly' comprise a backing object.
+- Support for **multiple uniform interfaces**; each interface provides a method for acquiring the memory maps of a target and provides a read & write primitive. Target catching procfs reads? Switch to an interface that uses a kernel module.
+- Multiple convenient utilities. For example, a way to find the process id of a target by its name, using the exact same method as `ps` & `top`.
 
-<b>liblain</b> stores both virtual memory areas and backing objects in nodes traversable as lists or trees. The use of nodes for storage means the internal memory map can be updated without invalidating any pointers. This makes development of complex tools much easier.
-
-In addition to a memory interface <b>liblain</b> also provides several utilities including:
-
-- Same method for resolving PID as ps/top.
-- Fast address -> VM area search.
-
----
+See the example below, and refer to `memcry.h`. Feel free to contact me on discord (*@vykt*), email (*vykt[at]disroot[dot]org*), and LiberaIRC (*@vykt*).
 
 ### DEPENDENCIES:
 
-<b>liblain</b> requires [libcmore](https://github.com/vykt/libcmore).
+If you're not using a packaged release, you'll need to install:
+
+- [CMore](https://github.com/vykt/cmore) - Data structures for C.
 
 
-### INSTALLATION:
+### EXAMPLE:
 
-Fetch the repo:
-```
-$ git clone https://github.com/vykt/liblain
+```c
+#include <stdio.h>
+#include <stdint.h>
+#include <unistd.h>
+
+#include <memcry.h>
+#include <cmore.h>
+
+
+int main() {
+
+	int ret;
+	
+
+	/*
+	 *  First, find the PID of the target based on the target's name. You can
+	 *  optionally pass a pointer to an uninitialised CMore vector if you want
+   *  to find PIDs of multiple processes with the same name.
+	 */
+	pid_t pid;
+	pid = mc_pid_by_name("target_name", NULL);
+
+
+	/*
+	 *  Open a session on your target. For the procfs interface, this will
+	 *  open file descriptors on /proc/pid/{mem,maps}
+	 */
+	 mc_session s;
+	 ret = mc_open(&s, PROCFS, pid);
+	 if (ret != 0) {
+		 /* on error, a perror() function is provided */
+		 mc_perror("[error]");
+	 }
+
+
+	/*
+	 *  Read the target's memory map for the first time.
+	 */
+	mc_vm_map m;
+	ret = mc_update_map(&s, &m);
+
+
+	/*
+	 *  Find the "libfoo.so" object in the target.
+	 */
+	cm_lst_node * libfoo_node = NULL;
+	libfoo_node = mc_get_obj_node_by_basename(&m, "libfoo.so");
+	if (libfoo_node == NULL) {/*...*/}
+
+
+	/*
+	 *  Print libfoo.so's starting address.
+	 */
+	mc_vm_obj * libfoo_obj = MC_GET_NODE_OBJ(libfoo_node);
+	printf("libfoo.so start addr: 0x%lx, end addr: 0x%lx\n", 
+	       libfoo_obj->start_addr, libfoo_obj->end_addr);
+
+
+	/*
+	 *  Print the full path of the object after libfoo.so.
+	 */
+	cm_lst_node * next_node = libfoo_node->next;
+	mc_vm_obj * next_obj = MC_GET_NODE_OBJ(next_node);
+	printf("after libfoo.so: %s\n", next_obj->pathname);
+
+
+	/*
+	 *  Get the first area of libfoo.so. The object of libfoo (libfoo_obj)
+	 *  stores pointers to area nodes. 
+	 */
+	cm_lst_node * area_node_p = libfoo_obj->vm_area_node_ps.head;
+	cm_lst_node * area_node = MC_GET_NODE_PTR(area_node_p);
+	mc_vm_area * area = MC_GET_NODE_AREA(area_node);
+	printf("is first area writable?: %d\n, area->access & MC_ACCESS_WRITE);
+
+
+	/*
+	 *  Get the next area and print its address range.
+	 */
+	mc_vm_area * next_area = MC_GET_NODE_AREA(area_node->next);
+	printf("next area start addr: 0x%lx, end addr: 0x%lx\n",
+	       next_area->start_addr, next_area->end_addr);
+
+
+	/*
+	 *  The target's (OS-wide) memory map may have been updated; we should update
+   *  our local map.
+	 */
+	ret = mc_update_map(&s, &m);
+	if (ret != 0) {/*...*/}
+
+
+	/*
+	 *  Check if libfoo.so is still mapped. If not, fetch the next mapped 
+	 *  object. Even if libfoo.so and its constituent areas have been unmapped, 
+	 *  their nodes and object pointers will remain valid.
+	 */
+	cm_lst_node * iter_node;
+	mc_vm_obj * iter_obj;
+	if (libfoo_obj->mapped == false) {
+		iter_node = libfoo_node->next;
+		while (iter_node != m.vm_objs.head) {
+			iter_obj = MC_GET_NODE_OBJ(iter_node);
+			if (iter_obj->mapped == true) break;
+		}
+	}
+
+
+	/*
+	 *  Clean up unmapped objects & areas. This will cause `libfoo_node` and
+	 *  `libfoo_obj` pointers to become invalid.
+	 */
+	ret = mc_map_clean_unmapped(&m);
+	if (ret != 0) {/*...*/}
+
+
+	/*
+	 *  Clean up and exit.
+	 */
+	ret = mc_close(&s);
+	if (ret != 0) {/*...*/}
+
+	ret = mc_del_vm_map(&m);
+	if (ret != 0) {/*...*/}
+
+	return 0;
+}
+
 ```
 
-Build:
-```
-$ make lib
-```
 
-Install:
-```
-# make install
-```
 
-Install additional markdown documentation:
-```
-# make install_doc
-```
 
-To uninstall:
-```
-# make uninstall
-```
 
----
 
-### LINKING:
 
-Ensure your linker searches for liblain in the install directory (adjust as required):
-```
-# echo "/usr/local/lib" > /etc/ld.so.conf.d/liblain.conf
-```
 
-Include `<liblain.h\>` in your sources:
-```
-#include <liblain.h>
-```
 
-Ask your compiler to link liblain:
-```
-$ gcc -o test test.c -llain
-```
 
----
 
-### DOCUMENTATION:
 
-See `./doc/md` for markdown documentation. After installing <b>liblain</b> the following manpages are available:
 
-| Manpage         | Description                 |
-| --------------- | --------------------------- |
-| `liblain_error` | Error handling              |
-| `liblain_map`   | Memory map data structure   |
-| `liblain_iface` | Using interfaces            |
-| `liblain_util`  | Utilities                   |
+
+
+
+
+## TL;DR
+
+
+
+
+
+Memcry is a memory manipulation library. It's des
+
+Memcry provides two views of a target's memory: areas
+
+
+`mc_vm_map` can be updated at any time by calling `mc_update_map()`.
+Most importantly, updating the map does not invalidate any existing
+pointers. Instead any areas discovered to no longer be mapped are
+moved to unmapped lists inside `mc_vm_map`, and their `mapped` flags
+are set to `false`.
+
+
+## Interfaces:
+
+As an obfuscation measure your target may be watching for memory
+accesses through some system APIs. Memcry performs all operations
+through _interfaces_. An interface provides read & write primitives, and
+a method to acquire the target's memory map. The library comes with support
+for two interfaces:
+
+- procfs (included)
+- krncry (WIP kernel module, get [here](https://github.com/vykt/krncry))
+
+
+## Utils:
+
+Memcry also offers some QoL utils:
+
+- Finding the PID of a target by name the exact way ps & top do.
+- A fast address -> area/object search.
+- Offset & bound offset getters.
+
+
+
+
+
+
+
+For any questions, contact me on discord (@vykt), by
+email (vykt[at]disroot[dot]org), or on LiberaIRC (@vykt).
+
+
+The core memcry data structure (`mc_vm_map`) 
+
+Searching
