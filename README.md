@@ -11,16 +11,16 @@
     <img src="overview.png" width="150" height="150">
 </p>
 
-**Memcry provides**:
+**The Memcry Library () provides**:
 
-- Sophisticated data structure for representing the memory map of a target process.
-- A way to update the memory map as the target's mappings change without invalidating pointers. Your pointer to a `vm_area` will not suddenly read garbage after a map update.
-- All `vm_areas` and "backing objects" (e.g.: `libc.so.6`) store pointers to each other; traversal is easy and fast.
-- Nameless areas are assumed to belong to the previous backing object, while still being distinctly separate from the areas that 'truly' comprise a backing object.
-- Support for **multiple uniform interfaces**; each interface provides a method for acquiring the memory maps of a target and provides a read & write primitive. Target catching procfs reads? Switch to an interface that uses a kernel module.
-- Multiple convenient utilities. For example, a way to find the process id of a target by its name, using the exact same method as `ps` & `top`.
+- Graph-like data structure (*map*) for representing the memory map of a target process.
+- The ability to update the *map* as the target's memory mappings change without invalidating pointers to the *map*.
+- Tracking of (assumed) ownership of unnamed `vm_area`s.
+- Support for **multiple interfaces** for acquiring the memory maps, reading and writing memory.
+- Multiple convenient utilities.
 
-See the example below, and refer to `memcry.h`. Feel free to contact me on discord (*@vykt*), email (*vykt[at]disroot[dot]org*), and LiberaIRC (*@vykt*).
+See the example below. Feel free to contact me on discord (*@vykt*), email (*vykt[at]disroot[dot]org*).
+
 
 ### DEPENDENCIES:
 

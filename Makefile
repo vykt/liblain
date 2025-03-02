@@ -18,7 +18,6 @@ LDFLAGS=-lcmore
 #[build constants]
 LIB_DIR=./src/lib
 TEST_DIR=./src/test
-DOC_DIR=./doc
 BUILD_DIR=${shell pwd}/build
 
 
@@ -68,9 +67,6 @@ static:
 	                           _LDFLAGS='${LDFLAGS}' \
 	                           BUILD_DIR='${BUILD_DIR}/lib'
 
-docs:
-> $(MAKE) -C ${DOC_DIR} all
-
 clean:
 > $(MAKE) -C ${TEST_DIR} clean CC='${CC}' BUILD_DIR='${BUILD_DIR}/test'
 > $(MAKE) -C ${LIB_DIR} clean CC='${CC}' BUILD_DIR='${BUILD_DIR}/lib'
@@ -80,20 +76,11 @@ install:
 > cp -v ${BUILD_DIR}/lib/{${SHARED},${STATIC}} ${INSTALL_DIR}
 > mkdir -pv ${INCLUDE_INSTALL_DIR}
 > cp -v ${LIB_DIR}/${HEADER} ${INCLUDE_INSTALL_DIR}
-> mkdir -pv ${MAN_INSTALL_DIR}
-> cp -Rv ${DOC_DIR}/groff/man/* ${MAN_INSTALL_DIR}
 > echo "${INSTALL_DIR}" > ${LD_DIR}/90memcry.conf
 > ldconfig
-
-install_docs:
-> mkdir -pv ${MD_INSTALL_DIR}
-> cp -v ${DOC_DIR}/md/* ${MD_INSTALL_DIR}
 
 uninstall:
 > -rm -v ${INSTALL_DIR}/{${SHARED},${STATIC}}
 > -rm -v ${INCLUDE_INSTALL_DIR}/${HEADER}
-> -rm -v ${MAN_INSTALL_DIR}/man7/memcry_*.7
-> -rm -v ${MD_INSTALL_DIR}/*.md
-> -rmdir ${MD_INSTALL_DIR}
 > -rm ${LD_DIR}/90memcry.conf
 > ldconfig
