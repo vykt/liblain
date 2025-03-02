@@ -42,7 +42,7 @@ If you're not using a packaged release, you'll need to install:
 
 int main() {
 
-	int ret;
+  int ret;
 	
 
   /*
