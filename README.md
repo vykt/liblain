@@ -1,15 +1,11 @@
 # Memcry
 
 <p align="center">
-    <img src="memcry.png" width="150" height="150">
+    <img src="media/memcry.png" width="150" height="150">
 </p>
 
 
 ### ABOUT:
-
-<p align="center">
-    <img src="overview.png">
-</p>
 
 **The Memcry Library () provides**:
 
@@ -18,6 +14,10 @@
 - Tracking of (assumed) ownership of unnamed `vm_area`s.
 - Support for **multiple interfaces** for acquiring the memory maps, reading and writing memory.
 - Multiple convenient utilities.
+
+<p align="center">
+    <img src="media/overview.png">
+</p>
 
 See the example below. Feel free to contact me on discord (*@vykt*), email (*vykt[at]disroot[dot]org*).
 
