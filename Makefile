@@ -19,6 +19,7 @@ LDFLAGS=-lcmore
 LIB_DIR=./src/lib
 TEST_DIR=./src/test
 BUILD_DIR=${shell pwd}/build
+PACKAGE_DIR=./package
 
 
 #[installation constants]
@@ -45,7 +46,7 @@ endif
 
 #[process targets]
 .PHONY prepare:
-> mkdir -p ${BUILD_DIR}/test ${BUILD_DIR}/lib
+> mkdir -p ${BUILD_DIR}/test ${BUILD_DIR}/lib ${PACKAGE_DIR}
 
 test: shared
 > $(MAKE) -C ${TEST_DIR} tests CC='${CC}' _CFLAGS='${CFLAGS_TEST}' \
@@ -70,6 +71,7 @@ static:
 clean:
 > $(MAKE) -C ${TEST_DIR} clean CC='${CC}' BUILD_DIR='${BUILD_DIR}/test'
 > $(MAKE) -C ${LIB_DIR} clean CC='${CC}' BUILD_DIR='${BUILD_DIR}/lib'
+> -rm ${PACKAGE_DIR}/*
 
 install:
 > mkdir -pv ${INSTALL_DIR}
@@ -85,3 +87,9 @@ uninstall:
 > -rm -v ${INCLUDE_INSTALL_DIR}/${HEADER}
 > -rm ${LD_DIR}/90memcry.conf
 > ldconfig
+
+package: all
+> -cp ${BUILD_DIR}/lib/${SHARED} ${PACKAGE_DIR}
+> -cp ${BUILD_DIR}/lib/${STATIC} ${PACKAGE_DIR}
+> -cp ${LIB_DIR}/memcry.h ${PACKAGE_DIR}
+> -tar cvjf ${PACKAGE_DIR}/memcry.tar.bz2 ${PACKAGE_DIR}/*
