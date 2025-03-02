@@ -8,7 +8,7 @@
 ### ABOUT:
 
 <p align="center">
-    <img src="overview.png" width="150" height="150">
+    <img src="overview.png">
 </p>
 
 **The Memcry Library () provides**:
