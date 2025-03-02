@@ -23,7 +23,7 @@
 		https://libcheck.github.io/check/
 
 	Check forks off new processes for each unit test. This can be undesirable
-	because debug builds of Memcry compile with GCC's address sanitizer,
+	because debug builds of MemCry compile with GCC's address sanitizer,
 	which will fail to report memory leaks if they occur in a child process.
 
 	Check will not fork new processes if the environment's `CK_FORK`
@@ -32,7 +32,7 @@
 
 [GDB scripts (essential)]:
 
-	Memcry's datastructures are very tedious to navigate with raw gdb.
+	MemCry's datastructures are very tedious to navigate with raw gdb.
 	Instead of writing 50 character long casts, make use these gdb scripts
 	defined in `$PROJROOT/build/test/init.gdb`:
 
