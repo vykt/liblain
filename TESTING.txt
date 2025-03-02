@@ -1,0 +1,84 @@
+[Summary]:
+
+	TL;DR: Inspect failing unit tests with GDB.
+
+	Build the unit tests with `make test [build=debug]`. This produces a
+	`test` executable in `$PROJROOT/build/test`. To run tests for a given
+	component, pass one (or more) of these flags:
+
+		-m : Core map data structure.
+		-p : `procfs` interface.
+		-k : `krncry` interface.
+		-n : Map utilities.
+		-u : Generic utilities.
+
+	When debugging with GDB (see whole document), use the `debug.sh`
+	script in `$PROJROOT/build/test/debug.sh`.
+
+
+[Unit tests & ASAN]:
+
+	Unit tests use the 'Check' library:
+
+		https://libcheck.github.io/check/
+
+	Check forks off new processes for each unit test. This can be undesirable
+	because debug builds of Memcry compile with GCC's address sanitizer,
+	which will fail to report memory leaks if they occur in a child process.
+
+	Check will not fork new processes if the environment's `CK_FORK`
+	variable is set to `no`.
+
+
+[GDB scripts (essential)]:
+
+	Memcry's datastructures are very tedious to navigate with raw gdb.
+	Instead of writing 50 character long casts, make use these gdb scripts
+	defined in `$PROJROOT/build/test/init.gdb`:
+
+		pmapa <mc_vm_map * m>
+
+			Pretty print all areas inside `m`.
+
+		pmapo <mc_vm_map * m>
+
+			Pretty print all objects of a map `m` and their constituent
+			areas.
+
+		pmapua <mc_vm_map * m>
+
+			Pretty print all unmapped areas inside `m`
+
+		pmapuo <mc_vm_map * m>
+
+			Pretty print all unmapped objects of a map `m` and their
+			constituent areas. 
+
+		parean <cm_lst_node<mc_vm_area> * n>
+
+			Dump a `mc_vm_area` held by a list node `cm_lst_node`.
+
+		pxarean <cm_lst_node<mc_vm_area> * n>
+
+			Dump (hex) a `mc_vm_area` held by a list node `cm_lst_node`
+
+		pobjn <cm_lst_node<mc_vm_obj> * n>
+
+			Dump a `mc_vm_obj` held by a list node `cm_lst_node`.
+
+		pxobjn <cm_lst_node<mc_vm_obj> * n>
+
+			Dump (hex) a `mc_vm_obj` held by a list node `cm_lst_node`.
+
+		pnode <cm_lst_node<cm_lst_node> * n>
+
+			Dump a nested list node held by another list node.
+
+		pnodea <cm_lst_node<cm_lst_node<mc_vm_area> *> * n>
+
+			`mc_vm_obj` stores a list of pointers to its constituent area
+			nodes. Use `pnodea` to easily print areas in this list.
+
+		pxnodea <cm_lst_node<cm_lst_node<mc_vm_area> *> * n>
+
+			See above.

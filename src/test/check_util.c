@@ -42,6 +42,8 @@ static void _setup_target() {
 
     int ret;
 
+    ret = clean_targets();
+    ck_assert_int_eq(ret, 0);
 
     pid = start_target();
     ck_assert_int_ne(pid, -1);

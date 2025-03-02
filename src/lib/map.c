@@ -133,6 +133,8 @@ int _map_obj_add_area_insert(cm_lst * obj_area_lst,
     //list is not empty, find appropriate insert point
     } else {
 
+        ret_node = NULL;
+
         //setup iteration
         iter_node = obj_area_lst->head;
         for (int i = 0; i < obj_area_lst->len; ++i) {
@@ -161,7 +163,7 @@ int _map_obj_add_area_insert(cm_lst * obj_area_lst,
     
         //check the new area was inserted successfully
         if (ret_node == NULL) {
-            mc_errno = MC_ERR_LIBCMORE;
+            mc_errno = MC_ERR_CMORE;
             return -1;
         }
     }
@@ -221,7 +223,7 @@ int _map_obj_add_area(mc_vm_obj * obj,
             obj->end_addr = area->end_addr;    
     }
 
-    //insert new area & ensure the area list remains sorted 
+    //insert new area & ensure the area list remains sorted
     ret = _map_obj_add_area_insert(&obj->vm_area_node_ps, area_node);
     if (ret) return -1; 
 
@@ -253,7 +255,7 @@ int _map_obj_rmv_area_fast(mc_vm_obj * obj, cm_lst_node * outer_area_node) {
     //remove area node from object
     ret = cm_lst_rmv_n(&obj->vm_area_node_ps, outer_area_node);
     if (ret != 0) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -269,7 +271,7 @@ int _map_obj_rmv_area_fast(mc_vm_obj * obj, cm_lst_node * outer_area_node) {
     //get start addr
     ret = cm_lst_get(&obj->vm_area_node_ps, 0, &temp_node);
     if (ret) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -281,7 +283,7 @@ int _map_obj_rmv_area_fast(mc_vm_obj * obj, cm_lst_node * outer_area_node) {
     if (index != 0) {
         ret = cm_lst_get(&obj->vm_area_node_ps, index, &temp_node); 
         if (ret) {
-            mc_errno = MC_ERR_LIBCMORE;
+            mc_errno = MC_ERR_CMORE;
             return -1;
         }
     }
@@ -321,7 +323,7 @@ int _map_obj_rmv_last_area_fast(mc_vm_obj * obj,
 
     ret = cm_lst_rmv_n(&obj->last_vm_area_node_ps, outer_area_node);
     if (ret != 0) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -440,7 +442,7 @@ int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
         ret_p = cm_lst_apd(&temp_prev_obj->last_vm_area_node_ps,
                            &temp_area_node);
         if (ret_p == NULL) {
-            mc_errno = MC_ERR_LIBCMORE;
+            mc_errno = MC_ERR_CMORE;
             return -1;
         }
 
@@ -453,7 +455,7 @@ int _map_backtrack_unmapped_obj_last_vm_areas(cm_lst_node * obj_node) {
         //remove this area from the object's last_vm_area_node_ps list
         ret = cm_lst_rmv(&temp_obj->last_vm_area_node_ps, 0);
         if (ret == -1) {
-            mc_errno = MC_ERR_LIBCMORE;
+            mc_errno = MC_ERR_CMORE;
             return -1;
         }
 
@@ -564,10 +566,10 @@ int _map_unlink_unmapped_obj(cm_lst_node * obj_node,
     ret = _map_backtrack_unmapped_obj_last_vm_areas(obj_node);
     if (ret == -1) return -1;
 
-    //unlink this node from the list of mapped vm areas
+    //unlink this node from the list of mapped vm objs
     ret_node = cm_lst_uln_n(&map->vm_objs, obj_node);
     if (ret_node != obj_node) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -581,7 +583,7 @@ int _map_unlink_unmapped_obj(cm_lst_node * obj_node,
     //move this object node to the unmapped list
     ret_node = cm_lst_apd(&map->vm_objs_unmapped, &obj_node);
     if (ret_node == NULL) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -639,7 +641,7 @@ int _map_unlink_unmapped_area(cm_lst_node * area_node,
     //unlink this node from the list of mapped vm areas
     ret_node = cm_lst_uln_n(&map->vm_areas, area_node);
     if (ret_node != area_node) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -653,7 +655,7 @@ int _map_unlink_unmapped_area(cm_lst_node * area_node,
     //move this area node to the unmapped list
     ret_node = cm_lst_apd(&map->vm_areas_unmapped, &area_node);
     if (ret_node == NULL) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -788,7 +790,7 @@ cm_lst_node * _map_add_obj(const struct vm_entry * entry,
     //insert obj into map
     obj_node = cm_lst_ins_na(&map->vm_objs, state->prev_obj_node, &vm_obj);
     if (obj_node == NULL) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return NULL;
     }
 
@@ -807,7 +809,7 @@ int _map_add_area(const struct vm_entry * entry,
     bool use_obj;
     bool forward_obj = false;
 
-    mc_vm_area area, * area_p;
+    mc_vm_area area;
     cm_lst_node * area_node;
     
     mc_vm_obj * obj;
@@ -876,7 +878,7 @@ int _map_add_area(const struct vm_entry * entry,
                                   state->next_area_node, &area);
     }
     if (area_node == NULL) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -1012,9 +1014,9 @@ void mc_new_vm_map(mc_vm_map * map) {
 
 int mc_del_vm_map(mc_vm_map * map) {
 
-    int ret, len_unmapped_obj;
+    int ret, len_obj;
 
-    cm_lst_node * unmapped_obj_node;
+    cm_lst_node * obj_node;
     mc_vm_obj * obj;
 
 
@@ -1024,18 +1026,21 @@ int mc_del_vm_map(mc_vm_map * map) {
 
 
     //setup iteration
-    len_unmapped_obj = map->vm_objs_unmapped.len;
-    unmapped_obj_node = map->vm_objs_unmapped.head;
+    len_obj = map->vm_objs.len;
+    obj_node = map->vm_objs.head;
     
-    //manually free all unmapped obj nodes
-    for (int i = 0; i < len_unmapped_obj; ++i) {
+    //manually free all object lists
+    for (int i = 0; i < len_obj; ++i) {
 
-        //fetch & destroy the object
-        obj = MC_GET_NODE_OBJ(unmapped_obj_node);
-        _map_del_vm_obj(obj);
+        //fetch the object
+        obj = MC_GET_NODE_OBJ(obj_node);
+
+        //destroy the object's list
+        cm_del_lst(&obj->vm_area_node_ps);
+        cm_del_lst(&obj->last_vm_area_node_ps);
 
         //advance iteration
-        unmapped_obj_node = unmapped_obj_node->next;
+        obj_node = obj_node->next;
 
     } //end for
 
@@ -1099,13 +1104,13 @@ int mc_map_clean_unmapped(mc_vm_map * map) {
     //empty out both unmapped lists
     ret = cm_lst_emp(&map->vm_areas_unmapped);
     if (ret) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
     ret = cm_lst_emp(&map->vm_objs_unmapped);
     if (ret) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 

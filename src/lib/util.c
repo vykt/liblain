@@ -132,7 +132,7 @@ pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
     //initialise vector
     ret = cm_new_vct(pid_vector, sizeof(pid_t));
     if (ret) {
-        mc_errno = MC_ERR_LIBCMORE;
+        mc_errno = MC_ERR_CMORE;
         return -1;
     }
 
@@ -175,7 +175,7 @@ pid_t mc_pid_by_name(const char * comm, cm_vct * pid_vector) {
             if (ret) {
                 closedir(ds);
                 cm_del_vct(pid_vector);
-                mc_errno = MC_ERR_LIBCMORE;
+                mc_errno = MC_ERR_CMORE;
                 return -1;
             }
 

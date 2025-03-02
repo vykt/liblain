@@ -251,7 +251,7 @@ void assert_iface_read_write(enum mc_iface_type iface) {
 
     //check if write succeeded
     ret = strncmp((char *) rw_buf, IFACE_W_BUF_STR, TARGET_BUF_SZ);
-    INFO_PRINT("[%s][none perm]<write check>: returned %d\n",
+    INFO_PRINT("[%s][no perm]<write check>: returned %d\n",
                get_iface_name(iface), ret);    
 
 
@@ -271,7 +271,7 @@ void assert_iface_read_write(enum mc_iface_type iface) {
                get_iface_name(iface), ret);    
 
     ret = strncmp((char *) rw_buf, IFACE_W_BUF_STR, TARGET_BUF_SZ);
-    INFO_PRINT("[%s][none perm]<write check>: returned %d\n",
+    INFO_PRINT("[%s][unmapped]<write check>: returned %d\n",
                get_iface_name(iface), ret);    
 
 

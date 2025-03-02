@@ -1,9 +1,3 @@
-[developing]:
-- While there are unit tests, they catch far from
-  everything. To ensure your changes work, inspect
-  state with a gdb using the provided macros.
-
-
 [bugs]:
 - Change error code `LIBCMORE` -> `CMORE`
 - Modify GDB scripts to pretty print areas, objs and nodes

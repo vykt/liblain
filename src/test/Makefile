@@ -11,7 +11,7 @@
 
 
 #[parameters]
-CFLAGS=${_CFLAGS} -fsanitize=address
+CFLAGS=${_CFLAGS} -fsanitize=address -fsanitize-recover=address
 WARN_OPTS+=${_WARN_OPTS} -Wno-unused-variable -Wno-unused-but-set-variable
 LDFLAGS=-L${LIB_BIN_DIR} \
         -Wl,-rpath=${LIB_BIN_DIR} -lmcry -lcmore -lcheck -lsubunit -static-libasan
@@ -19,8 +19,8 @@ LDFLAGS=-L${LIB_BIN_DIR} \
 
 #[build constants]
 SOURCES_TEST=check_map.c check_procfs_iface.c check_krncry_iface.c \
-             check_map_util.c check_util.c map_helper.c target_helper.c \
-			 iface_helper.c info.c main.c
+             check_map_util.c check_util.c iface_helper.c info.c \
+			 map_helper.c suites.c target_helper.c main.c
 OBJECTS_TEST=${SOURCES_TEST:%.c=${BUILD_DIR}/%.o}
 TARGET_DIR=${shell pwd}/target
 

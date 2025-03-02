@@ -42,24 +42,24 @@ char areas_unchanged[TARGET_AREAS_UNCHANGED][NAME_MAX] = {
     "libc.so.6",
     "",
     "",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "[stack]",
     "[vvar]",
-    "[vdso]",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "[stack]"
+    "[vdso]"
 };
 
 char objs_unchanged[TARGET_OBJS_UNCHANGED][NAME_MAX] = {
     "0x0",
     "unit_target",
     "libc.so.6",
-    "[vvar]",
-    "[vdso]",
     "ld-linux-x86-64.so.2",
-    "[stack]"
+    "[stack]",
+    "[vvar]",
+    "[vdso]"
 };
 
 
@@ -89,14 +89,14 @@ char areas_mapped[TARGET_AREAS_MAPPED][NAME_MAX] = {
     "libc.so.6",
     "",
     "",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "[stack]",
     "[vvar]",
-    "[vdso]",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "[stack]"
+    "[vdso]"
 };
 
 char objs_mapped[TARGET_OBJS_MAPPED][NAME_MAX] = {
@@ -106,10 +106,10 @@ char objs_mapped[TARGET_OBJS_MAPPED][NAME_MAX] = {
     "libz.so.1.2.13",
     "libelf-0.188.so",
     "libc.so.6",
-    "[vvar]",
-    "[vdso]",
     "ld-linux-x86-64.so.2",
-    "[stack]"
+    "[stack]",
+    "[vvar]",
+    "[vdso]"
 };
 
 
@@ -129,14 +129,14 @@ char areas_unmapped[TARGET_AREAS_UNMAPPED][NAME_MAX] = {
     "libc.so.6",
     "",
     "",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "ld-linux-x86-64.so.2",
+    "[stack]",
     "[vvar]",
-    "[vdso]",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "ld-linux-x86-64.so.2",
-    "[stack]"
+    "[vdso]"
 };
 
 char objs_unmapped[TARGET_OBJS_UNMAPPED][NAME_MAX] = {
@@ -144,22 +144,26 @@ char objs_unmapped[TARGET_OBJS_UNMAPPED][NAME_MAX] = {
     "unit_target",
     "[heap]",
     "libc.so.6",
-    "[vvar]",
-    "[vdso]",
     "ld-linux-x86-64.so.2",
-    "[stack]"
+    "[stack]",
+    "[vvar]",
+    "[vdso]"
 };
 
 
 //signal handlers
 static void _sigusr1_handler() {
 
-    if (target_state == UNCHANGED) {
+    //printf("<!> received signal from unit_target.\n");
+
+    if (target_state == UNINIT) {
+        target_state = UNCHANGED;
+
+    } else if (target_state == UNCHANGED) {
         target_state = MAPPED;
         
     } else if (target_state == MAPPED) {
         target_state = UNMAPPED;
-
     }
 
     return;
@@ -194,13 +198,20 @@ pid_t start_target() {
     char pid_buf[8];
     
     char * argv[3] = {TARGET_NAME, 0, 0};
-    target_state = UNCHANGED;
+    enum target_map_state old_state;
 
+
+    //setup initial state
+    target_state = old_state = UNINIT;
 
     //get current pid to pass to target
     parent_pid = getpid();
     snprintf(pid_buf, 8, "%d", parent_pid);
     argv[1] = pid_buf;
+
+    //register signal handler
+    ret_s = signal(SIGUSR1, _sigusr1_handler);
+    ck_assert(ret_s != SIG_ERR);
 
     //fork a new process
     target_pid = fork();
@@ -211,10 +222,9 @@ pid_t start_target() {
         ret = execve(TARGET_NAME, argv, NULL);
         ck_assert_int_ne(ret, -1);
 
-    //parent registers signal handler for child
+    //parent waits for child to complete initialisation
     } else {
-        ret_s = signal(SIGUSR1, _sigusr1_handler);
-        ck_assert(ret_s != SIG_ERR);
+        while (target_state == old_state) {}
     }
     
     return target_pid;
@@ -295,6 +305,9 @@ void assert_target_map(mc_vm_map * map) {
             assert_vm_map_objs_aslr(&map->vm_objs, objs_unmapped,
                                     0, TARGET_OBJS_UNMAPPED, true);
             break;
+
+        default:
+            ck_assert(false); //invalid state
         
     } //end switch
     

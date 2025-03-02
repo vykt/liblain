@@ -226,7 +226,7 @@ extern __thread int mc_errno;
 #define MC_ERR_INTERNAL_INDEX   2200
 #define MC_ERR_AREA_IN_OBJ      2201
 #define MC_ERR_UNEXPECTED_NULL  2202
-#define MC_ERR_LIBCMORE         2203
+#define MC_ERR_CMORE            2203
 #define MC_ERR_READ_WRITE       2204
 #define MC_ERR_MEMU_TARGET      2205
 #define MC_ERR_MEMU_MAP_SZ      2206
@@ -258,7 +258,7 @@ extern __thread int mc_errno;
     "Internal: Area is not in object when it should be.\n"
 #define MC_ERR_UNEXPECTED_NULL_MSG \
     "Internal: Unexpected NULL pointer.\n"
-#define MC_ERR_LIBCMORE_MSG \
+#define MC_ERR_CMORE_MSG \
     "Internal: CMore error. See cm_perror().\n"
 #define MC_ERR_READ_WRITE_MSG \
     "Internal: Read/write failed.\n"

@@ -178,8 +178,8 @@ int procfs_update_map(const mc_session * session, mc_vm_map * vm_map) {
     while (fgets(line_buf, LINE_LEN, fs) != NULL) {
 
         memset(&new_entry, 0, sizeof(new_entry));
-        _build_entry(&new_entry, line_buf);        
-
+        _build_entry(&new_entry, line_buf);
+        
         ret = map_send_entry(&new_entry, &state, vm_map);
         if (ret != 0) return -1;
 

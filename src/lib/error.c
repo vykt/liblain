@@ -43,8 +43,8 @@ void mc_perror(const char * prefix) {
             fprintf(stderr, "%s: %s", prefix, MC_ERR_UNEXPECTED_NULL_MSG);
             break;
         
-        case MC_ERR_LIBCMORE:
-            fprintf(stderr, "%s: %s", prefix, MC_ERR_LIBCMORE_MSG);
+        case MC_ERR_CMORE:
+            fprintf(stderr, "%s: %s", prefix, MC_ERR_CMORE_MSG);
             break;
         
         case MC_ERR_READ_WRITE:
@@ -120,8 +120,8 @@ const char * mc_strerror(const int mc_errnum) {
         case MC_ERR_UNEXPECTED_NULL:
             return MC_ERR_UNEXPECTED_NULL_MSG;
         
-        case MC_ERR_LIBCMORE:
-            return MC_ERR_LIBCMORE_MSG;
+        case MC_ERR_CMORE:
+            return MC_ERR_CMORE_MSG;
         
         case MC_ERR_READ_WRITE:
             return MC_ERR_READ_WRITE_MSG;

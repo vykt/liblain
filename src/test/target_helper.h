@@ -37,6 +37,7 @@ extern char objs_unmapped[TARGET_OBJS_UNMAPPED][NAME_MAX];
 
 //the state of the target's memory map
 enum target_map_state {
+    UNINIT,    //waiting for child to start
     UNCHANGED, //default state
     MAPPED,    //new areas mapped
     UNMAPPED   //newly mapped areas now unmapped
@@ -46,7 +47,7 @@ enum target_map_state {
 //target metadata
 #define TARGET_NAME "unit_target"
 
-#define TARGET_KILL_CMD_FMT "kill $(pidof %s)"
+#define TARGET_KILL_CMD_FMT "kill $(pidof %s) > /dev/null 2> /dev/null"
 #define TARGET_KILL_CMD_LEN NAME_MAX + 64
 
 #define TARGET_BUF_SZ 16 /* must be even */
@@ -55,7 +56,7 @@ enum target_map_state {
 
 #define IFACE_RW_BUF_OBJ_INDEX  1
 #define IFACE_RW_BUF_AREA_INDEX 4
-#define IFACE_RW_BUF_OFF        0x40
+#define IFACE_RW_BUF_OFF        0x60
 
 #define IFACE_NONE_OBJ_INDEX  0
 #define IFACE_NONE_AREA_INDEX 0

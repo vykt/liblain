@@ -46,9 +46,6 @@ static void _setup_target() {
     ret = mc_open(&s, PROCFS, pid);
     ck_assert_int_eq(ret, 0);
 
-    //wait for ldlinux.so in the target
-    sleep(1);
-
     mc_new_vm_map(&m);
     ret = mc_update_map(&s, &m);
     ck_assert_int_eq(ret, 0);
@@ -142,10 +139,12 @@ START_TEST(test_mc_get_area_offset_bnd) {
     cm_lst_node * a_n;
 
 
-    //first test: typical offset
+    //setup test
     o = MC_GET_NODE_OBJ(m.vm_objs.head);
     a_n = MC_GET_NODE_PTR(o->last_vm_area_node_ps.head);
 
+
+    //first test: typical offset
     off = mc_get_area_offset_bnd(a_n, 0x10800);
     ck_assert_int_eq(off, 0x800);
 
@@ -168,16 +167,19 @@ START_TEST(test_mc_get_obj_offset_bnd) {
     mc_vm_obj * o;
     
 
-    //first test: typical offset
+    //setup test
     o_n = m.vm_objs.head;
     o = MC_GET_NODE_OBJ(o_n);
 
+
+    //first test: typical offset
+    o->end_addr = 0x1000;
     off = mc_get_obj_offset_bnd(o_n, 0x800);
     ck_assert_int_eq(off, 0x800);
 
 
     //second test: address is lower than obj's starting address
-    o->end_addr = o->start_addr = 0x1000;
+    o->start_addr = 0x1000;
     off = mc_get_obj_offset_bnd(o_n, 0x800);
     ck_assert_int_eq(off, -1);
     

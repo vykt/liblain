@@ -13,11 +13,13 @@ extern bool _DEBUG_ACTIVE;
 
 
 //unit test suites
+Suite * fake_suite();
 Suite * krncry_iface_suite();
 Suite * procfs_iface_suite();
 Suite * map_suite();
 Suite * map_util_suite();
 Suite * util_suite();
+
 
 //other tests
 //TODO

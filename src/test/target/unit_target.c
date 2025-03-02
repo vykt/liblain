@@ -30,6 +30,7 @@
 
 
 //globals
+pid_t parent_pid;
 void * libelf;
 enum target_map_state state = UNCHANGED;
 
@@ -44,15 +45,15 @@ enum target_map_state state = UNCHANGED;
 void sigusr1_handler() {
 
     if (state == UNCHANGED) {
-
         libelf = dlopen("libelf.so.1", RTLD_LAZY);
         state = MAPPED;
 
     } else if (state == MAPPED) {
-
         dlclose(libelf);
         state = UNMAPPED;
     }
+
+    kill(parent_pid, SIGUSR1);
 
     return;
 }
@@ -61,7 +62,6 @@ void sigusr1_handler() {
 int main(int argc, char ** argv) {
 
     int ch;
-    pid_t parent_pid;
     void * protected_area;
 
     //check correct number of args is provided (quiet -Wunused-parameter)
@@ -76,6 +76,9 @@ int main(int argc, char ** argv) {
 
     //register unit test handler
     signal(SIGUSR1, sigusr1_handler);
+
+    //signal parent that initialisation is finished
+    kill(parent_pid, SIGUSR1);
 
     for (int i = 0; ++i; ) {
 

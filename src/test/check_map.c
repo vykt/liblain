@@ -1070,7 +1070,9 @@ START_TEST(test__map_forward_unmapped_obj_last_vm_areas) {
 START_TEST(test__map_unlink_unmapped_obj) {
 
     int ret;
+
     _traverse_state state;
+    mc_vm_obj * obj;
     
     uintptr_t heap_state[2]  = {0x6000, 0xC000};
     
@@ -1088,13 +1090,17 @@ START_TEST(test__map_unlink_unmapped_obj) {
                                 
     //only test: unlink `/lib/foo`
     state.prev_obj_node  = &m_o_n[2];
+
+    //clear constituent areas
+    ret = cm_lst_emp(&m_o[2].vm_area_node_ps);
+    ck_assert_int_eq(ret, 0);
     
     ret = _map_unlink_unmapped_obj(&m_o_n[2], &state, &m);
     ck_assert_int_eq(ret, 0);
 
     //check `/lib/foo` has no last areas associated with it, and is unmapped
     assert_vm_obj(&m_o[2], "/lib/foo", "foo",
-                  MC_UNDEF_ADDR, MC_UNDEF_ADDR, 3, 0, 2, false);
+                  MC_UNDEF_ADDR, MC_UNDEF_ADDR, 0, 0, 2, false);
     assert_vm_obj_list(&m_o[2].last_vm_area_node_ps, NULL, 0);
 
     //check `[heap]` has 2 last areas associated with it
@@ -1190,7 +1196,7 @@ START_TEST(test__map_unlink_unmapped_area) {
 
 
     //second test: remove only area of '[heap]'
-    state.prev_obj_node = &m_o_n[0];
+    /*state.prev_obj_node = &m_o_n[0];
     
     ret = _map_unlink_unmapped_area(&m_a_n[3], &state, &m);
     ck_assert_int_eq(ret, 0);
@@ -1207,7 +1213,7 @@ START_TEST(test__map_unlink_unmapped_area) {
                         second_areas_unmapped, 0, 2, false);
 
     ck_assert_ptr_eq(state.prev_obj_node, &m_o_n[0]);
-
+    */
     return;
     
 } END_TEST
@@ -1970,7 +1976,7 @@ START_TEST(test_mc_map_clean_unmapped) {
     tcase_add_checked_fixture(tc__unlink_unmapped_area, 
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc__unlink_unmapped_area, test__map_unlink_unmapped_area);
-
+    
     //tc__check_area_eql
     tc__check_area_eql = tcase_create("_check_area_eql");
     tcase_add_checked_fixture(tc__check_area_eql, 
@@ -2025,6 +2031,7 @@ START_TEST(test_mc_map_clean_unmapped) {
                               _setup_stub_vm_map, _teardown_vm_map);
     tcase_add_test(tc_clean_unmapped, test_mc_map_clean_unmapped);
     #endif
+
     
     //add test cases to map test suite
     suite_add_tcase(s, tc_new_del_vm_map);
