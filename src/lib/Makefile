@@ -5,9 +5,9 @@
 #	CC         - Compiler.
 #   BUILD_DIR  - Library build directory.
 #
-#   _LDFLAGS   - Linker flags.
 #	_CFLAGS    - Compiler flags.
 #   _WARN_OPTS - Compiler warnings.
+#   _LDFLAGS   - Linker flags.
 
 
 CFLAGS=${_CFLAGS}
