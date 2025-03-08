@@ -67,8 +67,8 @@ static:
 	                           BUILD_DIR='${BUILD_DIR}/lib'
 
 clean:
-> $(MAKE) -C ${TEST_DIR} clean CC='${CC}' BUILD_DIR='${BUILD_DIR}/test'
-> $(MAKE) -C ${LIB_DIR} clean CC='${CC}' BUILD_DIR='${BUILD_DIR}/lib'
+> $(MAKE) -C ${TEST_DIR} clean BUILD_DIR='${BUILD_DIR}/test'
+> $(MAKE) -C ${LIB_DIR} clean BUILD_DIR='${BUILD_DIR}/lib'
 > -rm ${PACKAGE_DIR}/*
 
 install:
