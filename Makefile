@@ -4,8 +4,6 @@
 #[set as required]
 INSTALL_DIR=/usr/local/lib
 INCLUDE_INSTALL_DIR=/usr/local/include
-MAN_INSTALL_DIR=/usr/local/share/man
-MD_INSTALL_DIR=/usr/local/share/doc/memcry
 LD_DIR=/etc/ld.so.conf.d
 
 CC=gcc
