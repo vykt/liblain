@@ -39,7 +39,7 @@ ${BUILD_DIR}/%.o: %.c
 > ${CC} ${CFLAGS} ${WARN_OPTS} -c $< -o $@
 
 tgt:
-> $(MAKE) -C ${TARGET_DIR} targets CC='${CC}' BUILD_DIR='${BUILD_DIR}'
+> $(MAKE) -C ${TARGET_DIR} target CC='${CC}' BUILD_DIR='${BUILD_DIR}'
 
 clean:
 > ${MAKE} -C ${TARGET_DIR} clean BUILD_DIR='${BUILD_DIR}'
