@@ -10,20 +10,20 @@ CFLAGS=-O0 -ggdb
 WARN_OPTS=-Wno-unused-variable -Wno-unused-but-set-variable
 LDFLAGS=-L${LIB_BIN_DIR} -Wl,-rpath=${LIB_BIN_DIR}
 
-SOURCES_UNIT_TARGET=unit_target.c
-OBJECTS_UNIT_TARGET=${SOURCES_UNIT_TARGET:%.c=${BUILD_DIR}/%.o}
+SOURCES_TARGET=unit_target.c
+OBJECTS_TARGET=${SOURCES_TARGET:%.c=${BUILD_DIR}/%.o}
 
-UNIT_TARGET=unit_target
+TARGET=target
 
-target: ${UNIT_TARGET}
+target: ${TARGET}
 > mkdir -p ${BUILD_DIR}
-> mv ${UNIT_TARGET} ${BUILD_DIR}
+> mv ${TARGET} ${BUILD_DIR}
 
-${UNIT_TARGET}: ${OBJECTS_UNIT_TARGET}
+${TARGET}: ${OBJECTS_TARGET}
 > ${CC} ${CFLAGS} ${WARN_OPTS} -o $@ $^ ${LDFLAGS}
 
 ${BUILD_DIR}/%.o: %.c
 > ${CC} ${CFLAGS} ${WARN_OPTS} -c $< -o $@
 
 clean:
-> -rm -v ${BUILD_DIR}/${UNIT_TARGET}
+> -rm -v ${BUILD_DIR}/${TARGET}
