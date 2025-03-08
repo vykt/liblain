@@ -13,7 +13,7 @@ LDFLAGS=-L${LIB_BIN_DIR} -Wl,-rpath=${LIB_BIN_DIR}
 SOURCES_TARGET=unit_target.c
 OBJECTS_TARGET=${SOURCES_TARGET:%.c=${BUILD_DIR}/%.o}
 
-TARGET=target
+TARGET=unit_target
 
 target: ${TARGET}
 > mkdir -p ${BUILD_DIR}
