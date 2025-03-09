@@ -27,3 +27,4 @@ ${BUILD_DIR}/%.o: %.c
 
 clean:
 > -rm -v ${BUILD_DIR}/${TARGET}
+> -rm -v ${OBJECTS_TARGET}

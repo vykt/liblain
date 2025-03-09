@@ -43,5 +43,5 @@ tgt:
 
 clean:
 > ${MAKE} -C ${TARGET_DIR} clean BUILD_DIR='${BUILD_DIR}'
-> -rm -v ${BUILD_DIR}/*.o
 > -rm -v ${BUILD_DIR}/${TESTS}
+> -rm -v ${OBJECTS_TEST}
